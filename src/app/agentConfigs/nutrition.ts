@@ -45,8 +45,9 @@ const getProfileTool = tool({
     additionalProperties: false,
   },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  execute: async (input: { userId?: string }) => {
-    const query = input?.userId ? `?user_id=${encodeURIComponent(input.userId)}` : '';
+  execute: async (input: any) => {
+    const userId = typeof input?.userId === 'string' ? input.userId : undefined;
+    const query = userId ? `?user_id=${encodeURIComponent(userId)}` : '';
     const res = await fetch(buildApiUrl(`/api/debug/profile${query}`), {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -73,6 +74,7 @@ const updateProfileTool = tool({
       activityLevel: { type: 'string', enum: ['low', 'moderate', 'high'] },
       allergies: { type: 'array', items: { type: 'string' } },
     },
+    required: [],
     additionalProperties: false,
   },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -103,11 +105,13 @@ const logMealTool = tool({
     additionalProperties: false,
   },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  execute: async (input: { description: string; time?: string }) => {
+  execute: async (input: any) => {
+    const description = typeof input?.description === 'string' ? input.description : '';
+    const time = typeof input?.time === 'string' ? input.time : undefined;
     return {
       status: 'logged',
       note: 'デモ環境のため、記録はメモリ内のみで永続化しません。',
-      meal: input,
+      meal: { description, time },
     };
   },
 });

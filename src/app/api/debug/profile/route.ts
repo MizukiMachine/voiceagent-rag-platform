@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { getUserProfile, updateUserProfile } from '../../../../../../services/nutrition/profileService';
+import { getUserProfile, updateUserProfile } from '../../../../../services/nutrition/profileService';
 
 const patchSchema = z.object({
   userId: z.string().trim().optional(),

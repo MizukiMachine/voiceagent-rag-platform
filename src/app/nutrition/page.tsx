@@ -1,6 +1,4 @@
-import dynamic from 'next/dynamic';
-
-const ProfileDashboard = dynamic(() => import('./ProfileDashboard'), { ssr: false });
+import ProfileDashboard from './ProfileDashboard';
 
 export default function NutritionPage() {
   return <ProfileDashboard />;
