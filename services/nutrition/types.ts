@@ -14,6 +14,8 @@ export interface UserProfile {
   dislikedFoods?: string[];
   dietStyle?: string; // e.g., ベジタリアン, 炭水化物抜き など
   mealLogs?: MealLog[];
+  todayBreakfast?: string;
+  todayLunch?: string;
   updatedAt: string;
 }
 

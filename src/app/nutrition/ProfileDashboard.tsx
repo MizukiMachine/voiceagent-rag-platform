@@ -23,6 +23,8 @@ type Profile = {
     timeOfDay?: string;
     recordedAt: string;
   }>;
+  todayBreakfast?: string;
+  todayLunch?: string;
   updatedAt: string;
   bmi?: number;
   weightDeltaKg?: number;
@@ -52,6 +54,8 @@ const fieldOrder: Array<keyof Profile> = [
   'allergies',
   'dislikedFoods',
   'dietStyle',
+  'todayBreakfast',
+  'todayLunch',
 ];
 
 type BusyState = 'idle' | 'loading' | 'saving';
@@ -249,6 +253,8 @@ function renderField(
     allergies: 'アレルギー（カンマ区切り）',
     dislikedFoods: '苦手な食品（カンマ区切り）',
     dietStyle: '食事スタイル（例: ベジタリアン/炭水化物控えめ）',
+    todayBreakfast: '今日の朝ごはん',
+    todayLunch: '今日の昼ごはん',
   };
 
   const value = profile[key];
@@ -319,6 +325,19 @@ function renderField(
         <input
           className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
           placeholder="例: ベジタリアン、炭水化物控えめ、低脂質"
+          value={(value as string | undefined) ?? ''}
+          onChange={(e) => onChange(key, e.target.value)}
+        />
+      </FieldShell>
+    );
+  }
+  if (key === 'todayBreakfast' || key === 'todayLunch') {
+    return (
+      <FieldShell key={key} label={labelMap[key]}>
+        <textarea
+          className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
+          rows={2}
+          placeholder={key === 'todayBreakfast' ? '例: ごはん、鮭、味噌汁' : '例: 玄米と鶏むね肉、サラダ'}
           value={(value as string | undefined) ?? ''}
           onChange={(e) => onChange(key, e.target.value)}
         />

@@ -20,6 +20,8 @@ const patchSchema = z.object({
       timeOfDay: z.string().trim().min(1).max(32).optional(),
     })
     .optional(),
+  todayBreakfast: z.string().trim().min(1).max(400).optional(),
+  todayLunch: z.string().trim().min(1).max(400).optional(),
 });
 
 export async function GET(request: Request) {

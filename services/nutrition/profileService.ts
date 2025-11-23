@@ -54,6 +54,8 @@ export interface UpdateProfileInput {
   dislikedFoods?: string[] | null;
   dietStyle?: string | null;
   mealLogAppend?: { description: string; timeOfDay?: string } | null;
+  todayBreakfast?: string | null;
+  todayLunch?: string | null;
 }
 
 export async function updateUserProfile(input: UpdateProfileInput): Promise<ProfileWithDerived> {
@@ -81,6 +83,14 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
         ? input.dietStyle.trim()
         : current.dietStyle,
     mealLogs: appendMealLog(current.mealLogs ?? [], input.mealLogAppend),
+    todayBreakfast:
+      typeof input.todayBreakfast === 'string' && input.todayBreakfast.trim()
+        ? input.todayBreakfast.trim()
+        : current.todayBreakfast,
+    todayLunch:
+      typeof input.todayLunch === 'string' && input.todayLunch.trim()
+        ? input.todayLunch.trim()
+        : current.todayLunch,
   };
 
   await store.upsert(next);
