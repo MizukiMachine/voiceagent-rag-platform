@@ -1031,7 +1031,8 @@ export class SessionHost {
           model: (response as any).model,
           outputLen: outputItems.length,
           refusal,
-          sample: JSON.stringify(outputItems?.[0]?.content ?? []).slice(0, 500),
+          outputs: JSON.stringify(response?.output ?? []).slice(0, 2000),
+          usage: (response as any).usage,
         },
       });
     }
