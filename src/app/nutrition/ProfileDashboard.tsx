@@ -120,17 +120,9 @@ export default function ProfileDashboard() {
     if (['age', 'heightCm', 'weightKg', 'targetWeightKg'].includes(key)) {
       nextValue = value === '' ? undefined : Number(value);
     }
-    if (key === 'allergies') {
-      nextValue = value
-        .split(',')
-        .map((v) => v.trim())
-        .filter(Boolean);
-    }
-    if (key === 'dislikedFoods') {
-      nextValue = value
-        .split(',')
-        .map((v) => v.trim())
-        .filter(Boolean);
+    if (key === 'allergies' || key === 'dislikedFoods') {
+      const trimmed = value.trim();
+      nextValue = trimmed ? [trimmed] : [];
     }
     setProfile({ ...profile, [key]: nextValue });
   };
@@ -298,10 +290,11 @@ function renderField(
   if (key === 'allergies') {
     return (
       <FieldShell key={key} label={labelMap[key]}>
-        <input
+        <textarea
           className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-          placeholder="例: peanut, shrimp"
-          value={(value as string[] | undefined)?.join(', ') ?? ''}
+          rows={2}
+          placeholder="例: ピーナッツ、エビ"
+          value={(value as string[] | undefined)?.[0] ?? ''}
           onChange={(e) => onChange(key, e.target.value)}
         />
       </FieldShell>
@@ -310,10 +303,11 @@ function renderField(
   if (key === 'dislikedFoods') {
     return (
       <FieldShell key={key} label={labelMap[key]}>
-        <input
+        <textarea
           className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-          placeholder="例: ピーマン, セロリ"
-          value={(value as string[] | undefined)?.join(', ') ?? ''}
+          rows={2}
+          placeholder="例: ピーマン、セロリが苦手。脂っこいものは避けたい。"
+          value={(value as string[] | undefined)?.[0] ?? ''}
           onChange={(e) => onChange(key, e.target.value)}
         />
       </FieldShell>
