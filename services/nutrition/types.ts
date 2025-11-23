@@ -1,5 +1,7 @@
 export type ActivityLevel = 'low' | 'moderate' | 'high';
 
+export type GoalType = 'loss' | 'maintain' | 'gain';
+
 export type BiologicalSex = 'male' | 'female' | 'other';
 
 export interface UserProfile {
@@ -9,6 +11,7 @@ export interface UserProfile {
   heightCm?: number;
   weightKg?: number;
   targetWeightKg?: number;
+  goalType?: GoalType; // 明示的な目標タイプ（減量/維持/増量）
   activityLevel?: ActivityLevel;
   allergies?: string[];
   dislikedFoods?: string[];

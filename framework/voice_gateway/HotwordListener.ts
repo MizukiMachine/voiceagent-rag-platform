@@ -1,5 +1,19 @@
 const DEFAULT_HOTWORD_TIMEOUT_MS = 8000;
-const HOTWORD_PREFIXES = ['hey', 'ﾍｲ', 'ヘイ', 'へい', 'はい', 'ハイ', 'ﾊｲ', 'ねえ', 'へえ', 'Hej', 'Hei'];
+const HOTWORD_PREFIXES = [
+  'hey',
+  'ﾍｲ',
+  'ヘイ',
+  'へい',
+  'はい',
+  'ハイ',
+  'ﾊｲ',
+  'ねえ', 
+  'へえ', 
+  'Hej',
+  'Hei',
+  'Hi',
+  'hi',
+];
 const DEFAULT_FILLERS = [
   'えー',
   'えっと',

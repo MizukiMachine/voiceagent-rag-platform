@@ -10,6 +10,7 @@ const patchSchema = z.object({
   heightCm: z.number().min(80).max(250).optional(),
   weightKg: z.number().min(20).max(300).optional(),
   targetWeightKg: z.number().min(20).max(300).optional(),
+  goalType: z.enum(['loss', 'maintain', 'gain']).optional(),
   activityLevel: z.enum(['low', 'moderate', 'high']).optional(),
   allergies: z.array(z.string().trim().min(1)).optional(),
   dislikedFoods: z.array(z.string().trim().min(1)).optional(),

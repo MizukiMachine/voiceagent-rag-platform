@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 type ActivityLevel = 'low' | 'moderate' | 'high';
 type Sex = 'male' | 'female' | 'other';
+type GoalType = 'loss' | 'maintain' | 'gain';
 
 type Profile = {
   userId: string;
@@ -13,6 +14,7 @@ type Profile = {
   heightCm?: number;
   weightKg?: number;
   targetWeightKg?: number;
+  goalType?: GoalType;
   activityLevel?: ActivityLevel;
   allergies?: string[];
   dislikedFoods?: string[];
@@ -50,6 +52,7 @@ const fieldOrder: Array<keyof Profile> = [
   'heightCm',
   'weightKg',
   'targetWeightKg',
+  'goalType',
   'activityLevel',
   'allergies',
   'dislikedFoods',
@@ -224,6 +227,18 @@ export default function ProfileDashboard() {
                 label="カロリーバジェット"
                 value={profile.caloricBudgetAdvice ?? '未計算（身長/体重/年齢を設定）'}
               />
+              <Metric
+                label="目標タイプ"
+                value={
+                  profile.goalType
+                    ? profile.goalType === 'loss'
+                      ? '減量'
+                      : profile.goalType === 'gain'
+                        ? '増量'
+                        : '維持'
+                    : '未設定'
+                }
+              />
               <Metric label="アレルギー" value={profile.allergies?.join(', ') || 'なし/未設定'} />
               <Metric label="苦手な食品" value={profile.dislikedFoods?.join(', ') || 'なし/未設定'} />
               <Metric label="食事スタイル" value={profile.dietStyle || '未設定'} />
@@ -247,6 +262,7 @@ function renderField(
     heightCm: '身長(cm)',
     weightKg: '体重(kg)',
     targetWeightKg: '目標体重(kg)',
+    goalType: '目標タイプ',
     activityLevel: '活動量',
     allergies: 'アレルギー（カンマ区切り）',
     dislikedFoods: '苦手な食品（カンマ区切り）',
@@ -288,6 +304,23 @@ function renderField(
               {activityLabels[lvl]}
             </option>
           ))}
+        </select>
+      </FieldShell>
+    );
+  }
+
+  if (key === 'goalType') {
+    return (
+      <FieldShell key={key} label={labelMap[key]}>
+        <select
+          className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
+          value={value ?? ''}
+          onChange={(e) => onChange(key, e.target.value)}
+        >
+          <option value="">未設定</option>
+          <option value="loss">減量</option>
+          <option value="maintain">維持</option>
+          <option value="gain">増量</option>
         </select>
       </FieldShell>
     );
@@ -384,6 +417,10 @@ function buildSummary(profile: Profile | null): string {
   if (profile.heightCm) parts.push(`身長${profile.heightCm}cm`);
   if (profile.weightKg) parts.push(`体重${profile.weightKg}kg`);
   if (profile.targetWeightKg) parts.push(`目標${profile.targetWeightKg}kg`);
+  if (profile.goalType) {
+    const label = profile.goalType === 'loss' ? '減量' : profile.goalType === 'gain' ? '増量' : '維持';
+    parts.push(`目標タイプ:${label}`);
+  }
   if (profile.activityLevel) parts.push(activityLabels[profile.activityLevel]);
   if (profile.allergies?.length) parts.push(`アレルギー:${profile.allergies.join(',')}`);
   if (profile.dislikedFoods?.length) parts.push(`苦手:${profile.dislikedFoods.join(',')}`);
@@ -399,6 +436,7 @@ function sanitizeForPatch(profile: Profile) {
     heightCm,
     weightKg,
     targetWeightKg,
+    goalType,
     activityLevel,
     allergies,
     dislikedFoods,
@@ -413,6 +451,7 @@ function sanitizeForPatch(profile: Profile) {
     heightCm: numberOrUndefined(heightCm),
     weightKg: numberOrUndefined(weightKg),
     targetWeightKg: numberOrUndefined(targetWeightKg),
+    goalType,
     activityLevel,
     allergies,
     dislikedFoods,
