@@ -998,7 +998,6 @@ export class SessionHost {
     const body = {
       model: 'gpt-5.1',
       reasoning: { effort: 'high' },
-      modalities: ['text'],
       input: [
         {
           role: 'user',
