@@ -1004,7 +1004,7 @@ export class SessionHost {
           content: [
             {
               type: 'input_text' as const,
-              text: `日本語で回答してください。結論→理由→具体アクションの順で4〜6文。理由/論拠は具体的な数値やプロフィール項目（年齢/性別/身長/体重/活動量/目標体重/goalType）や直近の食事内容を2〜3個必ず盛り込み、少しボリューム多めに書いてください。質問: ${question}`,
+              text: `日本語で回答してください。結論→理由→具体アクションの順で4〜6文。理由/論拠は具体的なパーソナルデータ（活動量/食事ログ/goalType）や直近の食事内容を2〜3個必ず盛り込み、理由や論拠を少しボリューム多めに具体的に書いてください。質問: ${question}`,
             },
           ],
         },
@@ -1019,6 +1019,17 @@ export class SessionHost {
       .filter((c: any) => c?.type === 'output_text')
       .map((c: any) => c.text)
       .join('\n');
+
+    if (!text) {
+      this.logger.warn('Deep reasoning response missing output_text; using fallback message', {
+        sessionId: context.id,
+        responseSummary: {
+          id: (response as any).id,
+          model: (response as any).model,
+          outputLen: outputItems.length,
+        },
+      });
+    }
 
     const assistantText = text || '詳細回答を取得できませんでした。';
 
