@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto';
+
 import { getUserProfileStore } from './profileStore';
-import type { ActivityLevel, ProfileWithDerived, UserProfile } from './types';
+import type { ActivityLevel, MealLog, ProfileWithDerived, UserProfile } from './types';
 
 const DEFAULT_USER_ID = process.env.DEMO_USER_ID ?? 'demo-user';
 
@@ -49,6 +51,9 @@ export interface UpdateProfileInput {
   targetWeightKg?: number | null;
   activityLevel?: ActivityLevel | null;
   allergies?: string[] | null;
+  dislikedFoods?: string[] | null;
+  dietStyle?: string | null;
+  mealLogAppend?: { description: string; timeOfDay?: string } | null;
 }
 
 export async function updateUserProfile(input: UpdateProfileInput): Promise<ProfileWithDerived> {
@@ -68,6 +73,14 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
     allergies: Array.isArray(input.allergies)
       ? [...input.allergies]
       : current.allergies ?? [],
+    dislikedFoods: Array.isArray(input.dislikedFoods)
+      ? [...input.dislikedFoods]
+      : current.dislikedFoods ?? [],
+    dietStyle:
+      typeof input.dietStyle === 'string' && input.dietStyle.trim()
+        ? input.dietStyle.trim()
+        : current.dietStyle,
+    mealLogs: appendMealLog(current.mealLogs ?? [], input.mealLogAppend),
   };
 
   await store.upsert(next);
@@ -96,6 +109,18 @@ function withDerived(profile: UserProfile): ProfileWithDerived {
     estimatedTdeeKcal,
     caloricBudgetAdvice,
   };
+}
+
+function appendMealLog(existing: MealLog[], append?: { description: string; timeOfDay?: string } | null): MealLog[] {
+  if (!append || !append.description?.trim()) return existing;
+  const nowIso = new Date().toISOString();
+  const next: MealLog = {
+    id: randomUUID(),
+    description: append.description.trim(),
+    timeOfDay: append.timeOfDay?.trim() || undefined,
+    recordedAt: nowIso,
+  };
+  return [...existing.slice(-49), next]; // keep latest 50
 }
 
 function estimateTdee(profile: UserProfile): number | undefined {

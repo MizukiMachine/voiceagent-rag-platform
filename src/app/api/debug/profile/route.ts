@@ -12,6 +12,14 @@ const patchSchema = z.object({
   targetWeightKg: z.number().min(20).max(300).optional(),
   activityLevel: z.enum(['low', 'moderate', 'high']).optional(),
   allergies: z.array(z.string().trim().min(1)).optional(),
+  dislikedFoods: z.array(z.string().trim().min(1)).optional(),
+  dietStyle: z.string().trim().min(1).max(120).optional(),
+  mealLogAppend: z
+    .object({
+      description: z.string().trim().min(1),
+      timeOfDay: z.string().trim().min(1).max(32).optional(),
+    })
+    .optional(),
 });
 
 export async function GET(request: Request) {

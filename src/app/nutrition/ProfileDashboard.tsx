@@ -15,6 +15,14 @@ type Profile = {
   targetWeightKg?: number;
   activityLevel?: ActivityLevel;
   allergies?: string[];
+  dislikedFoods?: string[];
+  dietStyle?: string;
+  mealLogs?: Array<{
+    id: string;
+    description: string;
+    timeOfDay?: string;
+    recordedAt: string;
+  }>;
   updatedAt: string;
   bmi?: number;
   weightDeltaKg?: number;
@@ -42,6 +50,8 @@ const fieldOrder: Array<keyof Profile> = [
   'targetWeightKg',
   'activityLevel',
   'allergies',
+  'dislikedFoods',
+  'dietStyle',
 ];
 
 type BusyState = 'idle' | 'loading' | 'saving';
@@ -54,6 +64,7 @@ export default function ProfileDashboard() {
   const [message, setMessage] = useState<string | null>(null);
 
   const summary = useMemo(() => buildSummary(profile), [profile]);
+  const latestMeal = profile?.mealLogs?.at(-1);
 
   useEffect(() => {
     void loadProfile(userId);
@@ -106,6 +117,12 @@ export default function ProfileDashboard() {
       nextValue = value === '' ? undefined : Number(value);
     }
     if (key === 'allergies') {
+      nextValue = value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+    if (key === 'dislikedFoods') {
       nextValue = value
         .split(',')
         .map((v) => v.trim())
@@ -181,6 +198,12 @@ export default function ProfileDashboard() {
           <section className="mt-6 grid gap-4 rounded-2xl bg-slate-800/80 p-6 ring-1 ring-white/10">
             <h2 className="text-lg font-semibold text-white">利用プロフィールのサマリ</h2>
             <p className="text-sm text-emerald-100">{summary}</p>
+            {latestMeal && (
+              <p className="text-sm text-emerald-100">
+                直近の食事記録: {latestMeal.timeOfDay ? `[${latestMeal.timeOfDay}] ` : ''}
+                {latestMeal.description} ({new Date(latestMeal.recordedAt).toLocaleString()})
+              </p>
+            )}
             <div className="grid gap-2 text-sm text-slate-100 md:grid-cols-3">
               <Metric label="BMI" value={profile.bmi ? profile.bmi.toFixed(1) : '未設定'} />
               <Metric
@@ -200,6 +223,8 @@ export default function ProfileDashboard() {
                 value={profile.caloricBudgetAdvice ?? '未計算（身長/体重/年齢を設定）'}
               />
               <Metric label="アレルギー" value={profile.allergies?.join(', ') || 'なし/未設定'} />
+              <Metric label="苦手な食品" value={profile.dislikedFoods?.join(', ') || 'なし/未設定'} />
+              <Metric label="食事スタイル" value={profile.dietStyle || '未設定'} />
               <Metric label="最終更新" value={new Date(profile.updatedAt).toLocaleString()} />
             </div>
           </section>
@@ -222,6 +247,8 @@ function renderField(
     targetWeightKg: '目標体重(kg)',
     activityLevel: '活動量',
     allergies: 'アレルギー（カンマ区切り）',
+    dislikedFoods: '苦手な食品（カンマ区切り）',
+    dietStyle: '食事スタイル（例: ベジタリアン/炭水化物控えめ）',
   };
 
   const value = profile[key];
@@ -274,6 +301,30 @@ function renderField(
       </FieldShell>
     );
   }
+  if (key === 'dislikedFoods') {
+    return (
+      <FieldShell key={key} label={labelMap[key]}>
+        <input
+          className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
+          placeholder="例: ピーマン, セロリ"
+          value={(value as string[] | undefined)?.join(', ') ?? ''}
+          onChange={(e) => onChange(key, e.target.value)}
+        />
+      </FieldShell>
+    );
+  }
+  if (key === 'dietStyle') {
+    return (
+      <FieldShell key={key} label={labelMap[key]}>
+        <input
+          className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
+          placeholder="例: ベジタリアン、炭水化物控えめ、低脂質"
+          value={(value as string | undefined) ?? ''}
+          onChange={(e) => onChange(key, e.target.value)}
+        />
+      </FieldShell>
+    );
+  }
 
   return (
     <FieldShell key={key} label={labelMap[key]}>
@@ -316,6 +367,8 @@ function buildSummary(profile: Profile | null): string {
   if (profile.targetWeightKg) parts.push(`目標${profile.targetWeightKg}kg`);
   if (profile.activityLevel) parts.push(activityLabels[profile.activityLevel]);
   if (profile.allergies?.length) parts.push(`アレルギー:${profile.allergies.join(',')}`);
+  if (profile.dislikedFoods?.length) parts.push(`苦手:${profile.dislikedFoods.join(',')}`);
+  if (profile.dietStyle) parts.push(`スタイル:${profile.dietStyle}`);
   return parts.join(' / ') || '未設定項目が多いため、追加で入力してください。';
 }
 
