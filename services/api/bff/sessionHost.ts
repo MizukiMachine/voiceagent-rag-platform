@@ -888,7 +888,7 @@ export class SessionHost {
 
     switch (command.kind) {
       case 'input_text':
-        this.handleInputText(context, command);
+        await this.handleInputText(context, command);
         break;
       case 'input_audio':
         this.handleInputAudio(context, command);
@@ -960,11 +960,19 @@ export class SessionHost {
     }
   }
 
-  private handleInputText(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_text' }>) {
+  private async handleInputText(
+    context: SessionContext,
+    command: Extract<SessionCommand, { kind: 'input_text' }>,
+  ) {
     const text = command.text ?? '';
-    if (this.shouldForceDeepReasoning(text)) {
+
+    const keywordHit = this.shouldForceDeepReasoning(text);
+    const llmHit = keywordHit ? true : await this.classifyDeepReasoningIntent(text);
+
+    if (llmHit) {
       this.logger.info('Deep reasoning trigger detected; executing responses API fallback', {
         sessionId: context.id,
+        keywordHit,
       });
       this.runDeepReasoningFallback(context, text).catch((error) => {
         this.logger.error('Deep reasoning fallback failed; forwarding to realtime as usual', {
@@ -1048,6 +1056,42 @@ export class SessionHost {
     context.manager.sendEvent({ type: 'response.create' });
 
     this.metrics.increment('bff.session.event_forwarded_total', 1, { kind: 'deep_reasoning_fallback' });
+  }
+
+  private async classifyDeepReasoningIntent(text: string): Promise<boolean> {
+    if (!text || text.trim().length === 0) return false;
+    try {
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const res = await openai.responses.create({
+        model: 'gpt-5-mini',
+        max_output_tokens: 50,
+        input: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'input_text',
+                text: `次のユーザー発話は「深く考えてほしい／じっくり理由を述べてほしい」という意図を含みますか？含むならYES、含まないならNOだけ返してください。発話: ${text}`,
+              },
+            ],
+          },
+        ],
+      });
+
+      const output: any[] = Array.isArray((res as any).output) ? (res as any).output : [];
+      const answer = output
+        .flatMap((item: any) => item?.content ?? [])
+        .filter((c: any) => c?.type === 'output_text')
+        .map((c: any) => c.text?.trim().toUpperCase?.() ?? '')
+        .join(' ');
+
+      return answer.includes('YES');
+    } catch (error) {
+      this.logger.warn('Deep reasoning intent classification failed; defaulting to no', {
+        error,
+      });
+      return false;
+    }
   }
 
   private handleInputAudio(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_audio' }>) {
