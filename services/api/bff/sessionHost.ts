@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import EventEmitter from 'node:events';
 
 import type { RealtimeAgent } from '@openai/agents/realtime';
+import OpenAI from 'openai';
 
 import { createStructuredLogger } from '../../../framework/logging/structuredLogger';
 import { createConsoleMetricEmitter } from '../../../framework/metrics/metricEmitter';
@@ -69,6 +70,7 @@ const HOTWORD_FUZZY_DISTANCE_THRESHOLD =
   Number(process.env.HOTWORD_FUZZY_DISTANCE_THRESHOLD ?? '2');
 const HOTWORD_MIN_CONFIDENCE = Number(process.env.HOTWORD_MIN_CONFIDENCE ?? '0.6');
 const HOTWORD_CUE_ENABLED = (process.env.HOTWORD_CUE_ENABLED ?? 'true') === 'true';
+const DEEP_REASONING_TRIGGERS = ['深く考えて', 'じっくり', '丁寧に考えて', '理由を詳しく', 'ステップを教えて'];
 
 function getCurrentTimeInTimeZone(timeZone: string): { currentTimeIso: string; timeZone: string } {
   const now = new Date();
@@ -959,7 +961,78 @@ export class SessionHost {
   }
 
   private handleInputText(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_text' }>) {
-    this.sendUserTextCommand(context, command.text, command.metadata);
+    const text = command.text ?? '';
+    if (this.shouldForceDeepReasoning(text)) {
+      this.logger.info('Deep reasoning trigger detected; executing responses API fallback', {
+        sessionId: context.id,
+      });
+      this.runDeepReasoningFallback(context, text).catch((error) => {
+        this.logger.error('Deep reasoning fallback failed; forwarding to realtime as usual', {
+          sessionId: context.id,
+          error,
+        });
+        this.sendUserTextCommand(context, text, command.metadata);
+      });
+      return;
+    }
+
+    this.sendUserTextCommand(context, text, command.metadata);
+  }
+
+  private shouldForceDeepReasoning(text: string): boolean {
+    const normalized = text ?? '';
+    return DEEP_REASONING_TRIGGERS.some((kw) => normalized.includes(kw));
+  }
+
+  private async runDeepReasoningFallback(context: SessionContext, question: string): Promise<void> {
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    const body = {
+      model: 'gpt-5.1',
+      reasoning: { effort: 'high' },
+      input: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'input_text' as const,
+              text: `日本語で丁寧かつ簡潔に回答してください。必ず結論→理由→具体アクションの順で3〜5文。質問: ${question}`,
+            },
+          ],
+        },
+      ],
+      max_output_tokens: 600,
+    };
+
+    const response = await openai.responses.create(body as any);
+    const outputItems: any[] = Array.isArray((response as any).output) ? (response as any).output : [];
+    const text = outputItems
+      .flatMap((item: any) => item?.content ?? [])
+      .filter((c: any) => c?.type === 'output_text')
+      .map((c: any) => c.text)
+      .join('\n');
+
+    const assistantText = text || '詳細回答を取得できませんでした。';
+
+    // Inject assistant message directly soユーザーには即時返答される
+    context.manager.sendEvent({
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'assistant',
+        content: [
+          {
+            type: 'output_text',
+            text: assistantText,
+          },
+        ],
+      },
+    });
+
+    // 可能なら音声合成をトリガーするために空のresponse.createを送る
+    context.manager.sendEvent({ type: 'response.create' });
+
+    this.metrics.increment('bff.session.event_forwarded_total', 1, { kind: 'deep_reasoning_fallback' });
   }
 
   private handleInputAudio(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_audio' }>) {
