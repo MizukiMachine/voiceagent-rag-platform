@@ -1014,11 +1014,7 @@ export class SessionHost {
 
     const response = await openai.responses.create(body as any);
     const outputItems: any[] = Array.isArray((response as any).output) ? (response as any).output : [];
-    const text = outputItems
-      .flatMap((item: any) => item?.content ?? [])
-      .filter((c: any) => c?.type === 'output_text')
-      .map((c: any) => c.text)
-      .join('\n');
+    const text = extractOutputText(outputItems);
 
     if (!text) {
       this.logger.warn('Deep reasoning response missing output_text; using fallback message', {
@@ -1057,7 +1053,7 @@ export class SessionHost {
           {
             type: 'input_text',
             text:
-              '【内部メモ・読み上げ禁止】以下は最終回答。これを一言一句変えずにそのまま音声で読み上げ、追加の説明や要約・言い換えは禁止。\n\n最終回答:\n' +
+              '【内部メモ・読み上げ禁止】以下は最終回答。これをそのまま日本語音声で読み上げる。\n\n最終回答:\n' +
               assistantText,
           },
         ],
@@ -1614,6 +1610,25 @@ export class SessionHost {
     }
     return apiKey;
   }
+}
+
+function extractOutputText(outputItems: any[]): string {
+  const collected = outputItems
+    .flatMap((item: any) => item?.content ?? [])
+    .filter((c: any) => c?.type === 'output_text')
+    .map((c: any) => c.text)
+    .filter(Boolean);
+
+  if (collected.length > 0) return collected.join('\n');
+
+  // Fallback: some models may emit { type: 'message', content: [{ type: 'text', text: ... }] }
+  const loose = outputItems
+    .flatMap((item: any) => item?.content ?? [])
+    .map((c: any) => c?.text)
+    .filter((t: any) => typeof t === 'string' && t.trim().length > 0);
+  if (loose.length > 0) return loose.join('\n');
+
+  return '';
 }
 
 const SESSION_HOST_SYMBOL = Symbol.for('mcpc.sessionHost.singleton');
