@@ -998,17 +998,9 @@ export class SessionHost {
     const body = {
       model: 'gpt-5.1',
       reasoning: { effort: 'high' },
-      input: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'input_text' as const,
-              text: `日本語で回答してください。結論→理由→具体アクションの順で4〜6文。理由/論拠は具体的なパーソナルデータ（活動量/食事ログ/goalType）や直近の食事内容を2〜3個必ず盛り込み、理由や論拠を少しボリューム多めに具体的に書いてください。質問: ${question}`,
-            },
-          ],
-        },
-      ],
+      input:
+        '日本語で回答してください。結論→理由→具体アクションの順で4〜6文。理由/論拠は活動量・食事ログ・goalTypeなどパーソナルデータや直近の食事内容を2〜3個必ず盛り込み、具体的に書いてください。質問: ' +
+        question,
       max_output_tokens: 600,
     };
 
