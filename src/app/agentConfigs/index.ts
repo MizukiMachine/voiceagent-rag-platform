@@ -4,6 +4,7 @@ import { bashoScenario, bashoCompanyName } from './basho';
 import { takubokuScenario, takubokuCompanyName } from './takuboku';
 import { patriciaScenario, patriciaCompanyName } from './patricia';
 import { markScenario, markCompanyName } from './mark';
+import { nutritionScenario, nutritionCompanyName } from './nutrition';
 import type { RealtimeAgent } from '@openai/agents/realtime';
 
 // Map of scenario key -> array of RealtimeAgent objects
@@ -14,6 +15,7 @@ export const allAgentSets: Record<string, RealtimeAgent[]> = {
   takuboku: takubokuScenario,
   patricia: patriciaScenario,
   mark: markScenario,
+  nutrition: nutritionScenario,
 };
 
 export type ScenarioMcpBinding = {
@@ -28,6 +30,7 @@ export const scenarioMcpBindings: Record<string, ScenarioMcpBinding> = {
   takuboku: { requiredMcpServers: [] },
   patricia: { requiredMcpServers: [] },
   mark: { requiredMcpServers: [] },
+  nutrition: { requiredMcpServers: [] },
 };
 
 export const defaultAgentSetKey = 'graffity';
@@ -56,5 +59,9 @@ export const agentSetMetadata: Record<string, { label: string; companyName: stri
   mark: {
     label: 'マーク (Meal Performance Advisor)',
     companyName: markCompanyName,
+  },
+  nutrition: {
+    label: 'ナディア (栄養管理)',
+    companyName: nutritionCompanyName,
   },
 };
