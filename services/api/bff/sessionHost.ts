@@ -998,6 +998,7 @@ export class SessionHost {
     const body = {
       model: 'gpt-5.1',
       reasoning: { effort: 'high' },
+      modalities: ['text'],
       input: [
         {
           role: 'user',
@@ -1012,9 +1013,16 @@ export class SessionHost {
       max_output_tokens: 600,
     };
 
-    const response = await openai.responses.create(body as any);
+    let response: any;
+    try {
+      response = await openai.responses.create(body as any);
+    } catch (error) {
+      this.logger.error('Deep reasoning responses.create failed', { error });
+      throw error;
+    }
+
     const outputItems: any[] = Array.isArray((response as any).output) ? (response as any).output : [];
-    const text = extractOutputText(outputItems);
+    const { text, refusal } = extractOutputText(outputItems);
 
     if (!text) {
       this.logger.warn('Deep reasoning response missing output_text; using fallback message', {
@@ -1023,6 +1031,8 @@ export class SessionHost {
           id: (response as any).id,
           model: (response as any).model,
           outputLen: outputItems.length,
+          refusal,
+          sample: JSON.stringify(outputItems?.[0]?.content ?? []).slice(0, 500),
         },
       });
     }
@@ -1612,23 +1622,33 @@ export class SessionHost {
   }
 }
 
-function extractOutputText(outputItems: any[]): string {
-  const collected = outputItems
-    .flatMap((item: any) => item?.content ?? [])
+function extractOutputText(outputItems: any[]): { text: string; refusal?: string } {
+  const contents = outputItems.flatMap((item: any) => item?.content ?? []);
+
+  const collected = contents
     .filter((c: any) => c?.type === 'output_text')
     .map((c: any) => c.text)
     .filter(Boolean);
 
-  if (collected.length > 0) return collected.join('\n');
+  if (collected.length > 0) {
+    return { text: collected.join('\n') };
+  }
 
-  // Fallback: some models may emit { type: 'message', content: [{ type: 'text', text: ... }] }
-  const loose = outputItems
-    .flatMap((item: any) => item?.content ?? [])
+  // refusalパスを拾う
+  const refusal = contents.find((c: any) => c?.type === 'refusal')?.refusal;
+  if (refusal) {
+    return { text: '', refusal };
+  }
+
+  // Fallback: message.content.text 形式
+  const loose = contents
     .map((c: any) => c?.text)
     .filter((t: any) => typeof t === 'string' && t.trim().length > 0);
-  if (loose.length > 0) return loose.join('\n');
+  if (loose.length > 0) {
+    return { text: loose.join('\n') };
+  }
 
-  return '';
+  return { text: '', refusal };
 }
 
 const SESSION_HOST_SYMBOL = Symbol.for('mcpc.sessionHost.singleton');
