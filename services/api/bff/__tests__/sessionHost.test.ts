@@ -162,6 +162,8 @@ describe('SessionHost', () => {
   let managers: FakeSessionManager[];
   let envSnapshot: RealtimeEnvironmentSnapshot;
   let hotwordCueService: StubHotwordCueService;
+  let responsesClient: { create: ReturnType<typeof vi.fn> };
+  let intentClassifier: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -172,6 +174,8 @@ describe('SessionHost', () => {
       audio: { enabled: true },
     };
     hotwordCueService = new StubHotwordCueService();
+    responsesClient = { create: vi.fn() };
+    intentClassifier = vi.fn(async () => false);
     host = new SessionHost({
       scenarioMap,
       sessionManagerFactory: (hooks) => {
@@ -182,6 +186,8 @@ describe('SessionHost', () => {
       now: () => Date.now(),
       envInspector: () => envSnapshot,
       hotwordCueService,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
     });
   });
 
@@ -216,6 +222,55 @@ describe('SessionHost', () => {
     await host.handleCommand(sessionId, { kind: 'input_text', text: 'with metadata', metadata });
     const responseEvent = managers[0]!.sentEvents.find((event) => event?.type === 'response.create');
     expect(responseEvent).toEqual({ type: 'response.create' });
+  });
+
+  it('relays deep reasoning output when Responses API returns text', async () => {
+    intentClassifier.mockResolvedValueOnce(true);
+    responsesClient.create.mockResolvedValueOnce({
+      id: 'resp_success',
+      model: 'gpt-5.1',
+      output: [
+        {
+          content: [
+            {
+              type: 'output_text',
+              text: '深考の最終回答です。',
+            },
+          ],
+        },
+      ],
+    });
+
+    const { sessionId } = await host.createSession({ agentSetKey: 'demo' });
+    await host.handleCommand(sessionId, { kind: 'input_text', text: '深く考えて教えて' });
+
+    const manager = managers[0]!;
+    expect(responsesClient.create).toHaveBeenCalled();
+    const systemMessage = manager.sentEvents.find((ev) => ev?.item?.role === 'system');
+    expect(systemMessage?.item?.content?.[0]?.text).toContain('最終回答');
+    const responseEventCount = manager.sentEvents.filter((ev) => ev?.type === 'response.create').length;
+    expect(responseEventCount).toBeGreaterThan(0);
+  });
+
+  it('falls back to realtime when deep reasoning output is empty', async () => {
+    intentClassifier.mockResolvedValueOnce(true);
+    responsesClient.create.mockResolvedValueOnce({
+      id: 'resp_empty',
+      model: 'gpt-5.1',
+      output: [
+        {
+          content: [],
+        },
+      ],
+    });
+
+    const { sessionId } = await host.createSession({ agentSetKey: 'demo' });
+    await host.handleCommand(sessionId, { kind: 'input_text', text: 'じっくり理由を教えて' });
+
+    const manager = managers[0]!;
+    const systemMessage = manager.sentEvents.find((ev) => ev?.item?.role === 'system');
+    expect(systemMessage?.item?.content?.[0]?.text).toContain('深考パイプラインで回答が得られなかった');
+    expect(responsesClient.create).toHaveBeenCalled();
   });
 
   it('allows disabling text output when requested by the client', async () => {
@@ -359,6 +414,8 @@ describe('SessionHost', () => {
       envInspector: () => envSnapshot,
       hotwordCueService,
       hotwordCueEnabled: false,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
     });
 
     const { sessionId } = await host.createSession({ agentSetKey: 'demo' });
@@ -446,6 +503,8 @@ describe('SessionHost', () => {
       now: () => Date.now(),
       envInspector: () => envSnapshot,
       memoryStore,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
     });
 
     await host.createSession({ agentSetKey: 'demo', memoryEnabled: true });
@@ -579,6 +638,8 @@ describe('SessionHost', () => {
         return mgr;
       },
       envInspector: () => envSnapshot,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
     });
 
     const result = await host.createSession({
@@ -648,6 +709,8 @@ describe('SessionHost', () => {
       },
       logger,
       envInspector: () => ({ warnings: [], audio: { enabled: true } }),
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
     });
 
     const { sessionId } = await host.createSession({ agentSetKey: 'demo' });
@@ -745,6 +808,8 @@ describe('SessionHost', () => {
       now: () => Date.now(),
       envInspector: () => envSnapshot,
       hotwordCueService,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
     });
     const { sessionId } = await host.createSession({ agentSetKey: 'demo' });
     const context: any = (host as any).sessions.get(sessionId);

@@ -3,7 +3,6 @@ import EventEmitter from 'node:events';
 
 import type { RealtimeAgent } from '@openai/agents/realtime';
 import OpenAI from 'openai';
-
 import { createStructuredLogger } from '../../../framework/logging/structuredLogger';
 import { createConsoleMetricEmitter } from '../../../framework/metrics/metricEmitter';
 import type { MetricEmitter } from '../../../framework/metrics/metricEmitter';
@@ -36,6 +35,7 @@ import { LlmScenarioNameClassifier } from '../../../framework/voice_gateway/LlmS
 import { ScenarioRouter, type ScenarioCommandForwarder } from '../../scenario/ScenarioRouter';
 import { ScenarioRegistry } from '../../scenario/ScenarioRegistry';
 import { ServerHotwordCueService, type HotwordCueService } from './hotwordCueService';
+import { classifyDeepReasoningIntent, runDeepReasoning, type ResponsesClient } from './sessionHost/deepReasoning';
 import {
   buildReplayEvents,
   getPersistentMemoryStore,
@@ -283,6 +283,9 @@ interface SessionHostDeps {
   hotwordReminderEnabled?: boolean;
   hotwordReminderDisconnectDelayMs?: number;
   hotwordCueEnabled?: boolean;
+  responsesClientFactory?: () => ResponsesClient;
+  intentClassifier?: (text: string) => Promise<boolean>;
+  deepReasoningLogSampleLimit?: number;
 }
 
 export class SessionHost {
@@ -303,6 +306,9 @@ export class SessionHost {
   private readonly hotwordReminderEnabled: boolean;
   private readonly hotwordReminderDisconnectDelayMs: number;
   private readonly hotwordCueEnabled: boolean;
+  private readonly responsesClientFactory: () => ResponsesClient;
+  private readonly intentClassifier: (text: string) => Promise<boolean>;
+  private readonly deepReasoningLogSampleLimit: number;
 
   constructor(deps: SessionHostDeps = {}) {
     this.logger = deps.logger ?? createStructuredLogger({ component: 'bff.session' });
@@ -326,6 +332,19 @@ export class SessionHost {
     this.hotwordReminderDisconnectDelayMs =
       deps.hotwordReminderDisconnectDelayMs ?? HOTWORD_REMINDER_DISCONNECT_DELAY_MS;
     this.hotwordCueEnabled = deps.hotwordCueEnabled ?? HOTWORD_CUE_ENABLED;
+    this.deepReasoningLogSampleLimit = deps.deepReasoningLogSampleLimit ?? 800;
+
+    this.responsesClientFactory =
+      deps.responsesClientFactory ??
+      (() => {
+        const apiKey = this.getResponsesApiKey();
+        const client = new OpenAI({ apiKey });
+        return client.responses;
+      });
+
+    this.intentClassifier =
+      deps.intentClassifier ??
+      ((text: string) => classifyDeepReasoningIntent(text, this.responsesClientFactory(), this.logger));
 
     const mcpConfigs = loadMcpServersFromEnv();
     const hasBindings = Object.values(this.scenarioMcpBindings).some(
@@ -960,6 +979,27 @@ export class SessionHost {
     }
   }
 
+  private enqueueTextMessage(
+    context: SessionContext,
+    role: 'user' | 'system' | 'assistant',
+    text: string,
+  ) {
+    if (!text || text.trim().length === 0) return;
+    context.manager.sendEvent({
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role,
+        content: [
+          {
+            type: 'input_text',
+            text,
+          },
+        ],
+      },
+    });
+  }
+
   private async handleInputText(
     context: SessionContext,
     command: Extract<SessionCommand, { kind: 'input_text' }>,
@@ -967,15 +1007,15 @@ export class SessionHost {
     const text = command.text ?? '';
 
     const keywordHit = this.shouldForceDeepReasoning(text);
-    const llmHit = keywordHit ? true : await this.classifyDeepReasoningIntent(text);
+    const llmHit = keywordHit ? true : await this.intentClassifier(text);
 
     if (llmHit) {
-      this.logger.info('Deep reasoning trigger detected; executing responses API fallback', {
+      this.logger.info('Deep reasoning trigger detected; executing responses API pipeline', {
         sessionId: context.id,
         keywordHit,
       });
-      this.runDeepReasoningFallback(context, text).catch((error) => {
-        this.logger.error('Deep reasoning fallback failed; forwarding to realtime as usual', {
+      this.executeDeepReasoningPipeline(context, text).catch((error) => {
+        this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as usual', {
           sessionId: context.id,
           error,
         });
@@ -992,115 +1032,54 @@ export class SessionHost {
     return DEEP_REASONING_TRIGGERS.some((kw) => normalized.includes(kw));
   }
 
-  private async runDeepReasoningFallback(context: SessionContext, question: string): Promise<void> {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  private async executeDeepReasoningPipeline(context: SessionContext, question: string): Promise<void> {
+    const client = this.responsesClientFactory();
+    const result = await runDeepReasoning({
+      question,
+      client,
+      logger: this.logger,
+      logSampleLimit: this.deepReasoningLogSampleLimit,
+    });
 
-    const body = {
-      model: 'gpt-5.1',
-      reasoning: { effort: 'high' },
-      input:
-        '日本語で回答してください。結論→理由→具体アクションの順で4〜6文。理由/論拠は活動量・食事ログ・goalTypeなどパーソナルデータや直近の食事内容を2〜3個必ず盛り込み、具体的に書いてください。質問: ' +
-        question,
-      max_output_tokens: 600,
-    };
-
-    let response: any;
-    try {
-      response = await openai.responses.create(body as any);
-    } catch (error) {
-      this.logger.error('Deep reasoning responses.create failed', { error });
-      throw error;
-    }
-
-    const outputItems: any[] = Array.isArray((response as any).output) ? (response as any).output : [];
-    const { text, refusal } = extractOutputText(outputItems);
-
-    if (!text) {
-      this.logger.warn('Deep reasoning response missing output_text; using fallback message', {
+    if (result.outcome === 'success' && result.text) {
+      this.logger.info('Deep reasoning succeeded; relaying answer to realtime', {
         sessionId: context.id,
-        responseSummary: {
-          id: (response as any).id,
-          model: (response as any).model,
-          outputLen: outputItems.length,
-          refusal,
-          outputs: JSON.stringify(response?.output ?? []).slice(0, 2000),
-          usage: (response as any).usage,
-        },
+        responseSummary: result.responseSummary,
       });
+      this.sendDeepReasoningAnswerToRealtime(context, question, result.text);
+      this.metrics.increment('bff.session.event_forwarded_total', 1, { kind: 'deep_reasoning_success' });
+      return;
     }
 
-    const assistantText = text || '詳細回答を取得できませんでした。';
-
-    // Realtimeに再生成させ、音声で返すためにユーザー発話と補助システム指示として注入する
-    context.manager.sendEvent({
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'user',
-        content: [
-          {
-            type: 'input_text',
-            text: question,
-          },
-        ],
-      },
+    this.logger.warn('Deep reasoning empty or refusal; falling back to realtime generation', {
+      sessionId: context.id,
+      responseSummary: result.responseSummary,
     });
-
-    context.manager.sendEvent({
-      type: 'conversation.item.create',
-      item: {
-        type: 'message',
-        role: 'system',
-        content: [
-          {
-            type: 'input_text',
-            text:
-              '【内部メモ・読み上げ禁止】以下は最終回答。これをそのまま日本語音声で読み上げる。\n\n最終回答:\n' +
-              assistantText,
-          },
-        ],
-      },
-    });
-
-    context.manager.sendEvent({ type: 'response.create' });
-
+    this.sendRealtimeFallback(context, question);
     this.metrics.increment('bff.session.event_forwarded_total', 1, { kind: 'deep_reasoning_fallback' });
   }
 
-  private async classifyDeepReasoningIntent(text: string): Promise<boolean> {
-    if (!text || text.trim().length === 0) return false;
-    try {
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      const res = await openai.responses.create({
-        model: 'gpt-5-mini',
-        max_output_tokens: 50,
-        input: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'input_text',
-                text: `次のユーザー発話は「深く考えてほしい／じっくり理由を述べてほしい」という意図を含みますか？含むならYES、含まないならNOだけ返してください。発話: ${text}`,
-              },
-            ],
-          },
-        ],
-      });
+  private sendDeepReasoningAnswerToRealtime(context: SessionContext, question: string, assistantText: string) {
+    context.hasUserContent = true;
+    this.enqueueTextMessage(context, 'user', question);
+    this.enqueueTextMessage(
+      context,
+      'system',
+      '【内部メモ・読み上げ禁止】以下は最終回答。これをそのまま日本語音声で読み上げる。\n\n最終回答:\n' +
+        assistantText,
+    );
+    context.manager.sendEvent({ type: 'response.create' });
+  }
 
-      const output: any[] = Array.isArray((res as any).output) ? (res as any).output : [];
-      const answer = output
-        .flatMap((item: any) => item?.content ?? [])
-        .filter((c: any) => c?.type === 'output_text')
-        .map((c: any) => c.text?.trim().toUpperCase?.() ?? '')
-        .join(' ');
-
-      return answer.includes('YES');
-    } catch (error) {
-      this.logger.warn('Deep reasoning intent classification failed; defaulting to no', {
-        error,
-      });
-      return false;
-    }
+  private sendRealtimeFallback(context: SessionContext, question: string) {
+    context.hasUserContent = true;
+    this.enqueueTextMessage(
+      context,
+      'system',
+      '【内部メモ・読み上げ禁止】深考パイプラインで回答が得られなかったため、リアルタイムで丁寧な回答を生成してください。ユーザーには通常どおり回答してください。',
+    );
+    this.enqueueTextMessage(context, 'user', question);
+    context.manager.sendEvent({ type: 'response.create' });
   }
 
   private handleInputAudio(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_audio' }>) {
@@ -1612,35 +1591,18 @@ export class SessionHost {
     }
     return apiKey;
   }
-}
 
-function extractOutputText(outputItems: any[]): { text: string; refusal?: string } {
-  const contents = outputItems.flatMap((item: any) => item?.content ?? []);
-
-  const collected = contents
-    .filter((c: any) => c?.type === 'output_text')
-    .map((c: any) => c.text)
-    .filter(Boolean);
-
-  if (collected.length > 0) {
-    return { text: collected.join('\n') };
+  private getResponsesApiKey(): string {
+    const apiKey =
+      process.env.OPENAI_API_KEY ??
+      process.env.OPENAI_API_KEY_RESPONSES ??
+      process.env.OPENAI_API_KEY_VOICE ??
+      process.env.OPENAI_REALTIME_API_KEY;
+    if (!apiKey) {
+      throw new SessionHostError('Responses API key is not configured', 'missing_api_key', 500);
+    }
+    return apiKey;
   }
-
-  // refusalパスを拾う
-  const refusal = contents.find((c: any) => c?.type === 'refusal')?.refusal;
-  if (refusal) {
-    return { text: '', refusal };
-  }
-
-  // Fallback: message.content.text 形式
-  const loose = contents
-    .map((c: any) => c?.text)
-    .filter((t: any) => typeof t === 'string' && t.trim().length > 0);
-  if (loose.length > 0) {
-    return { text: loose.join('\n') };
-  }
-
-  return { text: '', refusal };
 }
 
 const SESSION_HOST_SYMBOL = Symbol.for('mcpc.sessionHost.singleton');
