@@ -200,6 +200,12 @@ export default function ProfileDashboard() {
                 {latestMeal.description} ({new Date(latestMeal.recordedAt).toLocaleString()})
               </p>
             )}
+            {profile.todayBreakfast && (
+              <p className="text-sm text-emerald-100">今日の朝ごはん: {profile.todayBreakfast}</p>
+            )}
+            {profile.todayLunch && (
+              <p className="text-sm text-emerald-100">今日の昼ごはん: {profile.todayLunch}</p>
+            )}
             <div className="grid gap-2 text-sm text-slate-100 md:grid-cols-3">
               <Metric label="BMI" value={profile.bmi ? profile.bmi.toFixed(1) : '未設定'} />
               <Metric
