@@ -1014,22 +1014,37 @@ export class SessionHost {
 
     const assistantText = text || '詳細回答を取得できませんでした。';
 
-    // Inject assistant message directly soユーザーには即時返答される
+    // Realtimeに再生成させ、音声で返すためにユーザー発話と補助システム指示として注入する
     context.manager.sendEvent({
       type: 'conversation.item.create',
       item: {
         type: 'message',
-        role: 'assistant',
+        role: 'user',
         content: [
           {
-            type: 'output_text',
-            text: assistantText,
+            type: 'input_text',
+            text: question,
           },
         ],
       },
     });
 
-    // 可能なら音声合成をトリガーするために空のresponse.createを送る
+    context.manager.sendEvent({
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'system',
+        content: [
+          {
+            type: 'input_text',
+            text:
+              '深く考えた推論結果が以下にある。内容を崩さず日本語で2〜4文に要約し、音声で返答しなさい。結論→理由→具体アクションの順で簡潔に。\n\n推論結果:\n' +
+              assistantText,
+          },
+        ],
+      },
+    });
+
     context.manager.sendEvent({ type: 'response.create' });
 
     this.metrics.increment('bff.session.event_forwarded_total', 1, { kind: 'deep_reasoning_fallback' });
