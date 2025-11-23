@@ -3,11 +3,19 @@ import { RealtimeAgent, tool } from '@openai/agents/realtime';
 import { japaneseLanguagePreamble, commonInteractionRules, voiceResponsePreamble, buildSelfIntroductionRule } from './languagePolicy';
 import { switchAgentTool, switchScenarioTool } from './voiceControlTools';
 
-const PROFILE_API_BASE = process.env.NEXT_PUBLIC_PROFILE_API_BASE ?? '';
+function resolveProfileApiBase(): string {
+  if (typeof window === 'undefined') {
+    // サーバー側（BFF）で実行されるツール呼び出し
+    return process.env.INTERNAL_PROFILE_API_BASE ?? 'http://localhost:3000';
+  }
+  // ブラウザ側（将来クライアントツールで使う場合）
+  return process.env.NEXT_PUBLIC_PROFILE_API_BASE ?? '';
+}
 
 function buildApiUrl(path: string): string {
-  if (!PROFILE_API_BASE) return path;
-  return new URL(path, PROFILE_API_BASE).toString();
+  const base = resolveProfileApiBase();
+  if (!base) return path;
+  return new URL(path, base).toString();
 }
 
 const nutritionInstructions = `
