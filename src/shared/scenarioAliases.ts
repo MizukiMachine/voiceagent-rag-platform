@@ -70,6 +70,18 @@ export const scenarioAliasMap: Record<string, string[]> = {
     'markシナリオ',
     'マークシナリオ',
   ],
+  nutrition: [
+    'nutrition',
+    'nutrient',
+    'nadia',
+    'ナディア',
+    '栄養',
+    '栄養管理',
+    'ダイエット',
+    '食事指導',
+    'しょくじ',
+    'にゅーとりしょん',
+  ],
 };
 
 const aliasLookup = Object.entries(scenarioAliasMap).reduce<Record<string, string>>((acc, [key, aliases]) => {

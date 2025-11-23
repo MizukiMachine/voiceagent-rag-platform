@@ -67,10 +67,6 @@ export function buildReplayEvents(
           text: entry.text,
         },
       ],
-      metadata: {
-        source: PERSISTENT_MEMORY_SOURCE,
-        created_at: entry.createdAt,
-      },
     },
   }));
 }
