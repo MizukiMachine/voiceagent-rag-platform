@@ -33,7 +33,7 @@ ${commonInteractionRules}
 # 回答フロー（厳守）
 1. get_user_profile ツールで必ず最新プロフィールを取得する（毎ターン）。
 2. 食事・目標・アレルギー・苦手食品・食事スタイル・当日の朝/昼の食事・直近の食事記録を踏まえ、短い助言を行う。夜ごはんの提案では朝昼の内容を踏まえて不足/過剰を補う。
-3. 返答は必ず2文以上。「結論1文」＋「理由2〜3文」を基本とし、理由の中で年齢/性別/身長/体重/目標体重/活動量/アレルギー/苦手食品/食事スタイル/朝食/昼食/直近食事記録(1件)のうち、2つ以上の論拠を添えて「あなたは◯◯なので今日は◯◯が良い」の形で語る。理由を省略して単文にしない。
+3. 返答は必ず2文以上。「結論1文」＋「理由2〜3文」を基本とし、理由の中で 活動量/アレルギー/苦手食品/食事スタイル/朝食/昼食/直近食事記録のうち、2つ以上の論拠を添えて「あなたは◯◯なので今日は◯◯が良い」の形で語る。理由を省略して単文にしない。
 
 # 目標タイプの扱い
 - プロフィールのgoalType（loss=減量 / maintain=維持 / gain=増量）を最優先で用い、未設定時のみ目標体重と現在体重の差から推定する。
@@ -42,7 +42,8 @@ ${commonInteractionRules}
 
 # 深く考えるモード
 - ユーザー発話に「深く考えて」「もっと丁寧に」「理由を詳しく」「ステップを教えて」などが含まれるとき、該当ターンのみ深く考えるモードに切り替える。
-- 深く考えるモードでは commonInteractionRules の文字数/文数制約を解除し、4〜6文で回答する。結論1文→理由3文以上（プロフィール項目や直近食事を3要素以上引用）→具体アクション1文→締め1文の順に構成する。
+- 深く考えるモードでは必ず deep_reasoning ツールを呼び、gpt-5.1 + reasoning.effort=high で回答案を生成してから返す。ツール入力には最新の質問を question に、プロフィール要約/朝昼の食事などを context に渡す。
+- 深く考えるモードでは commonInteractionRules の文字数/文数制約を解除し、4〜6文で回答する。結論1文→理由3文以上（活動量/アレルギー/苦手食品/食事スタイル/朝食/昼食/直近食事記録のうちを3要素以上引用）→具体アクション1文→締め1文の順に構成する。
 - トリガー語が無いときは通常モード（2〜4文、共通ルール厳守）に戻す。
 
 # 補助ルール
@@ -135,11 +136,73 @@ const logMealTool = tool({
   },
 });
 
+const deepReasoningTool = tool({
+  name: 'deep_reasoning',
+  description:
+    'ユーザーが「深く考えて」「じっくり」などと求めた際に、Responses APIで gpt-5.1 + reasoning.effort=high を使って丁寧な回答案を生成する。',
+  parameters: {
+    type: 'object',
+    properties: {
+      question: { type: 'string', description: 'ユーザーからの最新の質問や依頼（日本語）' },
+      context: {
+        type: 'string',
+        description: '補足となるプロフィールや直近の食事内容など（省略可）',
+      },
+    },
+    required: ['question'],
+    additionalProperties: false,
+  },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  execute: async (input: any) => {
+    const question = typeof input?.question === 'string' ? input.question : '';
+    const context = typeof input?.context === 'string' ? input.context : '';
+
+    const prompt = [question, context].filter(Boolean).join('\n\n補足情報: ');
+
+    const body = {
+      model: 'gpt-5.1',
+      reasoning: { effort: 'high' },
+      input: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'input_text',
+              text: `日本語で丁寧かつ簡潔に回答してください。必ず結論→理由→具体アクションの順で3〜5文。質問: ${prompt}`,
+            },
+          ],
+        },
+      ],
+      max_output_tokens: 600,
+    };
+
+    const res = await fetch('/api/responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      throw new Error(`deep_reasoning failed: ${res.status}`);
+    }
+
+    const json = await res.json();
+    const outputItems: any[] = Array.isArray(json.output) ? json.output : [];
+    const text = outputItems
+      .flatMap((item) => item?.content ?? [])
+      .filter((c: any) => c?.type === 'output_text')
+      .map((c: any) => c.text)
+      .join('\n');
+
+    return { text: text || '詳細回答を取得できませんでした。' };
+  },
+});
+
 export const nutritionAgent = new RealtimeAgent({
   name: 'Nadia',
   voice: 'alloy',
   instructions: nutritionInstructions,
-  tools: [switchScenarioTool, switchAgentTool, getProfileTool, updateProfileTool, logMealTool],
+  tools: [switchScenarioTool, switchAgentTool, getProfileTool, updateProfileTool, logMealTool, deepReasoningTool],
   handoffs: [],
 });
 
