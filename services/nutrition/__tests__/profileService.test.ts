@@ -56,4 +56,29 @@ describe('profileService', () => {
     expect(updated.weightDeltaKg).toBeCloseTo(5);
     expect(updated.caloricBudgetAdvice).toContain('減量目安');
   });
+
+  it('prefers explicit goalType=maintain over weight delta when building advice', async () => {
+    await getUserProfile(userId);
+    const updated = await updateUserProfile({
+      userId,
+      targetWeightKg: 50, // 乖離があっても維持を優先
+      goalType: 'maintain',
+    });
+
+    expect(updated.caloricBudgetAdvice).toContain('維持目安');
+    expect(updated.caloricBudgetAdvice).toContain(String(updated.estimatedTdeeKcal));
+  });
+
+  it('supports gain mode and applies positive caloric buffer', async () => {
+    await getUserProfile(userId);
+    const updated = await updateUserProfile({
+      userId,
+      weightKg: 58,
+      goalType: 'gain',
+    });
+
+    const expected = (updated.estimatedTdeeKcal ?? 0) + 300;
+    expect(updated.caloricBudgetAdvice).toContain('増量目安');
+    expect(updated.caloricBudgetAdvice).toContain(String(expected));
+  });
 });

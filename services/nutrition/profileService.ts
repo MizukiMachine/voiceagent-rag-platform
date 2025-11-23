@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { getUserProfileStore } from './profileStore';
-import type { ActivityLevel, MealLog, ProfileWithDerived, UserProfile } from './types';
+import type { ActivityLevel, GoalType, MealLog, ProfileWithDerived, UserProfile } from './types';
 
 const DEFAULT_USER_ID = process.env.DEMO_USER_ID ?? 'demo-user';
 
@@ -11,6 +11,7 @@ const DEFAULT_PROFILE: Omit<UserProfile, 'userId' | 'updatedAt'> = {
   heightCm: 164,
   weightKg: 60,
   targetWeightKg: 56,
+  goalType: 'loss',
   activityLevel: 'moderate',
   allergies: ['peanut'],
 };
@@ -49,6 +50,7 @@ export interface UpdateProfileInput {
   heightCm?: number | null;
   weightKg?: number | null;
   targetWeightKg?: number | null;
+  goalType?: GoalType | null;
   activityLevel?: ActivityLevel | null;
   allergies?: string[] | null;
   dislikedFoods?: string[] | null;
@@ -71,6 +73,7 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
     heightCm: pickNumber(input.heightCm, current.heightCm),
     weightKg: pickNumber(input.weightKg, current.weightKg),
     targetWeightKg: pickNumber(input.targetWeightKg, current.targetWeightKg),
+    goalType: (input.goalType as GoalType | undefined) ?? current.goalType,
     activityLevel: (input.activityLevel as ActivityLevel | undefined) ?? current.activityLevel,
     allergies: Array.isArray(input.allergies)
       ? [...input.allergies]
@@ -150,18 +153,32 @@ function estimateTdee(profile: UserProfile): number | undefined {
 }
 
 function buildCaloricAdvice(profile: UserProfile, tdee?: number): string | undefined {
-  if (!tdee || typeof profile.weightKg !== 'number' || typeof profile.targetWeightKg !== 'number') {
+  if (!tdee) {
     return undefined;
   }
-  const delta = profile.targetWeightKg - profile.weightKg;
-  if (Math.abs(delta) < 0.1) {
-    return `維持目安: 約${tdee} kcal/日`;
+  const goal = resolveGoalType(profile);
+  if (!goal) return undefined;
+
+  if (goal === 'maintain') {
+    return `維持目安: 約${tdee} kcal/日 (推定TDEE ${tdee} kcal基準)`;
   }
-  const direction = delta < 0 ? '減量' : '増量';
-  const buffer = delta < 0 ? -400 : 300;
+
+  const isLoss = goal === 'loss';
+  const buffer = isLoss ? -400 : 300;
+  const direction = isLoss ? '減量' : '増量';
   return `${direction}目安: 約${tdee + buffer} kcal/日 (推定TDEE ${tdee} kcal基準)`;
 }
 
 function pickNumber(candidate: number | null | undefined, fallback: number | undefined): number | undefined {
   return typeof candidate === 'number' && Number.isFinite(candidate) ? candidate : fallback;
+}
+
+function resolveGoalType(profile: UserProfile): GoalType | undefined {
+  if (profile.goalType) return profile.goalType;
+  if (typeof profile.weightKg !== 'number' || typeof profile.targetWeightKg !== 'number') {
+    return undefined;
+  }
+  const delta = profile.targetWeightKg - profile.weightKg;
+  if (Math.abs(delta) < 0.1) return 'maintain';
+  return delta < 0 ? 'loss' : 'gain';
 }
