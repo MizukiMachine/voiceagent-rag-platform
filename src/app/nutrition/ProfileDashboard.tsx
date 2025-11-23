@@ -392,7 +392,20 @@ function buildSummary(profile: Profile | null): string {
 }
 
 function sanitizeForPatch(profile: Profile) {
-  const { userId, age, sex, heightCm, weightKg, targetWeightKg, activityLevel, allergies } = profile;
+  const {
+    userId,
+    age,
+    sex,
+    heightCm,
+    weightKg,
+    targetWeightKg,
+    activityLevel,
+    allergies,
+    dislikedFoods,
+    dietStyle,
+    todayBreakfast,
+    todayLunch,
+  } = profile;
   return {
     userId,
     age: numberOrUndefined(age),
@@ -402,9 +415,17 @@ function sanitizeForPatch(profile: Profile) {
     targetWeightKg: numberOrUndefined(targetWeightKg),
     activityLevel,
     allergies,
+    dislikedFoods,
+    dietStyle: stringOrUndefined(dietStyle),
+    todayBreakfast: stringOrUndefined(todayBreakfast),
+    todayLunch: stringOrUndefined(todayLunch),
   };
 }
 
 function numberOrUndefined(val: number | undefined) {
   return typeof val === 'number' && Number.isFinite(val) ? val : undefined;
+}
+
+function stringOrUndefined(val: string | undefined) {
+  return typeof val === 'string' && val.trim() ? val.trim() : undefined;
 }
