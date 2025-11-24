@@ -93,8 +93,13 @@ export async function classifyDeepReasoningIntent(
 }
 
 export function buildDeepReasoningRequest(question: string, maxOutputTokens?: number, profileContext?: string) {
-  const systemPrompt =
-    '日本語で回答してください。結論→理由→具体アクションの順で4〜6文。理由/論拠は活動量・食事ログ・goalTypeなどパーソナルデータや直近の食事内容を2〜3個必ず盛り込み、具体的に書いてください。';
+  const systemPrompt = [
+    '日本語で回答してください。全体で3〜4文、200〜260文字目安で端的に。',
+    '構成: 1文目=結論(料理スタイル＋主食/主菜/副菜を具体食材付きで列挙) / 2〜3文目=理由(プロフィールデータ由来の論拠を2つ以上) / 最終文=具体アクション(量の目安と調理/組み合わせ案、サプリで補うなら一言)。',
+    '料理は「料理名＋食材」を2〜3品挙げる（例: 雑穀ご飯, 鮭の照り焼き150g, 小松菜と油揚げの味噌汁）。',
+    '栄養が不足しがちな場合はオメガ3/ビタミンD/鉄＋ビタミンCなどサプリ提案を1つだけ添える。重複提案や総花的羅列はしない。',
+    '同じ型に陥らないよう、和/洋/ワンボウル/スープ多め等のスタイルを日替わりで示し、トーンは「肩の力を抜いた頼れる栄養士」。',
+  ].join('\n');
 
   const enrichedQuestion = profileContext
     ? `${question}\n\nプロフィール情報（最新）:\n${profileContext}`
