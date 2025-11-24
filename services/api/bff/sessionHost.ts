@@ -67,7 +67,7 @@ const HOTWORD_REMINDER_DISCONNECT_DELAY_MS =
   Number(process.env.HOTWORD_REMINDER_DISCONNECT_DELAY_MS ?? '') || 2000;
 const HOTWORD_REMINDER_TEXT =
   process.env.HOTWORD_REMINDER_TEXT ?? 'ホットワード「Hey + シナリオ名」で話しかけてください。';
-const HOTWORD_REMINDER_ENABLED = (process.env.HOTWORD_REMINDER_ENABLED ?? 'false') === 'true';
+const HOTWORD_REMINDER_ENABLED = false;
 const HOTWORD_REQUIRE_PREFIX = (process.env.HOTWORD_REQUIRE_PREFIX ?? 'false') === 'true';
 const HOTWORD_LLM_ENABLED = (process.env.HOTWORD_LLM_ENABLED ?? 'true') === 'true';
 const HOTWORD_LLM_MODEL = process.env.HOTWORD_LLM_MODEL ?? 'gpt-5-mini';
@@ -76,7 +76,16 @@ const HOTWORD_FUZZY_DISTANCE_THRESHOLD =
   Number(process.env.HOTWORD_FUZZY_DISTANCE_THRESHOLD ?? '2');
 const HOTWORD_MIN_CONFIDENCE = Number(process.env.HOTWORD_MIN_CONFIDENCE ?? '0.6');
 const HOTWORD_CUE_ENABLED = (process.env.HOTWORD_CUE_ENABLED ?? 'true') === 'true';
+const DEFAULT_HOTWORD_CONTINUATION_WINDOW_MS = 3000;
 const DEEP_REASONING_TRIGGERS = ['深く考えて', 'じっくり', '丁寧に考えて', '理由を詳しく', 'ステップを教えて'];
+
+function resolveHotwordContinuationWindowMs(): number {
+  const configured = Number(process.env.HOTWORD_CONTINUATION_WINDOW_MS ?? '');
+  if (Number.isFinite(configured) && configured > 0) {
+    return configured;
+  }
+  return DEFAULT_HOTWORD_CONTINUATION_WINDOW_MS;
+}
 
 function getCurrentTimeInTimeZone(timeZone: string): { currentTimeIso: string; timeZone: string } {
   const now = new Date();
@@ -674,6 +683,7 @@ export class SessionHost {
       voiceControl: voiceControlHandlers,
       forwarder: this.buildScenarioCommandForwarder(context),
       logger: this.logger,
+      mergeWindowMs: resolveHotwordContinuationWindowMs(),
     });
     const llmClassifier = HOTWORD_LLM_ENABLED
       ? new LlmScenarioNameClassifier({
@@ -1031,6 +1041,9 @@ export class SessionHost {
     command: Extract<SessionCommand, { kind: 'input_text' }>,
   ) {
     const text = command.text ?? '';
+    if (context.scenarioRouter?.appendContinuation(text)) {
+      return;
+    }
 
     const keywordHit = this.shouldForceDeepReasoning(text);
     const llmHit = keywordHit ? true : await this.intentClassifier(text);

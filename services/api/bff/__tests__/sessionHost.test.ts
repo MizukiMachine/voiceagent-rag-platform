@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { EventEmitter } from 'events';
 import { getOrCreateTrace } from '@openai/agents-core';
 
@@ -157,6 +157,7 @@ describe('SessionHost', () => {
       } as RealtimeAgent,
     ],
   };
+  const originalContinuationWindowMs = process.env.HOTWORD_CONTINUATION_WINDOW_MS;
 
   let host: SessionHost;
   let managers: FakeSessionManager[];
@@ -168,6 +169,7 @@ describe('SessionHost', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.OPENAI_API_KEY = 'test-key';
+    process.env.HOTWORD_CONTINUATION_WINDOW_MS = '20';
     managers = [];
     envSnapshot = {
       warnings: [],
@@ -190,6 +192,14 @@ describe('SessionHost', () => {
       intentClassifier,
       memoryStore: new InMemoryMemoryStore(),
     });
+  });
+
+  afterEach(() => {
+    if (originalContinuationWindowMs === undefined) {
+      delete process.env.HOTWORD_CONTINUATION_WINDOW_MS;
+    } else {
+      process.env.HOTWORD_CONTINUATION_WINDOW_MS = originalContinuationWindowMs;
+    }
   });
 
   it('creates sessions and forwards commands', async () => {
