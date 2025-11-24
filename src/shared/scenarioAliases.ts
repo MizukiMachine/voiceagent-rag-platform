@@ -25,6 +25,7 @@ export const scenarioAliasMap: Record<string, string[]> = {
     'graphiti',
     'Grażty',
     'Crafty',
+    'grašti',
   ],
   kate: ['kate',
     'ケイト',
@@ -42,6 +43,8 @@ export const scenarioAliasMap: Record<string, string[]> = {
     'Kato',
     'Kaito',
     'kaito',
+    '桂都',
+    '形と',
     ],
   takuboku: [
     'takuboku',

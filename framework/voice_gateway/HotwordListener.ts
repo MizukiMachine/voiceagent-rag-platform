@@ -14,6 +14,7 @@ const HOTWORD_PREFIXES = [
   'Hi',
   'hi',
   'シェイ',
+  '平',
 ];
 const DEFAULT_FILLERS = [
   'えー',
