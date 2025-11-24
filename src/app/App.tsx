@@ -193,14 +193,8 @@ function App() {
         `${uiText.session.agentBreadcrumbLabel}${selectedAgentName}`,
         currentAgent,
       );
-      const shouldTriggerInitialResponse =
-        !handoffTriggeredRef.current &&
-        !initialResponseTriggeredRef.current &&
-        !pendingInitialCommandRef.current;
+      const shouldTriggerInitialResponse = false;
       updateSession(shouldTriggerInitialResponse);
-      if (shouldTriggerInitialResponse) {
-        initialResponseTriggeredRef.current = true;
-      }
       // Reset flag after handling so subsequent effects behave normally
       handoffTriggeredRef.current = false;
     }
@@ -573,6 +567,9 @@ const requestAgentChange = useCallback(async (agentName: string) => {
     if (storedKey) {
       requestBody.memoryKey = storedKey;
     }
+    if (clientTag?.trim()) {
+      requestBody.clientTag = clientTag.trim();
+    }
     try {
       const response = await fetch('/api/memory', {
         method: 'DELETE',
@@ -597,6 +594,12 @@ const requestAgentChange = useCallback(async (agentName: string) => {
         memoryKey: resolvedMemoryKey ?? requestBody.memoryKey ?? 'unknown',
       });
       setSessionError(null);
+      setActiveMemoryKey(null);
+      setMemoryKeysByScenario((prev) => {
+        const next = { ...prev };
+        delete next[normalizedKey];
+        return next;
+      });
       // リセット直後はセッションを切断し、次回接続を完全に空の状態で開始させる
       disconnectFromRealtime();
     } catch (error) {

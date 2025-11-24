@@ -75,7 +75,8 @@
     - 認証: `x-bff-key` 必須（`POST /api/session` と同じ）
     - リクエストボディ (JSON)
         - `agentSetKey` (必須): どのシナリオのメモリを消すか
-        - `memoryKey` (任意): 個別のキーを指定したい場合のみ。未指定なら `agentSetKey` 単位で削除
+        - `memoryKey` (任意): 個別のキーを指定したい場合のみ。未指定なら clientTag → metadata.memoryKey → agentSetKey の順で決定
+        - `clientTag` (任意): 指定するとそのタグをメモリキーとして扱う。旧フォーマット `agentSetKey:clientTag` も同時に消去する
     - レスポンス例
         ```json
         {
@@ -88,10 +89,10 @@
         curl -X DELETE http://localhost:3000/api/memory \
           -H "x-bff-key: $NEXT_PUBLIC_BFF_KEY" \
           -H "Content-Type: application/json" \
-          -d '{"agentSetKey":"kate"}'
+          -d '{"agentSetKey":"kate","clientTag":"glasses01"}'
         ```
     - 補足
-        - サーバーの永続メモリは `PERSISTENT_MEMORY_ENABLED=true` のとき有効になります
+        - サーバーの永続メモリは `PERSISTENT_MEMORY_ENABLED=true` のとき有効（未設定時はデフォルトで有効）
         - リセットしても現在のセッションはそのまま継続します。必要に応じて `POST /api/session` で張り直してください
 
 ---

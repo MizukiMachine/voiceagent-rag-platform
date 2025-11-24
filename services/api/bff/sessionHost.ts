@@ -52,7 +52,8 @@ const STREAM_IDLE_CLEANUP_MS = 60_000;
 const RATE_LIMIT_WINDOW_MS = 1000;
 const RATE_LIMIT_MAX_EVENTS = 10;
 // デフォルトでは永続メモリを無効化する（過去ログの大量再生でUIが汚染されるため）。
-const PERSISTENT_MEMORY_ENABLED = process.env.PERSISTENT_MEMORY_ENABLED === 'true';
+// 要件に合わせ、デフォルトで有効にする（環境変数で明示的に無効化可能）。
+const PERSISTENT_MEMORY_ENABLED = (process.env.PERSISTENT_MEMORY_ENABLED ?? 'true') === 'true';
 const PERSISTENT_MEMORY_REPLAY_LIMIT =
   Number(process.env.PERSISTENT_MEMORY_REPLAY_LIMIT ?? '') || 30;
 const DEEP_REASONING_PLACEHOLDER_TEXT =
@@ -250,6 +251,7 @@ interface SessionContext {
   textOutputEnabled: boolean;
   memoryKey?: string | null;
   hasUserContent: boolean;
+  hasLiveUserInput: boolean;
   hotwordListener?: HotwordListener;
   scenarioRouter?: ScenarioRouter;
   hotwordReminderTimer?: ReturnType<typeof setTimeout>;
@@ -498,6 +500,16 @@ export class SessionHost {
     }
   }
 
+  /**
+   * clientTag に紐づくセッションがあれば破棄する。
+   * メモリリセット時に既存セッションが古い履歴を再度書き戻すのを防ぐため。
+   */
+  async destroySessionsByClientTag(clientTag: string, reason = 'memory_reset'): Promise<boolean> {
+    const binding = this.clientTagIndex.get(clientTag);
+    if (!binding?.sessionId) return false;
+    return this.destroySession(binding.sessionId, { reason, initiatedBy: 'system' });
+  }
+
   private saveClientTagBinding(clientTag: string, binding: Omit<ClientTagBinding, 'updatedAt'>): ClientTagBinding {
     const normalized: ClientTagBinding = {
       ...binding,
@@ -622,7 +634,7 @@ export class SessionHost {
     const reportedModalities = this.buildReportedModalities(options, envSnapshot, textOutputEnabled);
     const memoryEnabled = options.memoryEnabled ?? PERSISTENT_MEMORY_ENABLED;
     const memoryKey = memoryEnabled
-      ? resolveMemoryKey(options.agentSetKey, options.memoryKey, options.metadata)
+      ? resolveMemoryKey(options.agentSetKey, options.memoryKey, options.metadata, options.clientTag)
       : null;
 
     const manager = this.sessionManagerFactory(hooks);
@@ -855,6 +867,7 @@ export class SessionHost {
       textOutputEnabled,
       memoryKey,
       hasUserContent: false,
+      hasLiveUserInput: false,
       clientTag: options.clientTag,
     };
     return context;
@@ -959,6 +972,7 @@ export class SessionHost {
   ) {
     if (!text || text.trim().length === 0) return;
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     if (metadata && Object.keys(metadata).length > 0) {
       this.logger.debug('Dropping response metadata to satisfy Realtime API schema', {
         sessionId: context.id,
@@ -1160,6 +1174,7 @@ export class SessionHost {
 
   private sendDeepReasoningAnswerToRealtime(context: SessionContext, question: string, assistantText: string) {
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     this.enqueueTextMessage(context, 'user', question);
     this.enqueueTextMessage(
       context,
@@ -1172,6 +1187,7 @@ export class SessionHost {
 
   private sendRealtimeFallback(context: SessionContext, question: string, metadata?: Record<string, any>) {
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     this.enqueueTextMessage(
       context,
       'system',
@@ -1183,6 +1199,7 @@ export class SessionHost {
 
   private handleInputAudio(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_audio' }>) {
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     context.manager.sendEvent({
       type: 'input_audio_buffer.append',
       audio: command.audio,
@@ -1195,6 +1212,7 @@ export class SessionHost {
 
   private handleInputImage(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_image' }>) {
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     const imageUrl =
       command.mimeType && command.data && command.data.startsWith('data:')
         ? command.data
@@ -1300,7 +1318,7 @@ export class SessionHost {
   }
 
   private handleRawEvent(context: SessionContext, command: Extract<SessionCommand, { kind: 'event' }>) {
-    if (command.event?.type === 'response.create' && !context.hasUserContent) {
+    if (command.event?.type === 'response.create' && !context.hasLiveUserInput) {
       // ユーザー入力（またはメモリ再生）が無い初回の自動応答は抑制する（全シナリオ共通）。
       this.logger.debug('response.create ignored because no user content yet', { sessionId: context.id });
       return;
@@ -1544,7 +1562,15 @@ export class SessionHost {
   private async rehydratePersistentMemory(context: SessionContext): Promise<void> {
     if (!context.memoryKey) return;
     try {
-      const entries = await this.memoryStore.read(context.memoryKey, PERSISTENT_MEMORY_REPLAY_LIMIT);
+      const keysToRead = this.buildMemoryReadKeys(context);
+      const entries = await this.readMergedPersistentEntries(
+        context.memoryKey,
+        keysToRead,
+        PERSISTENT_MEMORY_REPLAY_LIMIT,
+      );
+      if (keysToRead.some((key) => key !== context.memoryKey)) {
+        await this.migrateLegacyKeys(context.memoryKey, keysToRead, entries);
+      }
       if (entries.length === 0) return;
       context.hasUserContent = true;
       const events = buildReplayEvents(entries, PERSISTENT_MEMORY_REPLAY_LIMIT);
@@ -1561,6 +1587,7 @@ export class SessionHost {
       this.logger.info('Persistent memory replayed', {
         sessionId: context.id,
         memoryKey: context.memoryKey,
+        legacyKeys: keysToRead.filter((k) => k !== context.memoryKey),
         count: events.length,
       });
     } catch (error) {
@@ -1569,7 +1596,59 @@ export class SessionHost {
         memoryKey: context.memoryKey,
         error,
       });
+      this.broadcast(context.id, 'session_error', {
+        code: 'memory_replay_failed',
+        message: '過去の記憶を再適用できませんでした（会話は継続します）',
+        retryable: false,
+      });
     }
+  }
+
+  private buildMemoryReadKeys(context: SessionContext): string[] {
+    const keys = new Set<string>();
+    if (context.memoryKey) keys.add(context.memoryKey);
+    if (context.clientTag) {
+      const legacyKey = `${context.agentSetKey}:${context.clientTag}`;
+      if (!keys.has(legacyKey)) keys.add(legacyKey);
+    }
+    return Array.from(keys);
+  }
+
+  private async readMergedPersistentEntries(primaryKey: string, keys: string[], limit: number): Promise<MemoryEntry[]> {
+    const latestByItem: Map<string, MemoryEntry> = new Map();
+    for (const key of keys) {
+      const list = await this.memoryStore.read(key);
+      list.forEach((entry) => {
+        const uid = entry.itemId ?? `${key}:${entry.createdAt}`;
+        const existing = latestByItem.get(uid);
+        if (!existing) {
+          latestByItem.set(uid, entry);
+        } else if (new Date(entry.createdAt).getTime() >= new Date(existing.createdAt).getTime()) {
+          latestByItem.set(uid, entry);
+        }
+      });
+    }
+    const merged = Array.from(latestByItem.values());
+    merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    const trimmed = this.trimTrailingUnansweredUser(merged);
+    return trimmed.slice(-limit);
+  }
+
+  private async migrateLegacyKeys(primaryKey: string, keys: string[], entries: MemoryEntry[]): Promise<void> {
+    const legacyKeys = keys.filter((key) => key !== primaryKey);
+    if (legacyKeys.length === 0) return;
+
+    // Write merged entries into primary
+    await Promise.all(
+      entries.map((entry) => this.memoryStore.upsert(primaryKey, entry).catch(() => undefined)),
+    );
+
+    // Remove legacy keys to avoid次回以降の二重リプレイ
+    await Promise.all(legacyKeys.map((key) => this.memoryStore.reset(key).catch(() => undefined)));
+  }
+
+  private trimTrailingUnansweredUser(entries: MemoryEntry[]): MemoryEntry[] {
+    return entries;
   }
 
   private async persistMemoryFromHistory(context: SessionContext, payload: any): Promise<void> {
@@ -1581,6 +1660,9 @@ export class SessionHost {
       .filter((entry): entry is NonNullable<ReturnType<typeof toMemoryEntry>> => Boolean(entry));
 
     if (entries.length === 0) return;
+    if (entries.some((entry) => entry.role === 'user')) {
+      context.hasLiveUserInput = true;
+    }
 
     await Promise.all(
       entries.map((entry) =>
@@ -1601,6 +1683,13 @@ export class SessionHost {
   }
 
   private isPersistentMemoryReplay(payload: any): boolean {
+    const id =
+      payload?.id ??
+      payload?.item_id ??
+      payload?.itemId ??
+      payload?.item?.id ??
+      payload?.item?.itemId;
+    if (typeof id === 'string' && id.startsWith('pm:')) return true;
     return payload?.metadata?.source === PERSISTENT_MEMORY_SOURCE;
   }
 

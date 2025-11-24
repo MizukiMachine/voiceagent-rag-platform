@@ -498,6 +498,9 @@ export function useSessionSpectator(): SessionSpectatorState {
     if (memoryKey) {
       body.memoryKey = memoryKey;
     }
+    if (params.clientTag) {
+      body.clientTag = params.clientTag;
+    }
 
     setIsResettingMemory(true);
     try {
@@ -525,8 +528,11 @@ export function useSessionSpectator(): SessionSpectatorState {
       setDirectives([]);
       setEvents([]);
       setLastError(null);
+      // リセット後はクライアント側のメモリキーも破棄する
+      setMemoryKey(null);
       if (params) {
-        await connect(params);
+        disconnect();
+        await connect({ ...params, preserveHistory: false });
       }
       return { ok: true };
     } finally {
