@@ -94,7 +94,6 @@ export function buildDeepReasoningRequest(question: string) {
   return {
     model: 'gpt-5.1',
     reasoning: { effort: 'high' },
-    temperature: 0.4,
     max_output_tokens: 600,
     input: [
       {
