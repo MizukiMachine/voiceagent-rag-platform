@@ -631,14 +631,7 @@ export function useRealtimeSession(
     async (command: SessionCommand) => {
       const active = sessionStateRef.current;
       if (!active) {
-        logClientEvent(
-          {
-            type: 'session_warning',
-            message: 'Command ignored because session is not connected',
-          },
-          'session_warning',
-        );
-        throw new Error('Session is not connected');
+        return;
       }
 
       const response = await fetchImpl(`/api/session/${active.sessionId}/event`, {
@@ -714,6 +707,14 @@ export function useRealtimeSession(
 
   const postSessionCommand = useCallback(
     async (command: SessionCommand, options: { allowRecovery?: boolean } = {}) => {
+      if (!sessionStateRef.current) {
+        if (lastConnectOptionsRef.current && options.allowRecovery !== false) {
+          pendingCommandQueueRef.current.push(command);
+          await recoverSession('session_state_missing');
+          await flushPendingCommands();
+        }
+        return;
+      }
       try {
         await sendCommandDirect(command);
       } catch (error) {
@@ -802,6 +803,7 @@ export function useRealtimeSession(
     (muted: boolean) => {
       audioMutedRef.current = muted;
       audioPlayerRef.current?.setMuted(muted);
+      if (!sessionStateRef.current) return;
       void postSessionCommand({ kind: 'control', action: 'mute', value: muted }).catch(() => {});
     },
     [postSessionCommand],
@@ -809,14 +811,17 @@ export function useRealtimeSession(
 
   const interrupt = useCallback(() => {
     stopAudioPlayback();
+    if (!sessionStateRef.current) return;
     void postSessionCommand({ kind: 'control', action: 'interrupt' });
   }, [postSessionCommand, stopAudioPlayback]);
 
   const pushToTalkStart = useCallback(() => {
+    if (!sessionStateRef.current) return;
     void postSessionCommand({ kind: 'control', action: 'push_to_talk_start' });
   }, [postSessionCommand]);
 
   const pushToTalkStop = useCallback(() => {
+    if (!sessionStateRef.current) return;
     void postSessionCommand({ kind: 'control', action: 'push_to_talk_stop' });
   }, [postSessionCommand]);
 
