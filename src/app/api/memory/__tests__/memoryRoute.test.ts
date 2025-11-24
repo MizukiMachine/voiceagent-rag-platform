@@ -36,6 +36,21 @@ describe('memory API route', () => {
     expect(storeMock.reset).toHaveBeenCalledWith('demo');
   });
 
+  it('resolves memoryKey using clientTag when provided', async () => {
+    const request = new Request('http://localhost/api/memory', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentSetKey: 'demo', clientTag: 'glasses01' }),
+    });
+
+    const response = await resetMemory(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.memoryKey).toBe('demo:glasses01');
+    expect(storeMock.reset).toHaveBeenCalledWith('demo:glasses01');
+  });
+
   it('rejects unauthorized calls when secret is set', async () => {
     process.env.BFF_SERVICE_SHARED_SECRET = 'secret';
     const request = new Request('http://localhost/api/memory', {

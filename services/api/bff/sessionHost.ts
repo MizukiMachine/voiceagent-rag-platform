@@ -52,7 +52,8 @@ const STREAM_IDLE_CLEANUP_MS = 60_000;
 const RATE_LIMIT_WINDOW_MS = 1000;
 const RATE_LIMIT_MAX_EVENTS = 10;
 // デフォルトでは永続メモリを無効化する（過去ログの大量再生でUIが汚染されるため）。
-const PERSISTENT_MEMORY_ENABLED = process.env.PERSISTENT_MEMORY_ENABLED === 'true';
+// 要件に合わせ、デフォルトで有効にする（環境変数で明示的に無効化可能）。
+const PERSISTENT_MEMORY_ENABLED = (process.env.PERSISTENT_MEMORY_ENABLED ?? 'true') === 'true';
 const PERSISTENT_MEMORY_REPLAY_LIMIT =
   Number(process.env.PERSISTENT_MEMORY_REPLAY_LIMIT ?? '') || 30;
 const DEEP_REASONING_PLACEHOLDER_TEXT =
@@ -622,7 +623,7 @@ export class SessionHost {
     const reportedModalities = this.buildReportedModalities(options, envSnapshot, textOutputEnabled);
     const memoryEnabled = options.memoryEnabled ?? PERSISTENT_MEMORY_ENABLED;
     const memoryKey = memoryEnabled
-      ? resolveMemoryKey(options.agentSetKey, options.memoryKey, options.metadata)
+      ? resolveMemoryKey(options.agentSetKey, options.memoryKey, options.metadata, options.clientTag)
       : null;
 
     const manager = this.sessionManagerFactory(hooks);
@@ -1569,6 +1570,11 @@ export class SessionHost {
         memoryKey: context.memoryKey,
         error,
       });
+      this.broadcast(context.id, 'session_error', {
+        code: 'memory_replay_failed',
+        message: '過去の記憶を再適用できませんでした（会話は継続します）',
+        retryable: false,
+      });
     }
   }
 
@@ -1601,6 +1607,13 @@ export class SessionHost {
   }
 
   private isPersistentMemoryReplay(payload: any): boolean {
+    const id =
+      payload?.id ??
+      payload?.item_id ??
+      payload?.itemId ??
+      payload?.item?.id ??
+      payload?.item?.itemId;
+    if (typeof id === 'string' && id.startsWith('pm:')) return true;
     return payload?.metadata?.source === PERSISTENT_MEMORY_SOURCE;
   }
 

@@ -188,6 +188,7 @@ describe('SessionHost', () => {
       hotwordCueService,
       responsesClientFactory: () => responsesClient as any,
       intentClassifier,
+      memoryStore: new InMemoryMemoryStore(),
     });
   });
 
@@ -519,7 +520,8 @@ describe('SessionHost', () => {
       manager.sentEvents.some(
         (ev) =>
           ev?.type === 'conversation.item.create' &&
-          ev?.item?.metadata?.source === 'persistent_memory',
+          typeof ev?.item?.id === 'string' &&
+          ev.item.id.startsWith('pm:'),
       ),
     ).toBe(true);
 
@@ -564,9 +566,8 @@ describe('SessionHost', () => {
     manager.emit('history_added', {
       type: 'message',
       role: 'assistant',
-      itemId: 'pm-1',
+      itemId: 'pm:1:2025-01-01T00:00:00Z',
       content: [{ type: 'output_text', text: '古いメモ' }],
-      metadata: { source: 'persistent_memory' },
     });
 
     expect(received.find((msg) => msg.event === 'history_added')).toBeUndefined();

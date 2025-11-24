@@ -526,7 +526,8 @@ export function useSessionSpectator(): SessionSpectatorState {
       setEvents([]);
       setLastError(null);
       if (params) {
-        await connect(params);
+        disconnect();
+        await connect({ ...params, preserveHistory: false });
       }
       return { ok: true };
     } finally {

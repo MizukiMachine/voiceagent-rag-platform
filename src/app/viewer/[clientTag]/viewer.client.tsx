@@ -90,6 +90,9 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
             </div>
           </div>
         </div>
+        <p className="text-xs text-slate-200/80">
+          記憶リセットは「直前の会話コンテキスト」を消して再接続します。現在のセッションも再購読されます。
+        </p>
 
         {resetNotice && (
           <div

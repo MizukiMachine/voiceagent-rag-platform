@@ -10,6 +10,7 @@ import { handleRouteError, requireBffSecret } from '../session/utils';
 const resetSchema = z.object({
   agentSetKey: z.string().min(1),
   memoryKey: z.string().min(1).optional(),
+  clientTag: z.string().min(1).optional(),
 });
 
 export async function DELETE(request: Request) {
@@ -20,6 +21,8 @@ export async function DELETE(request: Request) {
     const resolvedKey = resolveMemoryKey(
       payload.agentSetKey,
       payload.memoryKey,
+      undefined,
+      payload.clientTag,
     );
     if (!resolvedKey) {
       return NextResponse.json(

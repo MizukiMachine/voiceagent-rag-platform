@@ -33,6 +33,7 @@ export function resolveMemoryKey(
   agentSetKey: string,
   provided?: string | null,
   metadata?: Record<string, any>,
+  clientTag?: string | null,
 ): string | null {
   if (typeof provided === 'string' && provided.trim()) {
     return provided.trim();
@@ -43,6 +44,11 @@ export function resolveMemoryKey(
       : null;
   if (fromMetadata) {
     return fromMetadata;
+  }
+  const fromClientTag =
+    typeof clientTag === 'string' && clientTag.trim() ? clientTag.trim() : null;
+  if (fromClientTag) {
+    return `${agentSetKey}:${fromClientTag}`;
   }
   if (typeof metadata?.userId === 'string' && metadata.userId.trim()) {
     return `${agentSetKey}:${metadata.userId.trim()}`;
@@ -70,10 +76,6 @@ export function buildReplayEvents(
           text: entry.text,
         },
       ],
-      metadata: {
-        source: PERSISTENT_MEMORY_SOURCE,
-        createdAt: entry.createdAt,
-      },
     },
   }));
 }
