@@ -196,7 +196,7 @@ const deepReasoningTool = tool({
 
 export const nutritionAgent = new RealtimeAgent({
   name: 'Nadia',
-  voice: 'alloy',
+  voice: 'shimmer',
   instructions: nutritionInstructions,
   tools: [switchScenarioTool, switchAgentTool, getProfileTool, updateProfileTool, logMealTool, deepReasoningTool],
   handoffs: [],
