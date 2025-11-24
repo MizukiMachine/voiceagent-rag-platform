@@ -528,6 +528,8 @@ export function useSessionSpectator(): SessionSpectatorState {
       setDirectives([]);
       setEvents([]);
       setLastError(null);
+      // リセット後はクライアント側のメモリキーも破棄する
+      setMemoryKey(null);
       if (params) {
         disconnect();
         await connect({ ...params, preserveHistory: false });

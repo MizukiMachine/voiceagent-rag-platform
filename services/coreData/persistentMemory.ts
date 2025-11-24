@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 
 import type { MemoryEntry, MemoryStore } from './memoryStore';
 import { FileMemoryStore } from './memoryStore';
@@ -69,7 +70,7 @@ export function buildReplayEvents(
       role: entry.role,
       // Tag replayed items with a synthetic id; Realtime API rejects item.metadata,
       // so we avoid sending metadata and later skip re-persisting by this id prefix.
-      id: `pm:${entry.itemId ?? idx}:${entry.createdAt}`,
+      id: buildShortReplayId(entry, idx),
       content: [
         {
           type: entry.role === 'assistant' ? 'output_text' : 'input_text',
@@ -78,6 +79,13 @@ export function buildReplayEvents(
       ],
     },
   }));
+}
+
+function buildShortReplayId(entry: MemoryEntry, idx: number): string {
+  // Realtime API item.id must be <=32 chars. Use a short hash to avoid collisions.
+  const basis = `${entry.itemId ?? idx}|${entry.createdAt}`;
+  const hash = createHash('sha1').update(basis).digest('hex').slice(0, 16);
+  return `pm_${hash}`; // length 19, pattern-safe (alnum + underscore)
 }
 
 export function extractTextFromContent(content: any[] = []): string {

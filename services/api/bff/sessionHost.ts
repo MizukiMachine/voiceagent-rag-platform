@@ -251,6 +251,7 @@ interface SessionContext {
   textOutputEnabled: boolean;
   memoryKey?: string | null;
   hasUserContent: boolean;
+  hasLiveUserInput: boolean;
   hotwordListener?: HotwordListener;
   scenarioRouter?: ScenarioRouter;
   hotwordReminderTimer?: ReturnType<typeof setTimeout>;
@@ -856,6 +857,7 @@ export class SessionHost {
       textOutputEnabled,
       memoryKey,
       hasUserContent: false,
+      hasLiveUserInput: false,
       clientTag: options.clientTag,
     };
     return context;
@@ -960,6 +962,7 @@ export class SessionHost {
   ) {
     if (!text || text.trim().length === 0) return;
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     if (metadata && Object.keys(metadata).length > 0) {
       this.logger.debug('Dropping response metadata to satisfy Realtime API schema', {
         sessionId: context.id,
@@ -1161,6 +1164,7 @@ export class SessionHost {
 
   private sendDeepReasoningAnswerToRealtime(context: SessionContext, question: string, assistantText: string) {
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     this.enqueueTextMessage(context, 'user', question);
     this.enqueueTextMessage(
       context,
@@ -1173,6 +1177,7 @@ export class SessionHost {
 
   private sendRealtimeFallback(context: SessionContext, question: string, metadata?: Record<string, any>) {
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     this.enqueueTextMessage(
       context,
       'system',
@@ -1184,6 +1189,7 @@ export class SessionHost {
 
   private handleInputAudio(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_audio' }>) {
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     context.manager.sendEvent({
       type: 'input_audio_buffer.append',
       audio: command.audio,
@@ -1196,6 +1202,7 @@ export class SessionHost {
 
   private handleInputImage(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_image' }>) {
     context.hasUserContent = true;
+    context.hasLiveUserInput = true;
     const imageUrl =
       command.mimeType && command.data && command.data.startsWith('data:')
         ? command.data
@@ -1301,7 +1308,7 @@ export class SessionHost {
   }
 
   private handleRawEvent(context: SessionContext, command: Extract<SessionCommand, { kind: 'event' }>) {
-    if (command.event?.type === 'response.create' && !context.hasUserContent) {
+    if (command.event?.type === 'response.create' && !context.hasLiveUserInput) {
       // ユーザー入力（またはメモリ再生）が無い初回の自動応答は抑制する（全シナリオ共通）。
       this.logger.debug('response.create ignored because no user content yet', { sessionId: context.id });
       return;
@@ -1546,7 +1553,14 @@ export class SessionHost {
     if (!context.memoryKey) return;
     try {
       const keysToRead = this.buildMemoryReadKeys(context);
-      const entries = await this.readMergedPersistentEntries(keysToRead, PERSISTENT_MEMORY_REPLAY_LIMIT);
+      const entries = await this.readMergedPersistentEntries(
+        context.memoryKey,
+        keysToRead,
+        PERSISTENT_MEMORY_REPLAY_LIMIT,
+      );
+      if (keysToRead.some((key) => key !== context.memoryKey)) {
+        await this.migrateLegacyKeys(context.memoryKey, keysToRead, entries);
+      }
       if (entries.length === 0) return;
       context.hasUserContent = true;
       const events = buildReplayEvents(entries, PERSISTENT_MEMORY_REPLAY_LIMIT);
@@ -1590,32 +1604,41 @@ export class SessionHost {
     return Array.from(keys);
   }
 
-  private async readMergedPersistentEntries(keys: string[], limit: number): Promise<MemoryEntry[]> {
-    const merged: MemoryEntry[] = [];
-    const seen = new Set<string>();
+  private async readMergedPersistentEntries(primaryKey: string, keys: string[], limit: number): Promise<MemoryEntry[]> {
+    const latestByItem: Map<string, MemoryEntry> = new Map();
     for (const key of keys) {
       const list = await this.memoryStore.read(key);
       list.forEach((entry) => {
-        const uid = `${entry.itemId ?? 'noid'}:${entry.createdAt}`;
-        if (seen.has(uid)) return;
-        seen.add(uid);
-        merged.push(entry);
+        const uid = entry.itemId ?? `${key}:${entry.createdAt}`;
+        const existing = latestByItem.get(uid);
+        if (!existing) {
+          latestByItem.set(uid, entry);
+        } else if (new Date(entry.createdAt).getTime() >= new Date(existing.createdAt).getTime()) {
+          latestByItem.set(uid, entry);
+        }
       });
     }
+    const merged = Array.from(latestByItem.values());
     merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     const trimmed = this.trimTrailingUnansweredUser(merged);
     return trimmed.slice(-limit);
   }
 
+  private async migrateLegacyKeys(primaryKey: string, keys: string[], entries: MemoryEntry[]): Promise<void> {
+    const legacyKeys = keys.filter((key) => key !== primaryKey);
+    if (legacyKeys.length === 0) return;
+
+    // Write merged entries into primary
+    await Promise.all(
+      entries.map((entry) => this.memoryStore.upsert(primaryKey, entry).catch(() => undefined)),
+    );
+
+    // Remove legacy keys to avoid次回以降の二重リプレイ
+    await Promise.all(legacyKeys.map((key) => this.memoryStore.reset(key).catch(() => undefined)));
+  }
+
   private trimTrailingUnansweredUser(entries: MemoryEntry[]): MemoryEntry[] {
-    // モデルが「未回答のユーザー発話」に対して即応答しないよう、最後の assistant 発話までで切り詰める
-    for (let i = entries.length - 1; i >= 0; i -= 1) {
-      if (entries[i]?.role === 'assistant') {
-        return entries.slice(0, i + 1);
-      }
-    }
-    // assistant が一度も無ければリプレイしない（音声の一方的再生を防ぐ）
-    return [];
+    return entries;
   }
 
   private async persistMemoryFromHistory(context: SessionContext, payload: any): Promise<void> {
@@ -1627,6 +1650,9 @@ export class SessionHost {
       .filter((entry): entry is NonNullable<ReturnType<typeof toMemoryEntry>> => Boolean(entry));
 
     if (entries.length === 0) return;
+    if (entries.some((entry) => entry.role === 'user')) {
+      context.hasLiveUserInput = true;
+    }
 
     await Promise.all(
       entries.map((entry) =>

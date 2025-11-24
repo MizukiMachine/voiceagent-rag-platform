@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 
 import {
   getPersistentMemoryStore,
@@ -39,10 +41,35 @@ export async function DELETE(request: Request) {
       if (legacyKey !== resolvedKey) {
         await store.reset(legacyKey);
       }
+      await cleanupLegacyKeysByClientTag(payload.clientTag);
     }
 
     return NextResponse.json({ ok: true, memoryKey: resolvedKey });
   } catch (error) {
     return handleRouteError(error);
+  }
+}
+
+async function cleanupLegacyKeysByClientTag(clientTag: string): Promise<void> {
+  const filePath =
+    process.env.PERSISTENT_MEMORY_FILE ??
+    path.join(process.cwd(), 'var', 'memory', 'persistent-memory.json');
+  try {
+    const raw = await fs.readFile(filePath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (!parsed?.memories || typeof parsed.memories !== 'object') return;
+    let changed = false;
+    for (const key of Object.keys(parsed.memories)) {
+      if (key.endsWith(`:${clientTag}`)) {
+        delete parsed.memories[key];
+        changed = true;
+      }
+    }
+    if (changed) {
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      await fs.writeFile(filePath, JSON.stringify(parsed, null, 2), 'utf-8');
+    }
+  } catch {
+    // best-effort cleanup; ignore errors
   }
 }

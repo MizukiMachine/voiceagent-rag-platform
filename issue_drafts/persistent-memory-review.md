@@ -8,6 +8,7 @@
 - リプレイ失敗時はスキップしてセッション継続、クライアントへ `session_error` 通知。
 - キーは clientTag 単位（旧 `agentSetKey:clientTag` も読み出してマージする）。リセット後は viewer が再接続して空状態から購読する。
 - リプレイは最後の assistant 発話までを採用し、未回答のユーザー発話を切り落として自動応答の暴発を防ぐ。
+- legacy キーを読み出したら clientTag キーへマージ保存し、旧キーを削除する（再接続ごとの二重リプレイ防止）。
 
 ### 実装メモ
 - コア: `services/coreData/persistentMemory.ts`

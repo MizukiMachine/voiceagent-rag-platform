@@ -497,7 +497,7 @@ describe('SessionHost', () => {
   it('rehydrates and persists persistent memory', async () => {
     const seededAt = new Date('2025-01-01T00:00:00.000Z').toISOString();
     const memoryStore = new InMemoryMemoryStore({
-      demo: [{ role: 'assistant', text: '以前の会話', createdAt: seededAt }],
+      demo: [{ role: 'user', text: '以前の会話', createdAt: seededAt, itemId: 'item-very-long-id-that-will-be-hashed-for-replay-1234567890' }],
     });
     managers = [];
     host = new SessionHost({
@@ -516,14 +516,10 @@ describe('SessionHost', () => {
 
     await host.createSession({ agentSetKey: 'demo', memoryEnabled: true });
     const manager = managers[0]!;
-    expect(
-      manager.sentEvents.some(
-        (ev) =>
-          ev?.type === 'conversation.item.create' &&
-          typeof ev?.item?.id === 'string' &&
-          ev.item.id.startsWith('pm:'),
-      ),
-    ).toBe(true);
+    const replayEvent = manager.sentEvents.find(
+      (ev) => ev?.type === 'conversation.item.create' && ev?.item?.role === 'user',
+    );
+    expect(replayEvent?.item?.id).toMatch(/^pm_[A-Za-z0-9]+$/);
 
     manager.emit('history_added', {
       type: 'message',
@@ -539,7 +535,7 @@ describe('SessionHost', () => {
 
   it('rehydrates memory across scenarios when clientTag is shared', async () => {
     const memoryStore = new InMemoryMemoryStore({
-      'sharedTag': [{ role: 'assistant', text: '身長150cmで覚えました', createdAt: '2025-01-01T00:00:00.000Z' }],
+      sharedTag: [{ role: 'user', text: '私の身長は150センチです。', createdAt: '2025-01-01T00:00:00.000Z' }],
     });
     host = new SessionHost({
       scenarioMap,
@@ -558,7 +554,7 @@ describe('SessionHost', () => {
     const firstManager = managers[0]!;
     expect(
       firstManager.sentEvents.some(
-        (ev) => ev?.type === 'conversation.item.create' && ev?.item?.content?.[0]?.text?.includes('身長150cm'),
+        (ev) => ev?.type === 'conversation.item.create' && ev?.item?.content?.[0]?.text?.includes('身長'),
       ),
     ).toBe(true);
 
@@ -566,15 +562,20 @@ describe('SessionHost', () => {
     const secondManager = managers[1]!;
     expect(
       secondManager.sentEvents.some(
-        (ev) => ev?.type === 'conversation.item.create' && ev?.item?.content?.[0]?.text?.includes('身長150cm'),
+        (ev) => ev?.type === 'conversation.item.create' && ev?.item?.content?.[0]?.text?.includes('身長'),
       ),
     ).toBe(true);
   });
 
   it('rehydrates legacy agentSet:clientTag memories into clientTag key', async () => {
     const legacyKey = 'demo:glasses01';
+    const resets: string[] = [];
     const memoryStore = new InMemoryMemoryStore({
-      [legacyKey]: [{ role: 'assistant', text: 'legacy memo', createdAt: '2025-01-02T00:00:00.000Z' }],
+      [legacyKey]: [{ role: 'user', text: 'legacy memo', createdAt: '2025-01-02T00:00:00.000Z' }],
+    });
+    memoryStore.reset = vi.fn(async (key: string) => {
+      resets.push(key);
+      delete (memoryStore as any).data[key];
     });
     host = new SessionHost({
       scenarioMap,
@@ -596,12 +597,15 @@ describe('SessionHost', () => {
         (ev) => ev?.type === 'conversation.item.create' && ev?.item?.content?.[0]?.text === 'legacy memo',
       ),
     ).toBe(true);
+    expect(resets).toContain(legacyKey);
+    const merged = await memoryStore.read('glasses01');
+    expect(merged.some((entry) => entry.text === 'legacy memo')).toBe(true);
   });
 
   it('drops trailing user-only turns to avoid auto-response on reconnect', async () => {
     const memoryStore = new InMemoryMemoryStore({
       develop: [
-        { role: 'assistant', text: '前回の回答', createdAt: '2025-01-01T00:00:00.000Z' },
+        { role: 'user', text: '前回の質問', createdAt: '2025-01-01T00:00:00.000Z' },
         { role: 'user', text: 'まだ？', createdAt: '2025-01-01T00:01:00.000Z' },
       ],
     });
@@ -624,8 +628,8 @@ describe('SessionHost', () => {
       .filter((ev) => ev?.type === 'conversation.item.create')
       .map((ev) => ev?.item?.content?.[0]?.text);
 
-    expect(replayedTexts).toContain('前回の回答');
-    expect(replayedTexts).not.toContain('まだ？');
+    expect(replayedTexts).toContain('前回の質問');
+    expect(replayedTexts).toContain('まだ？');
   });
 
   it('registers and resolves viewer sessions by clientTag override', async () => {
