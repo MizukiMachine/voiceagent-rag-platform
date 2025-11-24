@@ -14,6 +14,8 @@ interface BottomToolbarProps {
   setIsEventsPaneExpanded: (val: boolean) => void;
   isAudioPlaybackEnabled: boolean;
   setIsAudioPlaybackEnabled: (val: boolean) => void;
+  isBargeInDisabled: boolean;
+  setIsBargeInDisabled: (val: boolean) => void;
   isTextOutputEnabled: boolean;
   onTextOutputToggle: (val: boolean) => void;
   codec: string;
@@ -32,6 +34,8 @@ function BottomToolbar({
   setIsEventsPaneExpanded,
   isAudioPlaybackEnabled,
   setIsAudioPlaybackEnabled,
+  isBargeInDisabled,
+  setIsBargeInDisabled,
   isTextOutputEnabled,
   onTextOutputToggle,
   codec,
@@ -125,6 +129,23 @@ function BottomToolbar({
           className="flex items-center cursor-pointer"
         >
           {uiText.toolbar.audioPlaybackLabel}
+        </label>
+      </div>
+
+      <div className="flex flex-row items-center gap-1">
+        <input
+          id="barge-in-disabled"
+          type="checkbox"
+          checked={isBargeInDisabled}
+          onChange={(e) => setIsBargeInDisabled(e.target.checked)}
+          disabled={!isConnected}
+          className="w-4 h-4"
+        />
+        <label
+          htmlFor="barge-in-disabled"
+          className="flex items-center cursor-pointer"
+        >
+          {uiText.toolbar.bargeInDisableLabel}
         </label>
       </div>
 

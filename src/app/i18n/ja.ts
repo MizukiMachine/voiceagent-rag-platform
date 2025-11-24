@@ -37,6 +37,7 @@ export const jaText: UiText = {
     pushToTalkLabel: "プッシュトゥトーク",
     talkButtonLabel: "話す",
     audioPlaybackLabel: "音声再生",
+    bargeInDisableLabel: "バージイン無効化",
     textOutputLabel: "テキスト表示",
     logsLabel: "ログ",
     codecLabel: "コーデック",

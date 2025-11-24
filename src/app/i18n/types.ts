@@ -36,6 +36,7 @@ export interface UiText {
     pushToTalkLabel: string;
     talkButtonLabel: string;
     audioPlaybackLabel: string;
+    bargeInDisableLabel: string;
     textOutputLabel: string;
     logsLabel: string;
     codecLabel: string;
