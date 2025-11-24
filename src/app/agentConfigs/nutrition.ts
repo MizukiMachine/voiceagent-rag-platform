@@ -63,7 +63,6 @@ const getProfileTool = tool({
     required: [],
     additionalProperties: false,
   },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   execute: async (input: any) => {
     const userId = typeof input?.userId === 'string' ? input.userId : undefined;
     const query = userId ? `?user_id=${encodeURIComponent(userId)}` : '';
@@ -97,7 +96,6 @@ const updateProfileTool = tool({
     required: [],
     additionalProperties: false,
   },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   execute: async (input: any) => {
     const res = await fetch(buildApiUrl('/api/debug/profile'), {
       method: 'PATCH',
@@ -124,7 +122,6 @@ const logMealTool = tool({
     required: ['description'],
     additionalProperties: false,
   },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   execute: async (input: any) => {
     const description = typeof input?.description === 'string' ? input.description : '';
     const time = typeof input?.time === 'string' ? input.time : undefined;
@@ -152,7 +149,6 @@ const deepReasoningTool = tool({
     required: ['question'],
     additionalProperties: false,
   },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   execute: async (input: any) => {
     const question = typeof input?.question === 'string' ? input.question : '';
     const context = typeof input?.context === 'string' ? input.context : '';
