@@ -14,18 +14,21 @@ export interface DeepReasoningResult {
 
 export interface DeepReasoningOptions {
   question: string;
+  profileContext?: string;
   client: ResponsesClient;
   logger: StructuredLogger;
   logSampleLimit?: number;
   maxOutputTokens?: number;
 }
 
+const MAX_CHAR_LENGTH = 180;
+
 const DEFAULT_MAX_OUTPUT_TOKENS =
   Number(process.env.DEEP_REASONING_MAX_OUTPUT_TOKENS ?? '') || 4000;
 
 export async function runDeepReasoning(options: DeepReasoningOptions): Promise<DeepReasoningResult> {
-  const { question, client, logger, logSampleLimit = 800, maxOutputTokens } = options;
-  const requestBody = buildDeepReasoningRequest(question, maxOutputTokens);
+  const { question, profileContext, client, logger, logSampleLimit = 800, maxOutputTokens } = options;
+  const requestBody = buildDeepReasoningRequest(question, maxOutputTokens, profileContext);
 
   let response: any;
   try {
@@ -35,7 +38,10 @@ export async function runDeepReasoning(options: DeepReasoningOptions): Promise<D
     throw error;
   }
 
-  const { text, refusal } = extractOutputText(response);
+  let { text, refusal } = extractOutputText(response);
+  if (text) {
+    text = trimToMaxChars(text, MAX_CHAR_LENGTH);
+  }
   const summary = buildResponseSummary(response, { text, refusal, limit: logSampleLimit });
 
   if (text && text.trim().length > 0) {
@@ -91,13 +97,21 @@ export async function classifyDeepReasoningIntent(
   }
 }
 
-export function buildDeepReasoningRequest(question: string, maxOutputTokens?: number) {
-  const systemPrompt =
-    '日本語で回答してください。結論→理由→具体アクションの順で4〜6文。理由/論拠は活動量・食事ログ・goalTypeなどパーソナルデータや直近の食事内容を2〜3個必ず盛り込み、具体的に書いてください。';
+export function buildDeepReasoningRequest(question: string, maxOutputTokens?: number, profileContext?: string) {
+  const systemPrompt = [
+    '日本語で回答。全体3〜4文・160〜180文字以内に収める。超過しそうなら内容を削って短くする。',
+    '構成: 1文目=結論(料理スタイル＋主食/主菜/副菜を具体食材付きで列挙) / 2〜3文目=理由(プロフィール由来の論拠を1つ以上: PFCバランス/GI/疲労・睡眠/目標) / 最終文=具体アクション(量目安＋調理/組み合わせ＋必要ならサプリ1つだけ)。',
+    '料理は主食以外の「料理名」を2品。',
+    'サプリは不足に応じて2つだけ（例: オメガ3/ビタミンD/鉄＋C/テアニン）。総花NG。和/洋/ワンボウル/スープ多め等を日替わりで、都会的でリアルなアドバイスに。',
+  ].join('\n');
+
+  const enrichedQuestion = profileContext
+    ? `${question}\n\nプロフィール情報（最新）:\n${profileContext}`
+    : question;
 
   return {
     model: 'gpt-5.1',
-    reasoning: { effort: 'high' },
+    reasoning: { effort: 'medium' },
     max_output_tokens: maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
     stream: false,
     input: [
@@ -115,7 +129,7 @@ export function buildDeepReasoningRequest(question: string, maxOutputTokens?: nu
         content: [
           {
             type: 'input_text',
-            text: question,
+            text: enrichedQuestion,
           },
         ],
       },
@@ -169,4 +183,9 @@ function normalizeContent(content: any): any[] {
   if (!content) return [];
   if (Array.isArray(content)) return content;
   return [content];
+}
+
+function trimToMaxChars(text: string, limit: number): string {
+  if (!text || text.length <= limit) return text;
+  return text.slice(0, limit);
 }

@@ -271,6 +271,7 @@ interface SessionContext {
   destroyed?: boolean;
   deepReasoningJob?: {
     id: string;
+    profileContext?: string;
     placeholderItemId?: string;
     timeout?: ReturnType<typeof setTimeout>;
   };
@@ -1046,6 +1047,21 @@ export class SessionHost {
       return;
     }
 
+    const isNutritionScenario = context.agentSetKey === 'nutrition';
+    if (isNutritionScenario) {
+      this.logger.info('Nutrition scenario: forcing deep reasoning pipeline', {
+        sessionId: context.id,
+      });
+      this.executeDeepReasoningPipeline(context, text, command.metadata).catch((error) => {
+        this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as usual', {
+          sessionId: context.id,
+          error,
+        });
+        this.sendUserTextCommand(context, text, command.metadata);
+      });
+      return;
+    }
+
     const keywordHit = this.shouldForceDeepReasoning(text);
     const llmHit = keywordHit ? true : await this.intentClassifier(text);
 
@@ -1072,7 +1088,70 @@ export class SessionHost {
     return DEEP_REASONING_TRIGGERS.some((kw) => normalized.includes(kw));
   }
 
-  private startDeepReasoningJob(context: SessionContext, question?: string, metadata?: Record<string, any>) {
+  private formatProfileContext(profile: any): string {
+    if (!profile || typeof profile !== 'object') return '';
+    const lines: string[] = [];
+    const push = (label: string, value: any) => {
+      if (value === undefined || value === null) return;
+      if (Array.isArray(value)) {
+        if (value.length === 0) return;
+        lines.push(`${label}: ${value.join(', ')}`);
+        return;
+      }
+      if (typeof value === 'object') return;
+      const str = String(value).trim();
+      if (str.length === 0) return;
+      lines.push(`${label}: ${str}`);
+    };
+
+    push('goalType', profile.goalType);
+    push('activityLevel', profile.activityLevel);
+    push('age', profile.age);
+    push('sex', profile.sex);
+    push('heightCm', profile.heightCm);
+    push('weightKg', profile.weightKg);
+    push('targetWeightKg', profile.targetWeightKg);
+    push('allergies', profile.allergies);
+    push('dislikes', profile.dislikes ?? profile.avoidFoods);
+    push('recentMeals', profile.recentMeals ?? profile.recent_meals);
+    push('breakfast', profile.breakfast);
+    push('lunch', profile.lunch);
+    push('dinner', profile.dinner);
+
+    return lines.join('\n');
+  }
+
+  private async fetchProfileContext(metadata?: Record<string, any>): Promise<string | undefined> {
+    const base = process.env.INTERNAL_PROFILE_API_BASE ?? 'http://localhost:3000';
+    const userId = typeof metadata?.userId === 'string' ? metadata.userId : undefined;
+    const query = userId ? `?user_id=${encodeURIComponent(userId)}` : '';
+    const url = `${base}/api/debug/profile${query}`;
+
+    try {
+      const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } });
+      if (!res.ok) {
+        this.logger.warn('Failed to fetch profile for deep reasoning', { url, status: res.status });
+        return undefined;
+      }
+      const json: any = await res.json();
+      const profileCtx = this.formatProfileContext(json?.profile);
+      if (profileCtx) {
+        this.logger.debug('Loaded profile context for deep reasoning', { url });
+        return profileCtx;
+      }
+      return undefined;
+    } catch (error) {
+      this.logger.warn('Profile fetch errored; proceeding without profile context', { url, error });
+      return undefined;
+    }
+  }
+
+  private startDeepReasoningJob(
+    context: SessionContext,
+    question?: string,
+    metadata?: Record<string, any>,
+    profileContext?: string,
+  ) {
     if (context.deepReasoningJob?.timeout) {
       clearTimeout(context.deepReasoningJob.timeout);
     }
@@ -1083,9 +1162,9 @@ export class SessionHost {
       const placeholderId = context.deepReasoningJob?.placeholderItemId;
       this.deleteTranscriptItem(context, placeholderId);
       this.clearDeepReasoningJob(context);
-      this.sendRealtimeFallback(context, question ?? '前の質問', metadata);
+      this.sendRealtimeFallback(context, question ?? '前の質問', metadata, context.deepReasoningJob?.profileContext);
     }, this.deepReasoningTimeoutMs);
-    context.deepReasoningJob = { id, timeout };
+    context.deepReasoningJob = { id, timeout, profileContext };
   }
 
   private clearDeepReasoningJob(context: SessionContext) {
@@ -1138,7 +1217,8 @@ export class SessionHost {
     question: string,
     metadata?: Record<string, any>,
   ): Promise<void> {
-    this.startDeepReasoningJob(context, question, metadata);
+    const profileContext = await this.fetchProfileContext(metadata);
+    this.startDeepReasoningJob(context, question, metadata, profileContext);
     const placeholderId = this.sendDeepReasoningPlaceholder(context);
 
     let result: Awaited<ReturnType<typeof runDeepReasoning>> | null = null;
@@ -1146,6 +1226,7 @@ export class SessionHost {
       const client = this.responsesClientFactory();
       result = await runDeepReasoning({
         question,
+        profileContext,
         client,
         logger: this.logger,
         logSampleLimit: this.deepReasoningLogSampleLimit,
@@ -1183,7 +1264,7 @@ export class SessionHost {
       sessionId: context.id,
       responseSummary: result.responseSummary,
     });
-    this.sendRealtimeFallback(context, question, metadata);
+    this.sendRealtimeFallback(context, question, metadata, profileContext);
     this.metrics.increment('bff.session.event_forwarded_total', 1, { kind: 'deep_reasoning_fallback' });
   }
 
@@ -1200,9 +1281,21 @@ export class SessionHost {
     context.manager.sendEvent({ type: 'response.create' });
   }
 
-  private sendRealtimeFallback(context: SessionContext, question: string, metadata?: Record<string, any>) {
+  private sendRealtimeFallback(
+    context: SessionContext,
+    question: string,
+    metadata?: Record<string, any>,
+    profileContext?: string,
+  ) {
     context.hasUserContent = true;
     context.hasLiveUserInput = true;
+    if (profileContext && profileContext.trim().length > 0) {
+      this.enqueueTextMessage(
+        context,
+        'system',
+        '【内部メモ・読み上げ禁止】最新プロフィールを考慮して回答してください。\n' + profileContext,
+      );
+    }
     this.enqueueTextMessage(
       context,
       'system',
@@ -1228,6 +1321,7 @@ export class SessionHost {
   private handleInputImage(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_image' }>) {
     context.hasUserContent = true;
     context.hasLiveUserInput = true;
+    // 画像は全シナリオ共通でRealtime経路に乗せる（Nadiaの料理画像質問もdeep reasoningには送らない）。
     const imageUrl =
       command.mimeType && command.data && command.data.startsWith('data:')
         ? command.data

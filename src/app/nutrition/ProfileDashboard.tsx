@@ -137,7 +137,7 @@ export default function ProfileDashboard() {
             <p className="text-sm uppercase tracking-[0.2em] text-emerald-200">Nutrition Agent Demo</p>
             <h1 className="text-3xl font-semibold text-white">栄養管理ダッシュボード</h1>
             <p className="text-sm text-emerald-100">
-              ここで編集した値が、音声エージェント「ナディア」の回答にそのまま反映されます。
+              ここで編集した値が、音声エージェント「メアリー」の回答にそのまま反映されます。
             </p>
           </div>
           <div className="flex gap-2 text-sm">

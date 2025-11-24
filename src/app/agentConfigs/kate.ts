@@ -61,7 +61,7 @@ ${calendarAliasList}
 
 export const kateAgent = new RealtimeAgent({
   name: 'kate',
-  voice: 'shimmer',
+  voice: 'ballad',
   instructions: (context) => buildKateInstructions(context),
   handoffs: [],
   tools: [switchScenarioTool, switchAgentTool],
