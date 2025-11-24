@@ -109,6 +109,11 @@ function App() {
       return stored ? stored === 'true' : true;
     },
   );
+  const [isBargeInDisabled, setIsBargeInDisabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const stored = localStorage.getItem('bargeInDisabled');
+    return stored ? stored === 'true' : false;
+  });
   const [isTextOutputEnabled, setIsTextOutputEnabled] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     const stored = localStorage.getItem('textOutputEnabled');
@@ -377,18 +382,21 @@ const requestAgentChange = useCallback(async (agentName: string) => {
   }, [addTranscriptBreadcrumb, agentSetKey, clientTag, connect, isTextOutputEnabled, logClientEvent, requestAgentChange, requestScenarioChange, selectedAgentName, sessionStatus]);
 
   const handleSpeechDetected = useCallback(() => {
+    if (isBargeInDisabled) {
+      return;
+    }
     logClientEvent(
       { type: 'barge_in_interrupt_sent' },
       'barge_in_interrupt',
     );
     interrupt();
-  }, [interrupt, logClientEvent]);
+  }, [interrupt, isBargeInDisabled, logClientEvent]);
 
   useMicrophoneStream({
     sessionStatus,
     sendAudioChunk,
     logClientEvent,
-    speechDetectionEnabled: !isPTTActive,
+    speechDetectionEnabled: !isPTTActive && !isBargeInDisabled,
     onSpeechDetected: handleSpeechDetected,
   });
 
@@ -633,6 +641,10 @@ const requestAgentChange = useCallback(async (agentName: string) => {
     if (storedAudioPlaybackEnabled) {
       setIsAudioPlaybackEnabled(storedAudioPlaybackEnabled === "true");
     }
+    const storedBargeInDisabled = localStorage.getItem('bargeInDisabled');
+    if (storedBargeInDisabled) {
+      setIsBargeInDisabled(storedBargeInDisabled === 'true');
+    }
     const storedTextOutputEnabled = localStorage.getItem('textOutputEnabled');
     if (storedTextOutputEnabled) {
       setIsTextOutputEnabled(storedTextOutputEnabled === 'true');
@@ -653,6 +665,10 @@ const requestAgentChange = useCallback(async (agentName: string) => {
       isAudioPlaybackEnabled.toString()
     );
   }, [isAudioPlaybackEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('bargeInDisabled', isBargeInDisabled.toString());
+  }, [isBargeInDisabled]);
 
   useEffect(() => {
     localStorage.setItem('textOutputEnabled', isTextOutputEnabled.toString());
@@ -829,6 +845,8 @@ const requestAgentChange = useCallback(async (agentName: string) => {
         setIsEventsPaneExpanded={setIsEventsPaneExpanded}
         isAudioPlaybackEnabled={isAudioPlaybackEnabled}
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
+        isBargeInDisabled={isBargeInDisabled}
+        setIsBargeInDisabled={setIsBargeInDisabled}
         isTextOutputEnabled={isTextOutputEnabled}
         onTextOutputToggle={handleTextOutputPreferenceChange}
         codec={urlCodec}

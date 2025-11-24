@@ -78,6 +78,7 @@ const HOTWORD_MIN_CONFIDENCE = Number(process.env.HOTWORD_MIN_CONFIDENCE ?? '0.6
 const HOTWORD_CUE_ENABLED = (process.env.HOTWORD_CUE_ENABLED ?? 'true') === 'true';
 const DEFAULT_HOTWORD_CONTINUATION_WINDOW_MS = 2000;
 const DEEP_REASONING_TRIGGERS = ['深く考えて', 'じっくり', '丁寧に考えて', '理由を詳しく', 'ステップを教えて'];
+const BARGE_IN_ENABLED = (process.env.BARGE_IN_ENABLED ?? 'true') === 'true';
 
 function resolveHotwordContinuationWindowMs(): number {
   const configured = Number(process.env.HOTWORD_CONTINUATION_WINDOW_MS ?? '');
@@ -1386,6 +1387,13 @@ export class SessionHost {
   private handleControlCommand(context: SessionContext, command: Extract<SessionCommand, { kind: 'control' }>) {
     switch (command.action) {
       case 'interrupt':
+        if (!BARGE_IN_ENABLED) {
+          this.logger.info('Barge-in disabled by env; interrupt ignored', {
+            sessionId: context.id,
+          });
+          this.metrics.increment('bff.session.barge_in_blocked_total', 1);
+          return;
+        }
         context.manager.interrupt();
         break;
       case 'mute':
