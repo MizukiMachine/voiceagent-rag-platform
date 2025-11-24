@@ -590,69 +590,6 @@ describe('useRealtimeSession', () => {
 
     expect(result.current.status).toBe('CONNECTED');
   });
-
-  it('reconnects and retries the command when /event returns 404', async () => {
-    const fetchImpl = vi
-      .fn()
-      .mockResolvedValueOnce(
-        createMockResponse({
-          sessionId: 'sess_recover_1',
-          streamUrl: '/api/session/sess_recover_1/stream',
-          allowedModalities: ['audio'],
-          capabilityWarnings: [],
-        }),
-      )
-      .mockResolvedValueOnce(createMockResponse({ error: 'session_not_found' }, false, 404))
-      .mockResolvedValueOnce(
-        createMockResponse({
-          sessionId: 'sess_recover_2',
-          streamUrl: '/api/session/sess_recover_2/stream',
-          allowedModalities: ['audio'],
-          capabilityWarnings: [],
-        }),
-      )
-      .mockResolvedValueOnce(createMockResponse({ accepted: true }));
-
-    const first = createStubEventSource();
-    const second = createStubEventSource();
-    const createEventSource = vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
-
-    const { result } = renderHook(() =>
-      useRealtimeSession(
-        {},
-        {
-          fetchImpl,
-          createEventSource,
-        },
-      ),
-    );
-
-    await act(async () => {
-      await result.current.connect({ agentSetKey: 'demo' });
-    });
-
-    const firstStatus = first.addEventListener.mock.calls.find(
-      ([eventName]) => eventName === 'status',
-    )?.[1];
-    await act(async () => {
-      firstStatus?.({ data: JSON.stringify({ status: 'CONNECTED' }) } as MessageEvent<string>);
-    });
-
-    await act(async () => {
-      await result.current.sendUserText('calendar request');
-    });
-
-    await vi.waitFor(() => {
-      expect(createEventSource).toHaveBeenCalledTimes(2);
-      expect(fetchImpl).toHaveBeenCalledTimes(4);
-    });
-
-    expect(first.close).toHaveBeenCalled();
-    const replayCall = fetchImpl.mock.calls[3];
-    expect(replayCall?.[0]).toBe('/api/session/sess_recover_2/event');
-    const replayBody = JSON.parse((replayCall?.[1]?.body ?? '{}') as string);
-    expect(replayBody.text).toBe('calendar request');
-  });
 });
 
 describe('createTransportEventHandler', () => {
@@ -722,10 +659,9 @@ describe('createTransportEventHandler', () => {
   });
 });
 
-function createMockResponse(body: any, ok = true, status = ok ? 200 : 500) {
+function createMockResponse(body: any, ok = true) {
   return {
     ok,
-    status,
     json: vi.fn().mockResolvedValue(body),
   } as unknown as Response;
 }

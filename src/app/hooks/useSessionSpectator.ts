@@ -168,8 +168,7 @@ export function upsertTranscriptItems(
     });
   }
 
-  // keep the most recent 50 transcripts to avoid unbounded growth
-  return next.slice(-50);
+  return next.slice(-100);
 }
 
 function generateId(prefix: string): string {

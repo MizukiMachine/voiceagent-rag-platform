@@ -198,9 +198,6 @@ export function useRealtimeSession(
     images: config.defaultCapabilities?.images,
     outputText: config.defaultCapabilities?.outputText ?? true,
   });
-  const lastConnectOptionsRef = useRef<ConnectOptions | null>(null);
-  const pendingCommandQueueRef = useRef<SessionCommand[]>([]);
-  const reconnectingRef = useRef<Promise<void> | null>(null);
   const serverTextOutputEnabledRef = useRef(true);
   const metricEmitterRef = useRef(createConsoleMetricEmitter('client.session_manager'));
   const audioPlayerRef = useRef<PcmAudioPlayer | null>(null);
@@ -296,15 +293,6 @@ export function useRealtimeSession(
     listenerCleanupRef.current = null;
   }, []);
 
-  const clearLocalSessionState = useCallback(() => {
-    detachStreamListeners();
-    sessionStateRef.current?.eventSource.close();
-    sessionStateRef.current = null;
-    serverTextOutputEnabledRef.current = true;
-    audioPlayerRef.current?.close();
-    audioPlayerRef.current = null;
-  }, [detachStreamListeners]);
-
   const registerStreamListeners = useCallback(
     (source: EventSource) => {
       detachStreamListeners();
@@ -317,7 +305,6 @@ export function useRealtimeSession(
           return;
         }
         try {
-          detachStreamListeners();
           const newSource = createEventSource(active.streamUrl);
           sessionStateRef.current = {
             ...active,
@@ -391,15 +378,11 @@ export function useRealtimeSession(
           },
           'session_error',
         );
-        const fatalStatus = typeof payload?.status === 'number' ? payload.status >= 500 : false;
-        const fatalCode =
-          payload?.code === 'session_expired' || payload?.code === 'session_not_found';
-        if (fatalStatus || fatalCode) {
-          detachStreamListeners();
-          sessionStateRef.current?.eventSource.close();
-          sessionStateRef.current = null;
-          updateStatus('DISCONNECTED');
-        }
+        // サーバ側でセッションが強制終了された場合、クライアント状態を即座に切断扱いにする
+        detachStreamListeners();
+        sessionStateRef.current?.eventSource.close();
+        sessionStateRef.current = null;
+        updateStatus('DISCONNECTED');
       });
       addListener('voice_control', (payload) => {
         if (isVoiceControlDirective(payload)) {
@@ -442,23 +425,36 @@ export function useRealtimeSession(
     ],
   );
 
-  const establishSession = useCallback(
-    async (
-      { agentSetKey, preferredAgentName, extraContext, clientCapabilities, clientTag }: ConnectOptions,
-      options: { forceNew?: boolean } = {},
-    ) => {
-      if (sessionStateRef.current && !options.forceNew) {
+  const disconnect = useCallback(async () => {
+    const active = sessionStateRef.current;
+    if (!active) return;
+
+    detachStreamListeners();
+    active.eventSource.close();
+    sessionStateRef.current = null;
+    serverTextOutputEnabledRef.current = true;
+    audioPlayerRef.current?.close();
+    audioPlayerRef.current = null;
+    clearSessionId();
+    updateStatus('DISCONNECTED');
+
+    try {
+      const reasonParam = `reason=${encodeURIComponent(CLIENT_DISCONNECT_REASON)}`;
+      await fetchImpl(`/api/session/${active.sessionId}?${reasonParam}`, {
+        method: 'DELETE',
+        headers: buildHeaders(),
+      });
+    } catch (error) {
+      console.warn('Failed to delete session', error);
+    }
+  }, [clearSessionId, detachStreamListeners, fetchImpl, updateStatus]);
+
+  const connect = useCallback(
+    async ({ agentSetKey, preferredAgentName, extraContext, clientCapabilities, clientTag }: ConnectOptions) => {
+      if (sessionStateRef.current) {
         console.info('Session already active, ignoring connect request');
         return;
       }
-
-      lastConnectOptionsRef.current = {
-        agentSetKey,
-        preferredAgentName,
-        extraContext,
-        clientCapabilities,
-        clientTag,
-      };
 
       assignSessionId();
       updateStatus('CONNECTING');
@@ -552,82 +548,24 @@ export function useRealtimeSession(
         memoryKey: typeof data.memoryKey === 'string' ? data.memoryKey : null,
       };
     },
-    [
-      assignSessionId,
-      createEventSource,
-      fetchImpl,
-      logClientEvent,
-      registerStreamListeners,
-      updateStatus,
-    ],
+    [assignSessionId, createEventSource, fetchImpl, logClientEvent, registerStreamListeners, updateStatus],
   );
 
-  const disconnect = useCallback(async () => {
-    const active = sessionStateRef.current;
-    if (!active) return;
+  const disconnectRef = useRef(disconnect);
+  useEffect(() => {
+    disconnectRef.current = disconnect;
+  }, [disconnect]);
 
-    clearLocalSessionState();
-    pendingCommandQueueRef.current = [];
-    clearSessionId();
-    updateStatus('DISCONNECTED');
-
-    try {
-      const reasonParam = `reason=${encodeURIComponent(CLIENT_DISCONNECT_REASON)}`;
-      await fetchImpl(`/api/session/${active.sessionId}?${reasonParam}`, {
-        method: 'DELETE',
-        headers: buildHeaders(),
-      });
-    } catch (error) {
-      console.warn('Failed to delete session', error);
-    }
-  }, [clearLocalSessionState, clearSessionId, fetchImpl, updateStatus]);
-
-  const connect = useCallback(
-    async (options: ConnectOptions) => establishSession(options),
-    [establishSession],
-  );
-
-  const recoverSession = useCallback(
-    async (reason: string) => {
-      const previousSessionId = sessionStateRef.current?.sessionId;
-      const options = lastConnectOptionsRef.current;
-      if (!options) {
-        updateStatus('DISCONNECTED');
-        return;
+  useEffect(() => {
+    return () => {
+      const fn = disconnectRef.current;
+      if (fn) {
+        void fn();
       }
-      if (reconnectingRef.current) {
-        return reconnectingRef.current;
-      }
+    };
+  }, []);
 
-      reconnectingRef.current = (async () => {
-        clearLocalSessionState();
-        updateStatus('CONNECTING');
-        logClientEvent(
-          {
-            type: 'session_reconnecting',
-            reason,
-            previousSessionId,
-          },
-          'session_reconnecting',
-        );
-        try {
-          await establishSession(options, { forceNew: true });
-        } catch (error) {
-          updateStatus('DISCONNECTED');
-          throw error;
-        }
-      })().finally(() => {
-        reconnectingRef.current = null;
-      });
-
-      return reconnectingRef.current;
-    },
-    [clearLocalSessionState, establishSession, logClientEvent, updateStatus],
-  );
-
-  type SessionCommandError = Error & { status?: number; sessionId?: string };
-
-  const sendCommandDirect = useCallback(
+  const postSessionCommand = useCallback(
     async (command: SessionCommand) => {
       const active = sessionStateRef.current;
       if (!active) {
@@ -652,21 +590,8 @@ export function useRealtimeSession(
 
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        const reason = payload?.message || payload?.error || `BFF returned ${response.status}`;
-        logClientEvent(
-          {
-            type: 'session_error',
-            code: payload?.error,
-            message: reason,
-            status: response.status,
-            sessionId: active.sessionId,
-          },
-          'error.forward_event_failed',
-        );
-        const error = new Error(reason) as SessionCommandError;
-        error.status = response.status;
-        error.sessionId = active.sessionId;
-        throw error;
+        logClientEvent(payload, 'error.forward_event_failed');
+        throw new Error('Failed to forward event to BFF');
       }
 
       metricEmitterRef.current.increment('session_events_total', 1, {
@@ -674,60 +599,6 @@ export function useRealtimeSession(
       });
     },
     [fetchImpl, logClientEvent],
-  );
-
-  const isRecoverableStatus = (status?: number) =>
-    typeof status === 'number' && [401, 403, 404, 410].includes(status);
-
-  const flushPendingCommands = useCallback(async () => {
-    if (pendingCommandQueueRef.current.length === 0) return;
-    const queue = [...pendingCommandQueueRef.current];
-    pendingCommandQueueRef.current = [];
-    for (const cmd of queue) {
-      try {
-        await sendCommandDirect(cmd);
-      } catch (error) {
-        logClientEvent(
-          {
-            type: 'session_error',
-            message: (error as Error)?.message ?? 'Failed to replay command after reconnect',
-          },
-          'error.session_replay_failed',
-        );
-      }
-    }
-  }, [logClientEvent, sendCommandDirect]);
-
-  const disconnectRef = useRef(disconnect);
-  useEffect(() => {
-    disconnectRef.current = disconnect;
-  }, [disconnect]);
-
-  useEffect(() => {
-    return () => {
-      const fn = disconnectRef.current;
-      if (fn) {
-        void fn();
-      }
-    };
-  }, []);
-
-  const postSessionCommand = useCallback(
-    async (command: SessionCommand, options: { allowRecovery?: boolean } = {}) => {
-      try {
-        await sendCommandDirect(command);
-      } catch (error) {
-        const status = (error as SessionCommandError)?.status;
-        if (options.allowRecovery !== false && isRecoverableStatus(status)) {
-          pendingCommandQueueRef.current.push(command);
-          await recoverSession('session_command_failed');
-          await flushPendingCommands();
-          return;
-        }
-        throw error;
-      }
-    },
-    [flushPendingCommands, recoverSession, sendCommandDirect],
   );
 
   const sendAudioChunk = useCallback(
@@ -744,15 +615,15 @@ export function useRealtimeSession(
   );
 
   const sendUserText = useCallback(
-    async (text: string) => {
-      await postSessionCommand({ kind: 'input_text', text });
+    (text: string) => {
+      void postSessionCommand({ kind: 'input_text', text });
     },
     [postSessionCommand],
   );
 
   const sendEvent = useCallback(
-    async (ev: any) => {
-      await postSessionCommand({ kind: 'event', event: ev });
+    (ev: any) => {
+      void postSessionCommand({ kind: 'event', event: ev });
     },
     [postSessionCommand],
   );
