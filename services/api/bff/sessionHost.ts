@@ -500,6 +500,16 @@ export class SessionHost {
     }
   }
 
+  /**
+   * clientTag に紐づくセッションがあれば破棄する。
+   * メモリリセット時に既存セッションが古い履歴を再度書き戻すのを防ぐため。
+   */
+  async destroySessionsByClientTag(clientTag: string, reason = 'memory_reset'): Promise<boolean> {
+    const binding = this.clientTagIndex.get(clientTag);
+    if (!binding?.sessionId) return false;
+    return this.destroySession(binding.sessionId, { reason, initiatedBy: 'system' });
+  }
+
   private saveClientTagBinding(clientTag: string, binding: Omit<ClientTagBinding, 'updatedAt'>): ClientTagBinding {
     const normalized: ClientTagBinding = {
       ...binding,

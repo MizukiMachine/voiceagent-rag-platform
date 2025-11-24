@@ -10,6 +10,8 @@ export const scenarioAliasMap: Record<string, string[]> = {
     'グラビティ', // よくある誤転写
     'クロクティ',
     'グラフィー',
+    'グラプティブ',
+    'ブラクティ',
     // 'グラ',
     // 'ぐら',
     // 'ｸﾞﾗ',
@@ -22,6 +24,7 @@ export const scenarioAliasMap: Record<string, string[]> = {
     'Graphiti',
     'graphiti',
     'Grażty',
+    'Crafty',
   ],
   kate: ['kate',
     'ケイト',

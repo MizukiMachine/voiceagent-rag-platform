@@ -8,6 +8,7 @@ import {
   resolveMemoryKey,
 } from '../../../../services/coreData/persistentMemory';
 import { handleRouteError, requireBffSecret } from '../session/utils';
+import { sessionHost } from '../../../../services/api/bff/sessionHost';
 
 const resetSchema = z.object({
   agentSetKey: z.string().min(1),
@@ -42,6 +43,8 @@ export async function DELETE(request: Request) {
         await store.reset(legacyKey);
       }
       await cleanupLegacyKeysByClientTag(payload.clientTag);
+      // 既存セッションが同じ clientTag で繋がったままだと、メモリを即座に再書き込みする恐れがあるため終了させる
+      await sessionHost.destroySessionsByClientTag(payload.clientTag).catch(() => undefined);
     }
 
     return NextResponse.json({ ok: true, memoryKey: resolvedKey });
