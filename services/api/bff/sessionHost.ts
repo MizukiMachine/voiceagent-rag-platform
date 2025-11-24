@@ -43,6 +43,7 @@ import {
   resolveMemoryKey,
   toMemoryEntry,
   type MemoryStore,
+  type MemoryEntry,
 } from '../../coreData/persistentMemory';
 
 const SESSION_TTL_MS = 10 * 60 * 1000;
