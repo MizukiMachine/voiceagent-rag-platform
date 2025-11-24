@@ -537,6 +537,67 @@ describe('SessionHost', () => {
     expect(stored.find((entry) => entry.text === '以前の会話')?.createdAt).toBe(seededAt);
   });
 
+  it('rehydrates memory across scenarios when clientTag is shared', async () => {
+    const memoryStore = new InMemoryMemoryStore({
+      'sharedTag': [{ role: 'assistant', text: '身長150cmで覚えました', createdAt: '2025-01-01T00:00:00.000Z' }],
+    });
+    host = new SessionHost({
+      scenarioMap,
+      sessionManagerFactory: (hooks) => {
+        const mgr = new FakeSessionManager(hooks);
+        managers.push(mgr);
+        return mgr;
+      },
+      envInspector: () => envSnapshot,
+      memoryStore,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
+    });
+
+    await host.createSession({ agentSetKey: 'demo', clientTag: 'sharedTag' });
+    const firstManager = managers[0]!;
+    expect(
+      firstManager.sentEvents.some(
+        (ev) => ev?.type === 'conversation.item.create' && ev?.item?.content?.[0]?.text?.includes('身長150cm'),
+      ),
+    ).toBe(true);
+
+    await host.createSession({ agentSetKey: 'kate', clientTag: 'sharedTag' });
+    const secondManager = managers[1]!;
+    expect(
+      secondManager.sentEvents.some(
+        (ev) => ev?.type === 'conversation.item.create' && ev?.item?.content?.[0]?.text?.includes('身長150cm'),
+      ),
+    ).toBe(true);
+  });
+
+  it('rehydrates legacy agentSet:clientTag memories into clientTag key', async () => {
+    const legacyKey = 'demo:glasses01';
+    const memoryStore = new InMemoryMemoryStore({
+      [legacyKey]: [{ role: 'assistant', text: 'legacy memo', createdAt: '2025-01-02T00:00:00.000Z' }],
+    });
+    host = new SessionHost({
+      scenarioMap,
+      sessionManagerFactory: (hooks) => {
+        const mgr = new FakeSessionManager(hooks);
+        managers.push(mgr);
+        return mgr;
+      },
+      envInspector: () => envSnapshot,
+      memoryStore,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
+    });
+
+    await host.createSession({ agentSetKey: 'demo', clientTag: 'glasses01' });
+    const manager = managers[0]!;
+    expect(
+      manager.sentEvents.some(
+        (ev) => ev?.type === 'conversation.item.create' && ev?.item?.content?.[0]?.text === 'legacy memo',
+      ),
+    ).toBe(true);
+  });
+
   it('registers and resolves viewer sessions by clientTag override', async () => {
     const { sessionId } = await host.createSession({ agentSetKey: 'demo' });
     const registered = host.registerViewerSession('glasses01', sessionId, 'kate');

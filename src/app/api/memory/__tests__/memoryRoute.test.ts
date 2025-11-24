@@ -47,8 +47,21 @@ describe('memory API route', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(200);
-    expect(payload.memoryKey).toBe('demo:glasses01');
-    expect(storeMock.reset).toHaveBeenCalledWith('demo:glasses01');
+    expect(payload.memoryKey).toBe('glasses01');
+    expect(storeMock.reset).toHaveBeenCalledWith('glasses01');
+  });
+
+  it('also resets legacy agentSet:clientTag key when clientTag is provided', async () => {
+    const request = new Request('http://localhost/api/memory', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentSetKey: 'demo', clientTag: 'legacy' }),
+    });
+
+    await resetMemory(request);
+
+    expect(storeMock.reset).toHaveBeenCalledWith('legacy');
+    expect(storeMock.reset).toHaveBeenCalledWith('demo:legacy');
   });
 
   it('rejects unauthorized calls when secret is set', async () => {

@@ -6,7 +6,7 @@
 - memoryKey 優先順位: 明示指定 > metadata.memoryKey > clientTag > metadata.userId > agentSetKey。
 - リプレイは Realtime API 互換ペイロードのみ送信し、metadata など非互換フィールドは除去。
 - リプレイ失敗時はスキップしてセッション継続、クライアントへ `session_error` 通知。
-- リセット後は viewer が再接続して空状態から購読する。
+- キーは clientTag 単位（旧 `agentSetKey:clientTag` も読み出してマージする）。リセット後は viewer が再接続して空状態から購読する。
 
 ### 実装メモ
 - コア: `services/coreData/persistentMemory.ts`
@@ -26,4 +26,3 @@
 - memoryKey 解決（clientTag 優先）とリセット API の挙動。
 - リプレイイベントに metadata が含まれないこと、`pm:` ID でフィルタリングされること。
 - リプレイ失敗時に `session_error` が通知されてもセッションが継続すること。
-

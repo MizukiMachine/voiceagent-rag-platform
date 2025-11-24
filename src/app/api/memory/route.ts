@@ -31,7 +31,16 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await getPersistentMemoryStore().reset(resolvedKey);
+    const store = getPersistentMemoryStore();
+    await store.reset(resolvedKey);
+
+    if (payload.clientTag) {
+      const legacyKey = `${payload.agentSetKey}:${payload.clientTag}`;
+      if (legacyKey !== resolvedKey) {
+        await store.reset(legacyKey);
+      }
+    }
+
     return NextResponse.json({ ok: true, memoryKey: resolvedKey });
   } catch (error) {
     return handleRouteError(error);

@@ -1545,7 +1545,8 @@ export class SessionHost {
   private async rehydratePersistentMemory(context: SessionContext): Promise<void> {
     if (!context.memoryKey) return;
     try {
-      const entries = await this.memoryStore.read(context.memoryKey, PERSISTENT_MEMORY_REPLAY_LIMIT);
+      const keysToRead = this.buildMemoryReadKeys(context);
+      const entries = await this.readMergedPersistentEntries(keysToRead, PERSISTENT_MEMORY_REPLAY_LIMIT);
       if (entries.length === 0) return;
       context.hasUserContent = true;
       const events = buildReplayEvents(entries, PERSISTENT_MEMORY_REPLAY_LIMIT);
@@ -1562,6 +1563,7 @@ export class SessionHost {
       this.logger.info('Persistent memory replayed', {
         sessionId: context.id,
         memoryKey: context.memoryKey,
+        legacyKeys: keysToRead.filter((k) => k !== context.memoryKey),
         count: events.length,
       });
     } catch (error) {
@@ -1576,6 +1578,32 @@ export class SessionHost {
         retryable: false,
       });
     }
+  }
+
+  private buildMemoryReadKeys(context: SessionContext): string[] {
+    const keys = new Set<string>();
+    if (context.memoryKey) keys.add(context.memoryKey);
+    if (context.clientTag) {
+      const legacyKey = `${context.agentSetKey}:${context.clientTag}`;
+      if (!keys.has(legacyKey)) keys.add(legacyKey);
+    }
+    return Array.from(keys);
+  }
+
+  private async readMergedPersistentEntries(keys: string[], limit: number): Promise<MemoryEntry[]> {
+    const merged: MemoryEntry[] = [];
+    const seen = new Set<string>();
+    for (const key of keys) {
+      const list = await this.memoryStore.read(key);
+      list.forEach((entry) => {
+        const uid = `${entry.itemId ?? 'noid'}:${entry.createdAt}`;
+        if (seen.has(uid)) return;
+        seen.add(uid);
+        merged.push(entry);
+      });
+    }
+    merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    return merged.slice(-limit);
   }
 
   private async persistMemoryFromHistory(context: SessionContext, payload: any): Promise<void> {

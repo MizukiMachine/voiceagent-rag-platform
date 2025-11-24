@@ -48,7 +48,7 @@ export function resolveMemoryKey(
   const fromClientTag =
     typeof clientTag === 'string' && clientTag.trim() ? clientTag.trim() : null;
   if (fromClientTag) {
-    return `${agentSetKey}:${fromClientTag}`;
+    return fromClientTag;
   }
   if (typeof metadata?.userId === 'string' && metadata.userId.trim()) {
     return `${agentSetKey}:${metadata.userId.trim()}`;
