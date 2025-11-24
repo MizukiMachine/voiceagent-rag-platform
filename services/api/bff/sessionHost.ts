@@ -1046,6 +1046,21 @@ export class SessionHost {
       return;
     }
 
+    const isNutritionScenario = context.agentSetKey === 'nutrition';
+    if (isNutritionScenario) {
+      this.logger.info('Nutrition scenario: forcing deep reasoning pipeline', {
+        sessionId: context.id,
+      });
+      this.executeDeepReasoningPipeline(context, text, command.metadata).catch((error) => {
+        this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as usual', {
+          sessionId: context.id,
+          error,
+        });
+        this.sendUserTextCommand(context, text, command.metadata);
+      });
+      return;
+    }
+
     const keywordHit = this.shouldForceDeepReasoning(text);
     const llmHit = keywordHit ? true : await this.intentClassifier(text);
 
@@ -1228,6 +1243,7 @@ export class SessionHost {
   private handleInputImage(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_image' }>) {
     context.hasUserContent = true;
     context.hasLiveUserInput = true;
+    // 画像は全シナリオ共通でRealtime経路に乗せる（Nadiaの料理画像質問もdeep reasoningには送らない）。
     const imageUrl =
       command.mimeType && command.data && command.data.startsWith('data:')
         ? command.data

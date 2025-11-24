@@ -156,6 +156,12 @@ describe('SessionHost', () => {
         instructions: 'haiku',
       } as RealtimeAgent,
     ],
+    nutrition: [
+      {
+        name: 'nutrition-agent',
+        instructions: 'nutrition',
+      } as RealtimeAgent,
+    ],
   };
   const originalContinuationWindowMs = process.env.HOTWORD_CONTINUATION_WINDOW_MS;
 
@@ -288,6 +294,45 @@ describe('SessionHost', () => {
       .find((item) => (item?.content?.[0] as any)?.text?.includes('深考パイプラインで回答が得られなかった'));
     expect(fallbackSystem?.content?.[0]?.text).toContain('深考パイプラインで回答が得られなかった');
     expect(responsesClient.create).toHaveBeenCalled();
+  });
+
+  it('routes all nutrition text to deep reasoning without intent triggers', async () => {
+    responsesClient.create.mockResolvedValueOnce({
+      id: 'resp_nutrition',
+      model: 'gpt-5.1',
+      output: [
+        {
+          content: [
+            {
+              type: 'output_text',
+              text: '深考栄養回答です。',
+            },
+          ],
+        },
+      ],
+    });
+
+    const { sessionId } = await host.createSession({ agentSetKey: 'nutrition' });
+    await host.handleCommand(sessionId, { kind: 'input_text', text: '夕飯は何が良い？' });
+    const manager = managers[0]!;
+
+    await vi.waitFor(() => {
+      expect(responsesClient.create).toHaveBeenCalled();
+    });
+    expect(intentClassifier).not.toHaveBeenCalled();
+
+    const placeholderEvent = manager.sentEvents.find(
+      (event) =>
+        typeof event?.item?.content?.[0]?.text === 'string' &&
+        event.item.content[0].text.includes('丁寧に考えています'),
+    );
+    expect(placeholderEvent).toBeTruthy();
+
+    const finalSystem = manager.sentEvents
+      .filter((ev) => ev?.item?.role === 'system')
+      .map((ev) => ev.item)
+      .find((item) => (item?.content?.[0] as any)?.text?.includes('最終回答'));
+    expect(finalSystem?.content?.[0]?.text).toContain('最終回答');
   });
 
   it('allows disabling text output when requested by the client', async () => {
