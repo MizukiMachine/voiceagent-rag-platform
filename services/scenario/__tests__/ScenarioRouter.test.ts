@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { ScenarioRouter } from '../ScenarioRouter';
 import type { VoiceControlHandlers } from '../../../src/shared/voiceControl';
@@ -20,6 +20,15 @@ describe('ScenarioRouter', () => {
   };
   let router: ScenarioRouter;
 
+  const createRouter = () =>
+    new ScenarioRouter({
+      currentScenarioKey: 'graffity',
+      voiceControl,
+      forwarder,
+      logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+      mergeWindowMs: 20,
+    });
+
   beforeEach(() => {
     voiceControl = {
       requestScenarioChange: vi.fn().mockResolvedValue({ success: true }),
@@ -31,23 +40,48 @@ describe('ScenarioRouter', () => {
       interruptActiveResponse: vi.fn(),
     };
 
-    router = new ScenarioRouter({
-      currentScenarioKey: 'graffity',
-      voiceControl,
-      forwarder,
-      logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-    });
+    router = createRouter();
   });
 
-  it('forwards commands when the hotword matches the current scenario', async () => {
-    await router.handleHotwordMatch(makeMatch());
+  it('flushes the hotword command after the merge window elapses', async () => {
+    vi.useFakeTimers();
+    try {
+      await router.handleHotwordMatch(makeMatch());
+      expect(forwarder.replaceTranscriptWithText).not.toHaveBeenCalled();
 
-    expect(forwarder.replaceTranscriptWithText).toHaveBeenCalledTimes(1);
-    expect(forwarder.replaceTranscriptWithText).toHaveBeenCalledWith(makeMatch());
-    expect(voiceControl.requestScenarioChange).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(25);
+      await Promise.resolve();
+
+      expect(forwarder.replaceTranscriptWithText).toHaveBeenCalledTimes(1);
+      expect(forwarder.replaceTranscriptWithText).toHaveBeenCalledWith(makeMatch());
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
-  it('requests a scenario change and cancels audio when a different hotword is detected', async () => {
+  it('appends continuation text arriving within the merge window', async () => {
+    vi.useFakeTimers();
+    try {
+      const continuation = 'さらに教えてください';
+      await router.handleHotwordMatch(makeMatch());
+      vi.advanceTimersByTime(5);
+      expect(router.appendContinuation(continuation)).toBe(true);
+
+      vi.advanceTimersByTime(25);
+      await Promise.resolve();
+
+      expect(forwarder.replaceTranscriptWithText).toHaveBeenCalledTimes(1);
+      expect(forwarder.replaceTranscriptWithText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          commandText: `注文状況を教えて ${continuation}`,
+        }),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('requests a scenario change when a different hotword arrives', async () => {
     const match = makeMatch({
       scenarioKey: 'kate',
       commandText: '今日の予定を教えて',
@@ -62,7 +96,7 @@ describe('ScenarioRouter', () => {
     });
   });
 
-  it('drops empty commands even when the scenario matches', async () => {
+  it('ignores empty hotword commands even when the scenario matches', async () => {
     await router.handleHotwordMatch(makeMatch({ commandText: '' }));
 
     expect(forwarder.replaceTranscriptWithText).not.toHaveBeenCalled();
