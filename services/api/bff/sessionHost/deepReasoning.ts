@@ -66,7 +66,6 @@ export async function classifyDeepReasoningIntent(
           ],
         },
       ],
-      response_format: { type: 'text' },
       temperature: 0.2,
     });
 
@@ -97,7 +96,6 @@ export function buildDeepReasoningRequest(question: string) {
     reasoning: { effort: 'high' },
     temperature: 0.4,
     max_output_tokens: 600,
-    response_format: { type: 'text' },
     input: [
       {
         role: 'system',
