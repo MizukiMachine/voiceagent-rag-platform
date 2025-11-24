@@ -246,8 +246,11 @@ describe('SessionHost', () => {
 
     const manager = managers[0]!;
     expect(responsesClient.create).toHaveBeenCalled();
-    const systemMessage = manager.sentEvents.find((ev) => ev?.item?.role === 'system');
-    expect(systemMessage?.item?.content?.[0]?.text).toContain('最終回答');
+    const finalSystem = manager.sentEvents
+      .filter((ev) => ev?.item?.role === 'system')
+      .map((ev) => ev.item)
+      .find((item) => (item?.content?.[0] as any)?.text?.includes('最終回答'));
+    expect(finalSystem?.content?.[0]?.text).toContain('最終回答');
     const responseEventCount = manager.sentEvents.filter((ev) => ev?.type === 'response.create').length;
     expect(responseEventCount).toBeGreaterThan(0);
   });
@@ -268,8 +271,11 @@ describe('SessionHost', () => {
     await host.handleCommand(sessionId, { kind: 'input_text', text: 'じっくり理由を教えて' });
 
     const manager = managers[0]!;
-    const systemMessage = manager.sentEvents.find((ev) => ev?.item?.role === 'system');
-    expect(systemMessage?.item?.content?.[0]?.text).toContain('深考パイプラインで回答が得られなかった');
+    const fallbackSystem = manager.sentEvents
+      .filter((ev) => ev?.item?.role === 'system')
+      .map((ev) => ev.item)
+      .find((item) => (item?.content?.[0] as any)?.text?.includes('深考パイプラインで回答が得られなかった'));
+    expect(fallbackSystem?.content?.[0]?.text).toContain('深考パイプラインで回答が得られなかった');
     expect(responsesClient.create).toHaveBeenCalled();
   });
 

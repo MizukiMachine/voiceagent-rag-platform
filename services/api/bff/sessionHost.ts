@@ -57,6 +57,8 @@ const PERSISTENT_MEMORY_REPLAY_LIMIT =
   Number(process.env.PERSISTENT_MEMORY_REPLAY_LIMIT ?? '') || 30;
 const DEEP_REASONING_PLACEHOLDER_TEXT =
   process.env.DEEP_REASONING_PLACEHOLDER_TEXT ?? '少々お待ちください。丁寧に考えています…';
+const DEEP_REASONING_TIMEOUT_MS =
+  Number(process.env.DEEP_REASONING_TIMEOUT_MS ?? '') || 45_000;
 
 const HOTWORD_TIMEOUT_MS = Number(process.env.HOTWORD_TIMEOUT_MS ?? '') || 8000;
 const HOTWORD_REMINDER_DISCONNECT_DELAY_MS =
@@ -341,7 +343,7 @@ export class SessionHost {
       deps.hotwordReminderDisconnectDelayMs ?? HOTWORD_REMINDER_DISCONNECT_DELAY_MS;
     this.hotwordCueEnabled = deps.hotwordCueEnabled ?? HOTWORD_CUE_ENABLED;
     this.deepReasoningLogSampleLimit = deps.deepReasoningLogSampleLimit ?? 800;
-    this.deepReasoningTimeoutMs = Number(process.env.DEEP_REASONING_TIMEOUT_MS ?? '') || 20_000;
+    this.deepReasoningTimeoutMs = DEEP_REASONING_TIMEOUT_MS;
 
     this.responsesClientFactory =
       deps.responsesClientFactory ??
@@ -1073,16 +1075,20 @@ export class SessionHost {
   private sendDeepReasoningPlaceholder(context: SessionContext): string | undefined {
     try {
       const placeholderItemId = `deep_placeholder_${randomUUID().slice(0, 8)}`;
+      // システム指示として短い待機メッセージをRealtimeに生成させる
       context.manager.sendEvent({
         type: 'conversation.item.create',
         item: {
           id: placeholderItemId,
           type: 'message',
-          role: 'assistant',
+          role: 'system',
           content: [
             {
-              type: 'output_text',
-              text: DEEP_REASONING_PLACEHOLDER_TEXT,
+              type: 'input_text',
+              text:
+                '次の応答では「' +
+                DEEP_REASONING_PLACEHOLDER_TEXT +
+                '」とだけ一度話し、すぐ終了してください。追加説明や二回以上の発話は不要です。',
             },
           ],
         },
