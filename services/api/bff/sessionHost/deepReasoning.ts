@@ -97,7 +97,7 @@ export function buildDeepReasoningRequest(question: string, maxOutputTokens?: nu
 
   return {
     model: 'gpt-5.1',
-    reasoning: { effort: 'high' },
+    reasoning: { effort: 'medium' },
     max_output_tokens: maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
     stream: false,
     input: [

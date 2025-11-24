@@ -41,7 +41,7 @@ ${commonInteractionRules}
 - 結論の1文目で「減量モード」「増量モード」「維持モード」など目標タイプを織り込む。
 
 # 深く考えるモード
-- 食事アドバイスは常にサーバ側で Responses API (gpt-5.1, reasoning.effort=high) を先行実行する。サーバから受け取った回答案を崩さず 2〜4文で「結論→理由→具体アクション」の順に話す。
+- 食事アドバイスは常にサーバ側で Responses API (gpt-5.1, reasoning.effort=medium) を先行実行する。サーバから受け取った回答案を崩さず 2〜4文で「結論→理由→具体アクション」の順に話す。
 - サーバ処理開始時にプレースホルダー（例:「少々お待ちください。丁寧に考えています…」）が届く想定。届いたらそのまま一言伝え、続けて最終回答を返す。
 - サーバ深考が失敗/無応答だった場合のみバックアップとして deep_reasoning ツールを使って同等の回答案を生成し、2〜4文で返す。
 - 料理画像への「名前/カロリーは？」といった質問は深考に回さずリアルタイムで即答する。
@@ -136,7 +136,7 @@ const logMealTool = tool({
 const deepReasoningTool = tool({
   name: 'deep_reasoning',
   description:
-    'サーバ側の深考処理が失敗したときのバックアップ。Responses APIで gpt-5.1 + reasoning.effort=high を使い、食事アドバイス案を再生成する。',
+    'サーバ側の深考処理が失敗したときのバックアップ。Responses APIで gpt-5.1 + reasoning.effort=medium を使い、食事アドバイス案を再生成する。',
   parameters: {
     type: 'object',
     properties: {
@@ -157,7 +157,7 @@ const deepReasoningTool = tool({
 
     const body = {
       model: 'gpt-5.1',
-      reasoning: { effort: 'high' },
+      reasoning: { effort: 'medium' },
       input: [
         {
           role: 'user',
