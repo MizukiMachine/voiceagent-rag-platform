@@ -17,11 +17,15 @@ export interface DeepReasoningOptions {
   client: ResponsesClient;
   logger: StructuredLogger;
   logSampleLimit?: number;
+  maxOutputTokens?: number;
 }
 
+const DEFAULT_MAX_OUTPUT_TOKENS =
+  Number(process.env.DEEP_REASONING_MAX_OUTPUT_TOKENS ?? '') || 4000;
+
 export async function runDeepReasoning(options: DeepReasoningOptions): Promise<DeepReasoningResult> {
-  const { question, client, logger, logSampleLimit = 800 } = options;
-  const requestBody = buildDeepReasoningRequest(question);
+  const { question, client, logger, logSampleLimit = 800, maxOutputTokens } = options;
+  const requestBody = buildDeepReasoningRequest(question, maxOutputTokens);
 
   let response: any;
   try {
@@ -55,6 +59,7 @@ export async function classifyDeepReasoningIntent(
     const res = await client.create({
       model: 'gpt-5-mini',
       max_output_tokens: 50,
+      stream: false,
       input: [
         {
           role: 'user',
@@ -66,7 +71,6 @@ export async function classifyDeepReasoningIntent(
           ],
         },
       ],
-      temperature: 0.2,
     });
 
     const output: any[] = Array.isArray((res as any).output) ? (res as any).output : [];
@@ -87,14 +91,15 @@ export async function classifyDeepReasoningIntent(
   }
 }
 
-export function buildDeepReasoningRequest(question: string) {
+export function buildDeepReasoningRequest(question: string, maxOutputTokens?: number) {
   const systemPrompt =
     '日本語で回答してください。結論→理由→具体アクションの順で4〜6文。理由/論拠は活動量・食事ログ・goalTypeなどパーソナルデータや直近の食事内容を2〜3個必ず盛り込み、具体的に書いてください。';
 
   return {
     model: 'gpt-5.1',
     reasoning: { effort: 'high' },
-    max_output_tokens: 600,
+    max_output_tokens: maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+    stream: false,
     input: [
       {
         role: 'system',

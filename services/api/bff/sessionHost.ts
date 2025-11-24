@@ -55,6 +55,8 @@ const RATE_LIMIT_MAX_EVENTS = 10;
 const PERSISTENT_MEMORY_ENABLED = process.env.PERSISTENT_MEMORY_ENABLED === 'true';
 const PERSISTENT_MEMORY_REPLAY_LIMIT =
   Number(process.env.PERSISTENT_MEMORY_REPLAY_LIMIT ?? '') || 30;
+const DEEP_REASONING_PLACEHOLDER_TEXT =
+  process.env.DEEP_REASONING_PLACEHOLDER_TEXT ?? '少々お待ちください。丁寧に考えています…';
 
 const HOTWORD_TIMEOUT_MS = Number(process.env.HOTWORD_TIMEOUT_MS ?? '') || 8000;
 const HOTWORD_REMINDER_DISCONNECT_DELAY_MS =
@@ -252,6 +254,11 @@ interface SessionContext {
   hotwordCuePlayedItems: Set<string>;
   clientTag?: string;
   destroyed?: boolean;
+  deepReasoningJob?: {
+    id: string;
+    placeholderItemId?: string;
+    timeout?: ReturnType<typeof setTimeout>;
+  };
 }
 
 interface DestroySessionOptions {
@@ -309,6 +316,7 @@ export class SessionHost {
   private readonly responsesClientFactory: () => ResponsesClient;
   private readonly intentClassifier: (text: string) => Promise<boolean>;
   private readonly deepReasoningLogSampleLimit: number;
+  private readonly deepReasoningTimeoutMs: number;
 
   constructor(deps: SessionHostDeps = {}) {
     this.logger = deps.logger ?? createStructuredLogger({ component: 'bff.session' });
@@ -333,6 +341,7 @@ export class SessionHost {
       deps.hotwordReminderDisconnectDelayMs ?? HOTWORD_REMINDER_DISCONNECT_DELAY_MS;
     this.hotwordCueEnabled = deps.hotwordCueEnabled ?? HOTWORD_CUE_ENABLED;
     this.deepReasoningLogSampleLimit = deps.deepReasoningLogSampleLimit ?? 800;
+    this.deepReasoningTimeoutMs = Number(process.env.DEEP_REASONING_TIMEOUT_MS ?? '') || 20_000;
 
     this.responsesClientFactory =
       deps.responsesClientFactory ??
@@ -1014,7 +1023,7 @@ export class SessionHost {
         sessionId: context.id,
         keywordHit,
       });
-      this.executeDeepReasoningPipeline(context, text).catch((error) => {
+      this.executeDeepReasoningPipeline(context, text, command.metadata).catch((error) => {
         this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as usual', {
           sessionId: context.id,
           error,
@@ -1032,14 +1041,98 @@ export class SessionHost {
     return DEEP_REASONING_TRIGGERS.some((kw) => normalized.includes(kw));
   }
 
-  private async executeDeepReasoningPipeline(context: SessionContext, question: string): Promise<void> {
-    const client = this.responsesClientFactory();
-    const result = await runDeepReasoning({
-      question,
-      client,
-      logger: this.logger,
-      logSampleLimit: this.deepReasoningLogSampleLimit,
-    });
+  private startDeepReasoningJob(context: SessionContext, question?: string, metadata?: Record<string, any>) {
+    if (context.deepReasoningJob?.timeout) {
+      clearTimeout(context.deepReasoningJob.timeout);
+    }
+    const id = randomUUID();
+    const timeout = setTimeout(() => {
+      if (!this.isDeepReasoningJobCurrent(context, id)) return;
+      this.logger.warn('Deep reasoning timed out; falling back', { sessionId: context.id });
+      const placeholderId = context.deepReasoningJob?.placeholderItemId;
+      this.deleteTranscriptItem(context, placeholderId);
+      this.clearDeepReasoningJob(context);
+      this.sendRealtimeFallback(context, question ?? '前の質問', metadata);
+    }, this.deepReasoningTimeoutMs);
+    context.deepReasoningJob = { id, timeout };
+  }
+
+  private clearDeepReasoningJob(context: SessionContext) {
+    if (context.deepReasoningJob?.timeout) {
+      clearTimeout(context.deepReasoningJob.timeout);
+    }
+    context.deepReasoningJob = undefined;
+  }
+
+  private isDeepReasoningJobCurrent(context: SessionContext, id?: string): boolean {
+    if (!context.deepReasoningJob) return false;
+    if (id) return context.deepReasoningJob.id === id;
+    return true;
+  }
+
+  private sendDeepReasoningPlaceholder(context: SessionContext): string | undefined {
+    try {
+      const placeholderItemId = `deep_placeholder_${randomUUID().slice(0, 8)}`;
+      context.manager.sendEvent({
+        type: 'conversation.item.create',
+        item: {
+          id: placeholderItemId,
+          type: 'message',
+          role: 'assistant',
+          content: [
+            {
+              type: 'output_text',
+              text: DEEP_REASONING_PLACEHOLDER_TEXT,
+            },
+          ],
+        },
+      });
+      context.manager.sendEvent({ type: 'response.create' });
+      if (context.deepReasoningJob) {
+        context.deepReasoningJob.placeholderItemId = placeholderItemId;
+      }
+      return placeholderItemId;
+    } catch (error) {
+      this.logger.warn('Failed to send deep reasoning placeholder', { sessionId: context.id, error });
+      return undefined;
+    }
+  }
+
+  private async executeDeepReasoningPipeline(
+    context: SessionContext,
+    question: string,
+    metadata?: Record<string, any>,
+  ): Promise<void> {
+    this.startDeepReasoningJob(context, question, metadata);
+    const placeholderId = this.sendDeepReasoningPlaceholder(context);
+
+    let result: Awaited<ReturnType<typeof runDeepReasoning>> | null = null;
+    try {
+      const client = this.responsesClientFactory();
+      result = await runDeepReasoning({
+        question,
+        client,
+        logger: this.logger,
+        logSampleLimit: this.deepReasoningLogSampleLimit,
+        maxOutputTokens: Number(process.env.DEEP_REASONING_MAX_OUTPUT_TOKENS ?? '') || undefined,
+      });
+    } catch (error) {
+      this.logger.error('Deep reasoning execution failed', { sessionId: context.id, error });
+      this.deleteTranscriptItem(context, placeholderId);
+      this.clearDeepReasoningJob(context);
+      throw error;
+    }
+
+    if (!this.isDeepReasoningJobCurrent(context)) {
+      this.logger.info('Deep reasoning job superseded; discarding result', {
+        sessionId: context.id,
+      });
+      this.clearDeepReasoningJob(context);
+      return;
+    }
+
+    this.clearDeepReasoningJob(context);
+    this.deleteTranscriptItem(context, placeholderId);
 
     if (result.outcome === 'success' && result.text) {
       this.logger.info('Deep reasoning succeeded; relaying answer to realtime', {
@@ -1055,7 +1148,7 @@ export class SessionHost {
       sessionId: context.id,
       responseSummary: result.responseSummary,
     });
-    this.sendRealtimeFallback(context, question);
+    this.sendRealtimeFallback(context, question, metadata);
     this.metrics.increment('bff.session.event_forwarded_total', 1, { kind: 'deep_reasoning_fallback' });
   }
 
@@ -1071,7 +1164,7 @@ export class SessionHost {
     context.manager.sendEvent({ type: 'response.create' });
   }
 
-  private sendRealtimeFallback(context: SessionContext, question: string) {
+  private sendRealtimeFallback(context: SessionContext, question: string, metadata?: Record<string, any>) {
     context.hasUserContent = true;
     this.enqueueTextMessage(
       context,
