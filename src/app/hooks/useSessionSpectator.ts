@@ -498,6 +498,9 @@ export function useSessionSpectator(): SessionSpectatorState {
     if (memoryKey) {
       body.memoryKey = memoryKey;
     }
+    if (params.clientTag) {
+      body.clientTag = params.clientTag;
+    }
 
     setIsResettingMemory(true);
     try {

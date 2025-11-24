@@ -1603,7 +1603,19 @@ export class SessionHost {
       });
     }
     merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    return merged.slice(-limit);
+    const trimmed = this.trimTrailingUnansweredUser(merged);
+    return trimmed.slice(-limit);
+  }
+
+  private trimTrailingUnansweredUser(entries: MemoryEntry[]): MemoryEntry[] {
+    // モデルが「未回答のユーザー発話」に対して即応答しないよう、最後の assistant 発話までで切り詰める
+    for (let i = entries.length - 1; i >= 0; i -= 1) {
+      if (entries[i]?.role === 'assistant') {
+        return entries.slice(0, i + 1);
+      }
+    }
+    // assistant が一度も無ければリプレイしない（音声の一方的再生を防ぐ）
+    return [];
   }
 
   private async persistMemoryFromHistory(context: SessionContext, payload: any): Promise<void> {

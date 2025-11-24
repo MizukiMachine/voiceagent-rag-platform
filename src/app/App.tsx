@@ -573,6 +573,9 @@ const requestAgentChange = useCallback(async (agentName: string) => {
     if (storedKey) {
       requestBody.memoryKey = storedKey;
     }
+    if (clientTag?.trim()) {
+      requestBody.clientTag = clientTag.trim();
+    }
     try {
       const response = await fetch('/api/memory', {
         method: 'DELETE',

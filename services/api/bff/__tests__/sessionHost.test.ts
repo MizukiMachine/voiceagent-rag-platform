@@ -598,6 +598,36 @@ describe('SessionHost', () => {
     ).toBe(true);
   });
 
+  it('drops trailing user-only turns to avoid auto-response on reconnect', async () => {
+    const memoryStore = new InMemoryMemoryStore({
+      develop: [
+        { role: 'assistant', text: '前回の回答', createdAt: '2025-01-01T00:00:00.000Z' },
+        { role: 'user', text: 'まだ？', createdAt: '2025-01-01T00:01:00.000Z' },
+      ],
+    });
+    host = new SessionHost({
+      scenarioMap,
+      sessionManagerFactory: (hooks) => {
+        const mgr = new FakeSessionManager(hooks);
+        managers.push(mgr);
+        return mgr;
+      },
+      envInspector: () => envSnapshot,
+      memoryStore,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
+    });
+
+    await host.createSession({ agentSetKey: 'demo', clientTag: 'develop' });
+    const manager = managers[0]!;
+    const replayedTexts = manager.sentEvents
+      .filter((ev) => ev?.type === 'conversation.item.create')
+      .map((ev) => ev?.item?.content?.[0]?.text);
+
+    expect(replayedTexts).toContain('前回の回答');
+    expect(replayedTexts).not.toContain('まだ？');
+  });
+
   it('registers and resolves viewer sessions by clientTag override', async () => {
     const { sessionId } = await host.createSession({ agentSetKey: 'demo' });
     const registered = host.registerViewerSession('glasses01', sessionId, 'kate');

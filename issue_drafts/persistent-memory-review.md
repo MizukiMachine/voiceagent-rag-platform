@@ -7,6 +7,7 @@
 - リプレイは Realtime API 互換ペイロードのみ送信し、metadata など非互換フィールドは除去。
 - リプレイ失敗時はスキップしてセッション継続、クライアントへ `session_error` 通知。
 - キーは clientTag 単位（旧 `agentSetKey:clientTag` も読み出してマージする）。リセット後は viewer が再接続して空状態から購読する。
+- リプレイは最後の assistant 発話までを採用し、未回答のユーザー発話を切り落として自動応答の暴発を防ぐ。
 
 ### 実装メモ
 - コア: `services/coreData/persistentMemory.ts`
