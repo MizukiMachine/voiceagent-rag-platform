@@ -41,14 +41,13 @@ describe('BottomToolbar バージイン無効化トグル', () => {
     render(
       <BottomToolbar
         {...baseProps}
-        sessionStatus="DISCONNECTED"
         isBargeInDisabled={false}
         setIsBargeInDisabled={vi.fn()}
       />,
     );
 
     const toggle = screen.getByLabelText(uiText.toolbar.bargeInDisableLabel) as HTMLInputElement;
-    expect(toggle.disabled).toBe(true);
+    expect(toggle.disabled).toBe(false);
   });
 
   it('トグル変更でハンドラが呼ばれる', () => {

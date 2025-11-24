@@ -138,7 +138,6 @@ function BottomToolbar({
           type="checkbox"
           checked={isBargeInDisabled}
           onChange={(e) => setIsBargeInDisabled(e.target.checked)}
-          disabled={!isConnected}
           className="w-4 h-4"
         />
         <label
