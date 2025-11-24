@@ -56,11 +56,14 @@ export function buildReplayEvents(
   limit = 30,
 ): Array<Record<string, any>> {
   const slice = entries.slice(-limit);
-  return slice.map((entry) => ({
+  return slice.map((entry, idx) => ({
     type: 'conversation.item.create',
     item: {
       type: 'message',
       role: entry.role,
+      // Tag replayed items with a synthetic id; Realtime API rejects item.metadata,
+      // so we avoid sending metadata and later skip re-persisting by this id prefix.
+      id: `pm:${entry.itemId ?? idx}:${entry.createdAt}`,
       content: [
         {
           type: entry.role === 'assistant' ? 'output_text' : 'input_text',
@@ -118,6 +121,8 @@ export function toMemoryEntry(
   now: number,
 ): MemoryEntry | null {
   if (!item || item.type !== 'message') return null;
+  const itemId = item.itemId ?? item.item_id ?? item.id;
+  if (typeof itemId === 'string' && itemId.startsWith('pm:')) return null;
   if (item?.metadata?.source === PERSISTENT_MEMORY_SOURCE) return null;
   const role = item.role === 'assistant' ? 'assistant' : item.role === 'user' ? 'user' : null;
   if (!role) return null;
