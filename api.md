@@ -130,6 +130,32 @@
         - 制御: `kind: "control"`, `action: interrupt | mute | push_to_talk_start | push_to_talk_stop`
         - 生イベント: `kind: "event"`, `event`(Realtimeイベントをそのまま中継)
 
+    **音声まわりの推奨設定（ホットワード必須運用を崩さないため）**
+    - 接続直後に1回だけ `session.update` を送る：
+        ```json
+        {
+          "kind": "event",
+          "event": {
+            "type": "session.update",
+            "session": {
+              "type": "realtime",
+              "audio": {
+                "input": {
+                  "turn_detection": {
+                    "type": "server_vad",
+                    "create_response": false
+                  }
+                }
+              }
+            }
+          }
+        }
+        ```
+        - 意味: サーバーVADで話し終わりを検知しても、自動で `response.create` を出さない。ホットワードでマッチしたときだけサーバー側ロジックが応答を開始できる。
+    - `input_audio` は原則 `response:false`（または未指定=デフォルトfalse推奨）で送る。
+        - `response:true` を付けると、そのチャンクをコミットした瞬間に応答が走り、ホットワード無視で1回だけ返答する事象が起きやすい。
+        - PTTなど「明示的にこのターンで即レスしたい」場面だけ、クライアント側で `response.create` を送るか `response:true` を使う。
+
 ---
 
 - SSE ストリーム：`GET /api/session/{id}/stream`
