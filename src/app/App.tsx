@@ -396,7 +396,6 @@ const requestAgentChange = useCallback(async (agentName: string) => {
     sessionStatus,
     sendAudioChunk,
     logClientEvent,
-    enabled: !isBargeInDisabled,
     speechDetectionEnabled: !isPTTActive && !isBargeInDisabled,
     onSpeechDetected: handleSpeechDetected,
   });
