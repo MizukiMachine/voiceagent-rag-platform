@@ -35,7 +35,11 @@ const SERVER_VAD_TEMPLATE = {
   type: 'server_vad' as const,
   threshold: 0.9,
   prefix_padding_ms: 300,
+<<<<<<< HEAD
+  silence_duration_ms: 1000,
+=======
   silence_duration_ms: 2000,
+>>>>>>> origin/develop
 };
 
 function resolveBffKeyForClient(): string | undefined {

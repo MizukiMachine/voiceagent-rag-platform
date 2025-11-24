@@ -76,7 +76,11 @@ const HOTWORD_FUZZY_DISTANCE_THRESHOLD =
   Number(process.env.HOTWORD_FUZZY_DISTANCE_THRESHOLD ?? '2');
 const HOTWORD_MIN_CONFIDENCE = Number(process.env.HOTWORD_MIN_CONFIDENCE ?? '0.6');
 const HOTWORD_CUE_ENABLED = (process.env.HOTWORD_CUE_ENABLED ?? 'true') === 'true';
+<<<<<<< HEAD
+const DEFAULT_HOTWORD_CONTINUATION_WINDOW_MS = 2000;
+=======
 const DEFAULT_HOTWORD_CONTINUATION_WINDOW_MS = 3000;
+>>>>>>> origin/develop
 const DEEP_REASONING_TRIGGERS = ['深く考えて', 'じっくり', '丁寧に考えて', '理由を詳しく', 'ステップを教えて'];
 
 function resolveHotwordContinuationWindowMs(): number {
