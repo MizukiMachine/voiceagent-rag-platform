@@ -71,16 +71,13 @@ export const scenarioAliasMap: Record<string, string[]> = {
     'マークシナリオ',
   ],
   nutrition: [
-    'nutrition',
-    'nutrient',
     'nadia',
     'ナディア',
-    '栄養',
-    '栄養管理',
-    'ダイエット',
-    '食事指導',
-    'しょくじ',
-    'にゅーとりしょん',
+    'なでぃあ',
+    'ナディ',
+    'なでぃ',
+    'ディア',
+    'でぃあ',
   ],
 };
 
