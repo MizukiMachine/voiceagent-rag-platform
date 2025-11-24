@@ -1,7 +1,6 @@
 import { RealtimeAgent } from '@openai/agents/realtime';
 
 import { japaneseLanguagePreamble, commonInteractionRules, voiceResponsePreamble, buildSelfIntroductionRule } from './languagePolicy';
-import { switchAgentTool, switchScenarioTool } from './voiceControlTools';
 
 export const patriciaAgent = new RealtimeAgent({
   name: 'Patricia',

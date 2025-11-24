@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
@@ -84,7 +83,7 @@ export default function ProfileDashboard() {
       const res = await fetch(`/api/debug/profile?user_id=${encodeURIComponent(targetUser)}`);
       const json = await res.json();
       setProfile(json.profile);
-    } catch (e: any) {
+    } catch {
       setError('プロフィールの取得に失敗しました');
     } finally {
       setBusy('idle');
@@ -110,7 +109,7 @@ export default function ProfileDashboard() {
         setProfile(json.profile);
         setMessage('保存しました。次の音声質問からこの値が使われます。');
       }
-    } catch (e: any) {
+    } catch {
       setError('保存に失敗しました');
     } finally {
       setBusy('idle');
@@ -274,11 +273,12 @@ function renderField(
   const value = profile[key];
 
   if (key === 'sex') {
+    const selectValue = typeof value === 'string' ? value : '';
     return (
       <FieldShell key={key} label={labelMap[key]}>
         <select
           className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-          value={value ?? ''}
+          value={selectValue}
           onChange={(e) => onChange(key, e.target.value)}
         >
           <option value="">未設定</option>
@@ -291,11 +291,13 @@ function renderField(
   }
 
   if (key === 'activityLevel') {
+    const selectValue =
+      typeof value === 'string' ? value : '';
     return (
       <FieldShell key={key} label={labelMap[key]}>
         <select
           className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-          value={value ?? ''}
+          value={selectValue}
           onChange={(e) => onChange(key, e.target.value)}
         >
           <option value="">未設定</option>
@@ -310,11 +312,12 @@ function renderField(
   }
 
   if (key === 'goalType') {
+    const selectValue = typeof value === 'string' ? value : '';
     return (
       <FieldShell key={key} label={labelMap[key]}>
         <select
           className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-          value={value ?? ''}
+          value={selectValue}
           onChange={(e) => onChange(key, e.target.value)}
         >
           <option value="">未設定</option>
@@ -380,13 +383,19 @@ function renderField(
 
   return (
     <FieldShell key={key} label={labelMap[key]}>
-      <input
-        className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-        type="number"
-        step="0.1"
-        value={value ?? ''}
-        onChange={(e) => onChange(key, e.target.value)}
-      />
+      {(() => {
+        const inputValue =
+          typeof value === 'string' || typeof value === 'number' ? value : '';
+        return (
+          <input
+            className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
+            type="number"
+            step="0.1"
+            value={inputValue}
+            onChange={(e) => onChange(key, e.target.value)}
+          />
+        );
+      })()}
     </FieldShell>
   );
 }
