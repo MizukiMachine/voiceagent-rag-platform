@@ -76,6 +76,7 @@ const HOTWORD_FUZZY_DISTANCE_THRESHOLD =
   Number(process.env.HOTWORD_FUZZY_DISTANCE_THRESHOLD ?? '2');
 const HOTWORD_MIN_CONFIDENCE = Number(process.env.HOTWORD_MIN_CONFIDENCE ?? '0.6');
 const HOTWORD_CUE_ENABLED = (process.env.HOTWORD_CUE_ENABLED ?? 'true') === 'true';
+const HOTWORD_SWITCH_DELAY_MS = Number(process.env.HOTWORD_SWITCH_DELAY_MS ?? '200');
 const DEFAULT_HOTWORD_CONTINUATION_WINDOW_MS = 2000;
 const DEEP_REASONING_TRIGGERS = ['深く考えて', 'じっくり', '丁寧に考えて', '理由を詳しく', 'ステップを教えて'];
 const BARGE_IN_ENABLED = (process.env.BARGE_IN_ENABLED ?? 'true') === 'true';
@@ -267,6 +268,7 @@ interface SessionContext {
   scenarioRouter?: ScenarioRouter;
   hotwordReminderTimer?: ReturnType<typeof setTimeout>;
   hotwordCuePlayedItems: Set<string>;
+  transcribedItemIds: Set<string>;
   clientTag?: string;
   destroyed?: boolean;
   deepReasoningJob?: {
@@ -436,6 +438,10 @@ export class SessionHost {
         let consumed = false;
         if (event === 'transport_event') {
           try {
+            const itemId = typeof payload?.item_id === 'string' ? payload.item_id : undefined;
+            if (itemId) {
+              contextRef.current?.transcribedItemIds.add(itemId);
+            }
             consumed = contextRef.current?.hotwordListener?.handleTranscriptionEvent(payload) ?? false;
           } catch (error) {
             this.logger.warn('Hotword listener failed to process event', {
@@ -686,6 +692,7 @@ export class SessionHost {
       forwarder: this.buildScenarioCommandForwarder(context),
       logger: this.logger,
       mergeWindowMs: resolveHotwordContinuationWindowMs(),
+      scenarioSwitchDelayMs: HOTWORD_SWITCH_DELAY_MS,
     });
     const llmClassifier = HOTWORD_LLM_ENABLED
       ? new LlmScenarioNameClassifier({
@@ -717,6 +724,10 @@ export class SessionHost {
           method: detection.method,
           confidence: detection.confidence,
         });
+        // delta段階は誤検知が起きやすいので通知のみ。キュー音はcompleted判定で送る。
+        if (detection.stage === 'delta') {
+          return;
+        }
         await this.emitHotwordCue(context, {
           scenarioKey: detection.scenarioKey,
           transcript: detection.transcript,
@@ -839,6 +850,7 @@ export class SessionHost {
       subscribers: new Map(),
       emitter: new EventEmitter(),
       hotwordCuePlayedItems: new Set(),
+      transcribedItemIds: new Set(),
       destroy: async (destroyOptions: DestroySessionOptions = {}) => {
         if (context.destroyed) {
           return;
@@ -1643,9 +1655,9 @@ export class SessionHost {
         let forwardPayload = payload;
 
         if (event === 'history_added' || event === 'history_updated') {
-          const filtered = this.normalizeHistoryPayload(payload).filter(
-            (item) => !this.isPersistentMemoryReplay(item),
-          );
+          const filtered = this.normalizeHistoryPayload(payload)
+            .filter((item) => !this.isPersistentMemoryReplay(item))
+            .filter((item) => this.shouldForwardHistoryItem(context, item));
 
           if (filtered.length === 0) {
             return;
@@ -1841,6 +1853,16 @@ export class SessionHost {
       timestamp: new Date(this.now()).toISOString(),
     };
     context.emitter.emit('message', message);
+  }
+
+  private shouldForwardHistoryItem(context: SessionContext, item: any): boolean {
+    const itemId =
+      item?.id ?? item?.item_id ?? item?.itemId ?? item?.item?.id ?? item?.item?.itemId;
+    if (itemId && context.transcribedItemIds.has(itemId)) {
+      // 音声入力の生トランスクリプトはホットワード確定までサンドボックス扱い
+      return false;
+    }
+    return true;
   }
 
   private clearTimers(context: SessionContext) {

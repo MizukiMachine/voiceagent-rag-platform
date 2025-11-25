@@ -37,7 +37,14 @@ export class ServerHotwordCueService implements HotwordCueService {
   constructor(options: HotwordCueServiceOptions) {
     this.logger = options.logger;
     this.metrics = options.metrics;
-    this.audioFilePath = options.audioFilePath ?? path.join(process.cwd(), 'public', 'audio', 'hotword-chime.wav');
+    this.audioFilePath =
+      options.audioFilePath ??
+      path.join(
+        process.cwd(),
+        'public',
+        'audio',
+        '4-ESM_Airy_Echo_Metallic_Alert_Notification_Synth_Electronic_Particle_Cute_Cartoon.wav',
+      );
   }
 
   async playCue(request: HotwordCueRequest): Promise<HotwordCueResult> {
@@ -70,33 +77,7 @@ export class ServerHotwordCueService implements HotwordCueService {
       return this.audioBase64;
     }
     const buffer = fs.readFileSync(this.audioFilePath);
-    const pcm = this.extractPcmBuffer(buffer);
-    this.audioBase64 = pcm.toString('base64');
+    this.audioBase64 = buffer.toString('base64'); // WAVヘッダごと保持し、再生側でサンプルレートを尊重する
     return this.audioBase64;
-  }
-
-  private extractPcmBuffer(buffer: Buffer): Buffer {
-    const header = buffer.subarray(0, 4).toString('ascii');
-    if (header !== 'RIFF') {
-      throw new Error('Invalid WAV file: missing RIFF header');
-    }
-    const wave = buffer.subarray(8, 12).toString('ascii');
-    if (wave !== 'WAVE') {
-      throw new Error('Invalid WAV file: missing WAVE chunk');
-    }
-    let offset = 12;
-    while (offset + 8 <= buffer.length) {
-      const chunkId = buffer.subarray(offset, offset + 4).toString('ascii');
-      const chunkSize = buffer.readUInt32LE(offset + 4);
-      offset += 8;
-      if (chunkId === 'data') {
-        if (offset + chunkSize > buffer.length) {
-          throw new Error('Invalid WAV file: truncated data chunk');
-        }
-        return buffer.subarray(offset, offset + chunkSize);
-      }
-      offset += chunkSize + (chunkSize % 2);
-    }
-    throw new Error('Invalid WAV file: data chunk not found');
   }
 }
