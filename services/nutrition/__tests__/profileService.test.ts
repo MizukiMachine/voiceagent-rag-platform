@@ -78,4 +78,30 @@ describe('profileService', () => {
     expect(updated.caloricBudgetAdvice).toContain('増量目安');
     expect(updated.caloricBudgetAdvice).toContain(String(expected));
   });
+
+  it('appends mealLogs when todayMealsAppend is provided (image ingestion path)', async () => {
+    await getUserProfile(userId);
+
+    const updated = await updateUserProfile({
+      userId,
+      todayMealsAppend: 'バナナ',
+    });
+
+    expect(updated.todayMeals).toBe('バナナ');
+    expect(updated.mealLogs?.at(-1)?.description).toBe('バナナ');
+  });
+
+  it('falls back to todayMealsAppend when mealLogAppend description is blank', async () => {
+    await getUserProfile(userId);
+
+    const updated = await updateUserProfile({
+      userId,
+      mealLogAppend: { description: '   ', timeOfDay: '昼' },
+      todayMealsAppend: 'バナナヨーグルト',
+    });
+
+    expect(updated.mealLogs?.at(-1)?.description).toBe('バナナヨーグルト');
+    expect(updated.mealLogs?.at(-1)?.timeOfDay).toBeUndefined();
+    expect(updated.todayMeals).toContain('バナナヨーグルト');
+  });
 });

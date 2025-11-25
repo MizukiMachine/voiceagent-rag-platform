@@ -62,11 +62,7 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
   const userId = resolveUserId(input.userId);
   const current = await getUserProfile(userId);
 
-  const normalizedMealLogAppend =
-    input.mealLogAppend ??
-    (typeof input.todayMealsAppend === 'string' && input.todayMealsAppend.trim()
-      ? { description: input.todayMealsAppend.trim(), timeOfDay: undefined }
-      : null);
+  const normalizedMealLogAppend = normalizeMealLogAppend(input);
 
   const next: UserProfile = {
     ...current,
@@ -85,7 +81,9 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
       typeof input.dietStyle === 'string' && input.dietStyle.trim()
         ? input.dietStyle.trim()
         : current.dietStyle,
-    mealLogs: appendMealLog(current.mealLogs ?? [], normalizedMealLogAppend),
+    mealLogs: normalizedMealLogAppend
+      ? appendMealLog(current.mealLogs ?? [], normalizedMealLogAppend)
+      : current.mealLogs ?? [],
     todayMeals: resolveTodayMeals(current.todayMeals, input.todayMeals, input.todayMealsAppend),
   };
 
@@ -110,6 +108,29 @@ function withDerived(profile: UserProfile): ProfileWithDerived {
     estimatedTdeeKcal,
     caloricBudgetAdvice,
   };
+}
+
+function normalizeMealLogAppend(input: UpdateProfileInput): { description: string; timeOfDay?: string } | null {
+  const fromExplicit = sanitizeMealLogAppend(input.mealLogAppend);
+  if (fromExplicit) return fromExplicit;
+
+  const fromTodayAppend = sanitizeMealLogAppend(
+    typeof input.todayMealsAppend === 'string' && input.todayMealsAppend.trim()
+      ? { description: input.todayMealsAppend }
+      : null,
+  );
+  return fromTodayAppend;
+}
+
+function sanitizeMealLogAppend(
+  raw?: { description?: string | null; timeOfDay?: string | null } | null,
+): { description: string; timeOfDay?: string } | null {
+  if (!raw) return null;
+  const description = typeof raw.description === 'string' ? raw.description.trim() : '';
+  if (!description) return null;
+  const timeOfDay =
+    typeof raw.timeOfDay === 'string' && raw.timeOfDay.trim() ? raw.timeOfDay.trim() : undefined;
+  return { description, timeOfDay };
 }
 
 function appendMealLog(existing: MealLog[], append?: { description: string; timeOfDay?: string } | null): MealLog[] {
