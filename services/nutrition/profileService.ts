@@ -32,6 +32,9 @@ function resolveClientTag(input?: string | null): string {
 
 function resolveUserIdWithTag(userId?: string | null, clientTag?: string | null): string {
   const id = resolveUserId(userId);
+  if (id.includes(':')) {
+    return id;
+  }
   const tag = resolveClientTag(clientTag);
   return `${tag}:${id}`;
 }

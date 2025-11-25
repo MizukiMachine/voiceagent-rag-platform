@@ -75,8 +75,6 @@ type NutritionToolContext = {
 };
 
 function resolveClientTag(input: any, runContext?: RunContext<NutritionToolContext>): string | undefined {
-  const inputValue = typeof input?.clientTag === 'string' ? input.clientTag.trim() : '';
-  if (inputValue) return inputValue;
   const contextData = runContext?.context ?? {};
   const contextTag = typeof contextData.clientTag === 'string' ? contextData.clientTag.trim() : '';
   if (contextTag) return contextTag;
@@ -85,6 +83,8 @@ function resolveClientTag(input: any, runContext?: RunContext<NutritionToolConte
       ? contextData.metadata.clientTag.trim()
       : '';
   if (metadataTag) return metadataTag;
+  const inputValue = typeof input?.clientTag === 'string' ? input.clientTag.trim() : '';
+  if (inputValue) return inputValue;
   return undefined;
 }
 
@@ -124,7 +124,7 @@ const getProfileTool = tool<any, NutritionToolContext>({
 export async function executeUpdateUserProfileTool(input: any, runContext?: RunContext<NutritionToolContext>) {
   const payload = { ...(input ?? {}) };
   const resolvedClientTag = resolveClientTag(payload, runContext);
-  if (resolvedClientTag && typeof payload.clientTag !== 'string') {
+  if (resolvedClientTag) {
     payload.clientTag = resolvedClientTag;
   }
   if (typeof payload.clientTag !== 'string' || !payload.clientTag.trim()) {

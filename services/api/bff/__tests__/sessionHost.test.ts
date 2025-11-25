@@ -305,6 +305,29 @@ describe('SessionHost', () => {
     expect(body.clientTag).toBe('glasses01');
   });
 
+  it('overrides mismatched clientTag values when nutrition update_user_profile runs', async () => {
+    const originalBase = process.env.INTERNAL_PROFILE_API_BASE;
+    process.env.INTERNAL_PROFILE_API_BASE = 'http://localhost:3000';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ profile: {} }),
+    });
+    const prevFetch = global.fetch;
+    global.fetch = fetchMock as any;
+    try {
+      await executeUpdateUserProfileTool(
+        { clientTag: 'BFF', mealLogAppend: { description: '焼き魚定食' } },
+        new RunContext({ clientTag: 'glasses01' }),
+      );
+    } finally {
+      global.fetch = prevFetch;
+      restoreEnvVar('INTERNAL_PROFILE_API_BASE', originalBase);
+    }
+    const [, init] = fetchMock.mock.calls[0]!;
+    const body = JSON.parse(init.body as string);
+    expect(body.clientTag).toBe('glasses01');
+  });
+
   it('attaches context clientTag when nutrition get_user_profile runs', async () => {
     const originalBase = process.env.INTERNAL_PROFILE_API_BASE;
     process.env.INTERNAL_PROFILE_API_BASE = 'http://localhost:3000';

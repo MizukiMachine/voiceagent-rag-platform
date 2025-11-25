@@ -169,6 +169,20 @@ describe('profileService', () => {
     expect(profileA.userId).not.toBe(profileB.userId);
   });
 
+  it('treats namespaced userIds as canonical and avoids double prefixing', async () => {
+    const canonicalId = 'glasses01:demo-user';
+
+    await updateUserProfile({
+      userId: canonicalId,
+      clientTag: 'glasses01',
+      mealLogAppend: { description: '焼き魚' },
+    });
+
+    const profile = await getUserProfile(canonicalId);
+    expect(profile.userId).toBe(canonicalId);
+    expect(profile.mealLogs?.at(-1)?.description).toBe('焼き魚');
+  });
+
   it('strips time-of-day prefix when appending', async () => {
     const updated = await updateUserProfile({
       userId,
