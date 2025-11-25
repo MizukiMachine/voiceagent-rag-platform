@@ -128,4 +128,21 @@ describe('profileService', () => {
     expect(updated.mealLogs?.at(-1)?.timeOfDay).toBeUndefined();
     expect(updated.todayMeals).toBe('ヨーグルト');
   });
+
+  it('resets all fields and logs when resetAll is true', async () => {
+    await updateUserProfile({
+      userId,
+      age: 40,
+      dietStyle: '低脂質',
+      mealLogAppend: { description: 'カレー', timeOfDay: '夜' },
+      todayMeals: 'カレーとサラダ',
+    });
+
+    const updated = await updateUserProfile({ userId, resetAll: true });
+
+    expect(updated.mealLogs?.length ?? 0).toBe(0);
+    expect(updated.todayMeals).toBeUndefined();
+    expect(updated.age).toBe(32); // default
+    expect(updated.dietStyle).toBeUndefined();
+  });
 });

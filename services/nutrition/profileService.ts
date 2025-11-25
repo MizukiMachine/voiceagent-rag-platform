@@ -55,6 +55,7 @@ export interface UpdateProfileInput {
   mealLogAppend?: { description: string; timeOfDay?: string } | null;
   todayMeals?: string | null;
   todayMealsAppend?: string | null;
+  resetAll?: boolean | null;
 }
 
 export async function updateUserProfile(input: UpdateProfileInput): Promise<ProfileWithDerived> {
@@ -62,6 +63,18 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
   const userId = resolveUserId(input.userId);
   const current = await getUserProfile(userId);
   const now = new Date();
+
+  if (input.resetAll) {
+    const reset: UserProfile = {
+      userId,
+      updatedAt: now.toISOString(),
+      ...DEFAULT_PROFILE,
+      mealLogs: [],
+      todayMeals: undefined,
+    };
+    await store.upsert(reset);
+    return withDerived(reset);
+  }
 
   const normalizedMealLogAppend = normalizeMealLogAppend(input);
   const todayMealsDirect = typeof input.todayMeals === 'string' && input.todayMeals.trim()

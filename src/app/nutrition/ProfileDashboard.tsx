@@ -63,7 +63,7 @@ const presets = [
   },
 ];
 
-type BusyState = 'idle' | 'loading' | 'saving';
+type BusyState = 'idle' | 'loading' | 'saving' | 'resetting';
 
 export default function ProfileDashboard() {
   const [userId, setUserId] = useState('demo-user');
@@ -134,6 +134,30 @@ export default function ProfileDashboard() {
     }
   }
 
+  async function resetProfile() {
+    setBusy('resetting');
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/debug/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, resetAll: true }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json?.issues ? 'リセットに失敗しました（入力値エラー）' : 'リセットに失敗しました');
+      } else {
+        setProfile(json.profile);
+        setMessage('全項目を初期状態にリセットしました。');
+      }
+    } catch {
+      setError('リセットに失敗しました');
+    } finally {
+      setBusy('idle');
+    }
+  }
+
   const onFieldChange = (key: keyof Profile, value: string) => {
     if (!profile) return;
     let nextValue: any = value;
@@ -177,7 +201,13 @@ export default function ProfileDashboard() {
         <section className="mt-8 grid gap-6 rounded-2xl bg-white/5 p-6 shadow-xl ring-1 ring-white/10 backdrop-blur">
           <div className="flex flex-wrap items-center gap-3 text-sm text-emerald-100">
             <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-100">
-              {busy === 'loading' ? '読込中...' : busy === 'saving' ? '保存中...' : '編集できます'}
+              {busy === 'loading'
+                ? '読込中...'
+                : busy === 'saving'
+                  ? '保存中...'
+                  : busy === 'resetting'
+                    ? 'リセット中...'
+                    : '編集できます'}
             </span>
             {error && <span className="text-rose-200">{error}</span>}
             {message && <span className="text-emerald-200">{message}</span>}
@@ -211,18 +241,25 @@ export default function ProfileDashboard() {
                 {fieldOrder.map((field) => renderField(field, profile, onFieldChange))}
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={saveProfile}
-                  disabled={busy !== 'idle'}
-                  className="rounded-xl bg-emerald-400 px-4 py-2 font-semibold text-slate-900 shadow-lg shadow-emerald-900/30 hover:bg-emerald-300 disabled:opacity-60"
-                >
-                  保存してエージェントに反映
-                </button>
-                <p className="text-sm text-emerald-100">
-                  保存後、音声で「今日のランチどうする？」と聞くと最新プロフィールで回答が変わります。
-                </p>
-              </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={saveProfile}
+              disabled={busy !== 'idle'}
+              className="rounded-xl bg-emerald-400 px-4 py-2 font-semibold text-slate-900 shadow-lg shadow-emerald-900/30 hover:bg-emerald-300 disabled:opacity-60"
+            >
+              保存してエージェントに反映
+            </button>
+            <button
+              onClick={resetProfile}
+              disabled={busy !== 'idle'}
+              className="rounded-xl bg-rose-400 px-4 py-2 font-semibold text-slate-900 shadow-lg shadow-rose-900/30 hover:bg-rose-300 disabled:opacity-60"
+            >
+              すべてリセット
+            </button>
+            <p className="text-sm text-emerald-100">
+              保存後、音声で「今日のランチどうする？」と聞くと最新プロフィールで回答が変わります。
+            </p>
+          </div>
             </>
           ) : (
             <div className="text-emerald-100">プロフィールを読み込み中...</div>

@@ -21,6 +21,7 @@ const patchSchema = z.object({
     .optional(),
   todayMeals: z.string().trim().min(1).max(400).optional(),
   todayMealsAppend: z.string().trim().min(1).max(400).optional(),
+  resetAll: z.boolean().optional(),
 });
 
 export async function GET(request: Request) {

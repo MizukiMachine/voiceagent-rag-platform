@@ -47,6 +47,26 @@ function buildProfileSummary(profile: any): string {
   return parts.join(" / ");
 }
 
+function buildMealLogSummary(profile: any): { today: string | null; recent: string | null } {
+  const today = typeof profile?.todayMeals === "string" && profile.todayMeals.trim()
+    ? profile.todayMeals.trim()
+    : null;
+
+  const logs: any[] = Array.isArray(profile?.mealLogs) ? profile.mealLogs : [];
+  const recent = logs
+    .slice()
+    .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
+    .slice(-3)
+    .map((log) => {
+      const ts = log.recordedAt ? new Date(log.recordedAt).toLocaleString() : "";
+      const tod = log.timeOfDay ? `[${log.timeOfDay}] ` : "";
+      return `${tod}${log.description ?? ""}${ts ? ` (${ts})` : ""}`;
+    })
+    .join("\n");
+
+  return { today, recent: recent || null };
+}
+
 type ValidTag = keyof typeof BADGE_LABELS;
 const VALID_TAGS = new Set<ValidTag>(Object.keys(BADGE_LABELS) as ValidTag[]);
 
@@ -57,6 +77,8 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
   const spectator = useSessionSpectator();
   const [profileSummary, setProfileSummary] = useState<string>("読み込み中…");
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [mealToday, setMealToday] = useState<string | null>(null);
+  const [mealRecent, setMealRecent] = useState<string | null>(null);
 
   const resolvedBffKey = useMemo(() => {
     const qp = searchParams?.get("bffKey");
@@ -93,7 +115,10 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
         const json = await res.json();
         if (abort) return;
         const summary = buildProfileSummary(json?.profile);
+        const mealSummary = buildMealLogSummary(json?.profile);
         setProfileSummary(summary || "未設定が多いため、ダッシュボードで入力してください。");
+        setMealToday(mealSummary.today);
+        setMealRecent(mealSummary.recent);
         setProfileError(null);
       } catch (error: any) {
         if (abort) return;
@@ -153,6 +178,18 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
           ) : (
             <p className="text-sm text-amber-50 whitespace-pre-wrap leading-relaxed">{profileSummary}</p>
           )}
+          <div className="space-y-1 text-sm text-amber-50 whitespace-pre-wrap leading-relaxed">
+            {mealToday && <p>今日の食事ログ: {mealToday}</p>}
+            {mealRecent ? (
+              <p>
+                直近の食事記録(最大3件):
+                <br />
+                {mealRecent}
+              </p>
+            ) : (
+              <p>直近の食事記録がまだありません。</p>
+            )}
+          </div>
         </div>
 
         {spectator.lastError && (
