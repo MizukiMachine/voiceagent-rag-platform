@@ -40,6 +40,7 @@ import { getUserProfile, resolveUserId } from '../../../services/nutrition/profi
 import {
   buildReplayEvents,
   getPersistentMemoryStore,
+  PERSISTENT_MEMORY_ENABLED,
   PERSISTENT_MEMORY_SOURCE,
   resolveMemoryKey,
   toMemoryEntry,
@@ -53,9 +54,6 @@ const HEARTBEAT_INTERVAL_MS = 25_000;
 const STREAM_IDLE_CLEANUP_MS = 60_000;
 const RATE_LIMIT_WINDOW_MS = 1000;
 const RATE_LIMIT_MAX_EVENTS = 10;
-// デフォルトでは永続メモリを無効化する（過去ログの大量再生でUIが汚染されるため）。
-// 要件に合わせ、デフォルトで有効にする（環境変数で明示的に無効化可能）。
-const PERSISTENT_MEMORY_ENABLED = (process.env.PERSISTENT_MEMORY_ENABLED ?? 'true') === 'true';
 const PERSISTENT_MEMORY_REPLAY_LIMIT =
   Number(process.env.PERSISTENT_MEMORY_REPLAY_LIMIT ?? '') || 30;
 const DEEP_REASONING_PLACEHOLDER_TEXT =
