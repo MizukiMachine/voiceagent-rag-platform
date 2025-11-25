@@ -11,6 +11,40 @@ const BADGE_LABELS = {
   glasses02: "ARグラス #2",
 } as const;
 
+const SCENARIO_LABELS: Record<string, string> = {
+  graffity: "Graffityエージェント",
+  nutrition: "食事アドバイザー：メアリー",
+  kate: "秘書エージェント：ケイト",
+  takuboku: "短歌ライター：タクボク",
+};
+
+function buildProfileSummary(profile: any): string {
+  if (!profile || typeof profile !== "object") return "";
+  const parts: string[] = [];
+  const sexLabel = profile.sex === "male" ? "男性" : profile.sex === "female" ? "女性" : profile.sex ? "その他" : "";
+  const activityLabels: Record<string, string> = {
+    low: "活動量:低め",
+    moderate: "活動量:ふつう",
+    high: "活動量:高め",
+  };
+  const goalLabels: Record<string, string> = {
+    loss: "目標:減量",
+    maintain: "目標:維持",
+    gain: "目標:増量",
+  };
+
+  if (profile.age) parts.push(`年齢${profile.age}歳`);
+  if (sexLabel) parts.push(sexLabel);
+  if (profile.heightCm) parts.push(`身長${profile.heightCm}cm`);
+  if (profile.weightKg) parts.push(`体重${profile.weightKg}kg`);
+  if (profile.goalType && goalLabels[profile.goalType]) parts.push(goalLabels[profile.goalType]);
+  if (profile.activityLevel && activityLabels[profile.activityLevel]) parts.push(activityLabels[profile.activityLevel]);
+  if (profile.avoidFoods) parts.push(`避けたい食品:${profile.avoidFoods}`);
+  if (profile.dietStyle) parts.push(`食事スタイル:${profile.dietStyle}`);
+  if (profile.todayMeals) parts.push(`今日の食事:${profile.todayMeals}`);
+  return parts.join(" / ");
+}
+
 type ValidTag = keyof typeof BADGE_LABELS;
 const VALID_TAGS = new Set<ValidTag>(Object.keys(BADGE_LABELS) as ValidTag[]);
 
@@ -21,6 +55,8 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
   const spectator = useSessionSpectator();
   const [resetNotice, setResetNotice] = useState<string | null>(null);
   const [resetNoticeTone, setResetNoticeTone] = useState<"success" | "error">("success");
+  const [profileSummary, setProfileSummary] = useState<string>("読み込み中…");
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   const resolvedBffKey = useMemo(() => {
     const qp = searchParams?.get("bffKey");
@@ -32,6 +68,7 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
   }, [searchParams]);
 
   const baseUrl = searchParams?.get("baseUrl") ?? undefined;
+  const userId = searchParams?.get("userId") ?? "demo-user";
   const canResetMemory = Boolean(spectator.scenarioKey);
 
   useEffect(() => {
@@ -42,6 +79,36 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
       baseUrl,
     });
   }, [isValid, resolvedBffKey, tag, baseUrl]);
+
+  // プロフィールサマリの定期取得（ダッシュボード更新を即時反映）
+  useEffect(() => {
+    let abort = false;
+    const origin = baseUrl?.trim() || (typeof window !== "undefined" ? window.location.origin : "");
+
+    async function fetchProfile() {
+      try {
+        const url = new URL(`/api/debug/profile`, origin || "http://localhost:3000");
+        if (userId) url.searchParams.set("user_id", userId);
+        const res = await fetch(url.toString(), { headers: { "Content-Type": "application/json" } });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const json = await res.json();
+        if (abort) return;
+        const summary = buildProfileSummary(json?.profile);
+        setProfileSummary(summary || "未設定が多いため、ダッシュボードで入力してください。");
+        setProfileError(null);
+      } catch (error: any) {
+        if (abort) return;
+        setProfileError("プロフィール取得に失敗しました");
+      }
+    }
+
+    fetchProfile();
+    const timer = setInterval(fetchProfile, 8000);
+    return () => {
+      abort = true;
+      clearInterval(timer);
+    };
+  }, [baseUrl, userId]);
 
   const handleResetMemory = async () => {
     setResetNotice(null);
@@ -107,8 +174,17 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
         )}
 
         <p className="text-3xl font-bold text-amber-100">
-          現在のシナリオ: {spectator.scenarioKey ?? "解決中…"}
+          現在のシナリオ: {SCENARIO_LABELS[spectator.scenarioKey ?? ""] ?? spectator.scenarioKey ?? "解決中…"}
         </p>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur shadow-2xl p-4 space-y-2">
+          <p className="text-xs font-semibold text-slate-200">利用プロフィールのサマリ</p>
+          {profileError ? (
+            <p className="text-xs text-rose-200">{profileError}</p>
+          ) : (
+            <p className="text-sm text-amber-50 whitespace-pre-wrap leading-relaxed">{profileSummary}</p>
+          )}
+        </div>
 
         {spectator.lastError && (
           <div className="rounded-lg border border-slate-500/30 bg-slate-800/50 text-slate-100 px-3 py-2 text-xs">

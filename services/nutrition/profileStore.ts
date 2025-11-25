@@ -17,9 +17,12 @@ interface PersistedPayload {
   profiles: Record<string, UserProfile>;
 }
 
-const DEFAULT_PROFILE_FILE =
-  process.env.NUTRITION_PROFILE_FILE ??
-  path.join(process.cwd(), 'var', 'nutrition', 'profiles.json');
+const DEFAULT_PROFILE_FILE = (() => {
+  const envPath = process.env.NUTRITION_PROFILE_FILE?.trim();
+  if (envPath) return envPath;
+  // 単一プロセス/コンテナで共通に扱える相対パス（cwd 基準）
+  return path.resolve(process.cwd(), 'var', 'nutrition', 'profiles.json');
+})();
 
 let singleton: UserProfileStore | null = null;
 

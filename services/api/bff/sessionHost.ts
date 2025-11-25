@@ -36,6 +36,7 @@ import { ScenarioRouter, type ScenarioCommandForwarder } from '../../scenario/Sc
 import { ScenarioRegistry } from '../../scenario/ScenarioRegistry';
 import { ServerHotwordCueService, type HotwordCueService } from './hotwordCueService';
 import { classifyDeepReasoningIntent, runDeepReasoning, type ResponsesClient } from './sessionHost/deepReasoning';
+import { getUserProfile, resolveUserId } from '../../../services/nutrition/profileService';
 import {
   buildReplayEvents,
   getPersistentMemoryStore,
@@ -671,6 +672,11 @@ export class SessionHost {
     contextRef.current = context;
 
     this.sessions.set(sessionId, context);
+    // 深考モデルのウォームアップを並行で走らせ、初回遅延を吸収
+    Promise.resolve()
+      .then(() => this.responsesClientFactory())
+      .then((client) => warmupModel(client, this.logger))
+      .catch((error) => this.logger.info('Deep reasoning warmup skipped', { error }));
     if (options.clientTag) {
       this.clientTagIndex.set(options.clientTag, {
         sessionId,
@@ -1127,40 +1133,63 @@ export class SessionHost {
     push('sex', profile.sex);
     push('heightCm', profile.heightCm);
     push('weightKg', profile.weightKg);
-    push('targetWeightKg', profile.targetWeightKg);
-    push('allergies', profile.allergies);
-    push('dislikes', profile.dislikes ?? profile.avoidFoods);
+    push('avoidFoods', profile.avoidFoods ?? profile.allergies ?? profile.dislikedFoods);
     push('recentMeals', profile.recentMeals ?? profile.recent_meals);
-    push('breakfast', profile.breakfast);
-    push('lunch', profile.lunch);
+    push('todayMeals', profile.todayMeals ?? profile.today_meals);
     push('dinner', profile.dinner);
 
     return lines.join('\n');
   }
 
   private async fetchProfileContext(metadata?: Record<string, any>): Promise<string | undefined> {
-    const base = process.env.INTERNAL_PROFILE_API_BASE ?? 'http://localhost:3000';
     const userId = typeof metadata?.userId === 'string' ? metadata.userId : undefined;
-    const query = userId ? `?user_id=${encodeURIComponent(userId)}` : '';
+    const resolvedUserId = resolveUserId(userId);
+
+    // HTTP とローカルを並行取得し、updatedAt が新しい方を採用する。
+    const httpTimeoutMs = Number(process.env.PROFILE_FETCH_TIMEOUT_MS ?? '') || 1200;
+    const base = process.env.INTERNAL_PROFILE_API_BASE ?? 'http://localhost:3000';
+    const query = resolvedUserId ? `?user_id=${encodeURIComponent(resolvedUserId)}` : '';
     const url = `${base}/api/debug/profile${query}`;
 
-    try {
-      const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } });
-      if (!res.ok) {
-        this.logger.warn('Failed to fetch profile for deep reasoning', { url, status: res.status });
-        return undefined;
+    const httpPromise = (async () => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), httpTimeoutMs);
+      try {
+        const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, signal: controller.signal });
+        if (!res.ok) return null;
+        const json: any = await res.json();
+        return json?.profile ?? null;
+      } catch (error) {
+        const aborted = (error as any)?.name === 'AbortError';
+        this.logger[aborted ? 'info' : 'warn']('Profile HTTP fetch skipped', { url, aborted });
+        return null;
+      } finally {
+        clearTimeout(timer);
       }
-      const json: any = await res.json();
-      const profileCtx = this.formatProfileContext(json?.profile);
-      if (profileCtx) {
-        this.logger.debug('Loaded profile context for deep reasoning', { url });
-        return profileCtx;
+    })();
+
+    const localPromise = (async () => {
+      try {
+        return await getUserProfile(resolvedUserId);
+      } catch (error) {
+        this.logger.warn('Local profile read failed', { userId: resolvedUserId, error });
+        return null;
       }
-      return undefined;
-    } catch (error) {
-      this.logger.warn('Profile fetch errored; proceeding without profile context', { url, error });
-      return undefined;
+    })();
+
+    const [httpProfile, localProfile] = await Promise.all([httpPromise, localPromise]);
+
+    const pickLatest = (...profiles: any[]) => {
+      return profiles
+        .filter((p) => p && typeof p === 'object')
+        .sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime())[0];
+    };
+
+    const latest = pickLatest(httpProfile, localProfile);
+    if (latest) {
+      return this.formatProfileContext(latest);
     }
+    return undefined;
   }
 
   private startDeepReasoningJob(

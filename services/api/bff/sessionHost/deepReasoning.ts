@@ -21,13 +21,22 @@ export interface DeepReasoningOptions {
   maxOutputTokens?: number;
 }
 
-const MAX_CHAR_LENGTH = 180;
+const MAX_CHAR_LENGTH = 110;
 
-const DEFAULT_MAX_OUTPUT_TOKENS =
-  Number(process.env.DEEP_REASONING_MAX_OUTPUT_TOKENS ?? '') || 4000;
+const DEFAULT_MAX_OUTPUT_TOKENS = Math.min(Number(process.env.DEEP_REASONING_MAX_OUTPUT_TOKENS ?? '') || 300, 800);
+
+let warmupPromise: Promise<void> | null = null;
 
 export async function runDeepReasoning(options: DeepReasoningOptions): Promise<DeepReasoningResult> {
   const { question, profileContext, client, logger, logSampleLimit = 800, maxOutputTokens } = options;
+
+  // 事前ウォームアップ（初回のモデル起動遅延を隠蔽）
+  try {
+    await warmupModel(client, logger);
+  } catch (error) {
+    logger.warn('Warmup failed; continuing anyway', { error });
+  }
+
   const requestBody = buildDeepReasoningRequest(question, maxOutputTokens, profileContext);
 
   let response: any;
@@ -99,10 +108,11 @@ export async function classifyDeepReasoningIntent(
 
 export function buildDeepReasoningRequest(question: string, maxOutputTokens?: number, profileContext?: string) {
   const systemPrompt = [
-    '日本語で回答。全体3〜4文・160〜180文字以内に収める。超過しそうなら内容を削って短くする。',
+    '日本語で回答。全体3〜4文・90〜100文字目安。必要なら110文字まで伸ばしてもよいので、必ず自然に句点で完結させる。途中で切らない。',
     '構成: 1文目=結論(料理スタイル＋主食/主菜/副菜を具体食材付きで列挙) / 2〜3文目=理由(プロフィール由来の論拠を1つ以上: PFCバランス/GI/疲労・睡眠/目標) / 最終文=具体アクション(量目安＋調理/組み合わせ＋必要ならサプリ1つだけ)。',
     '料理は主食以外の「料理名」を2品。',
-    'サプリは不足に応じて2つだけ（例: オメガ3/ビタミンD/鉄＋C/テアニン）。総花NG。和/洋/ワンボウル/スープ多め等を日替わりで、都会的でリアルなアドバイスに。',
+    'サプリは不足に応じて2つだけ（例: オメガ3/ビタミンD/鉄＋C/テアニン）。総花NG。和/洋/中華/等を日替わりで、都会的でリアルなアドバイスに。',
+    '用語: 「冷奴」は必ず「ひややっこ」と読みを添えて書く。',
   ].join('\n');
 
   const enrichedQuestion = profileContext
@@ -187,5 +197,41 @@ function normalizeContent(content: any): any[] {
 
 function trimToMaxChars(text: string, limit: number): string {
   if (!text || text.length <= limit) return text;
-  return text.slice(0, limit);
+
+  // 少し余裕を見て句点まで許容する（ハード上限）
+  const hardCap = limit + 20; // 最大20文字超過まで許容
+  const slice = text.slice(0, hardCap);
+  const punctuation = ['。', '！', '？', '!', '?', '．', '.', '、'];
+  const lastPuncIndex = punctuation.reduce((max, p) => Math.max(max, slice.lastIndexOf(p)), -1);
+
+  if (lastPuncIndex >= 0) {
+    return slice.slice(0, lastPuncIndex + 1);
+  }
+
+  // 句読点が無ければハードキャップで返す（モデル側指示で句点を付けてもらう前提）
+  return slice.trimEnd();
+}
+
+// 一度だけ Responses API に最小リクエストを送り、モデルのコールドスタート遅延を吸収する
+async function warmupModel(client: ResponsesClient, logger: StructuredLogger) {
+  if (warmupPromise) return warmupPromise;
+  warmupPromise = (async () => {
+    try {
+      await client.create({
+        model: 'gpt-5.1',
+        max_output_tokens: 1,
+        stream: false,
+        input: [
+          {
+            role: 'user',
+            content: [{ type: 'input_text', text: 'ping' }],
+          },
+        ],
+      } as any);
+      logger.info('Deep reasoning warmup completed');
+    } catch (error) {
+      logger.warn('Deep reasoning warmup failed (non-fatal)', { error });
+    }
+  })();
+  return warmupPromise;
 }
