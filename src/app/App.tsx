@@ -38,21 +38,7 @@ const SERVER_VAD_TEMPLATE = {
   silence_duration_ms: 1000,
 };
 
-function resolveBffKeyForClient(): string | undefined {
-  if (typeof window !== 'undefined' && (window as any).__MCPC_BFF_KEY) {
-    return (window as any).__MCPC_BFF_KEY;
-  }
-  return process.env.NEXT_PUBLIC_BFF_KEY;
-}
-
-function buildBffHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const bffKey = resolveBffKeyForClient();
-  if (bffKey) {
-    headers['x-bff-key'] = bffKey;
-  }
-  return headers;
-}
+const MEMORY_FEATURE_ENABLED = false;
 
 function App() {
   const searchParams = useSearchParams()!;
@@ -83,9 +69,6 @@ function App() {
     RealtimeAgent[] | null
   >(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
-  const [isResettingMemory, setIsResettingMemory] = useState<boolean>(false);
-  const [memoryKeysByScenario, setMemoryKeysByScenario] = useState<Record<string, string>>({});
-  const [activeMemoryKey, setActiveMemoryKey] = useState<string | null>(null);
 
   // Ref to identify whether the latest agent switch came from an automatic handoff
   const handoffTriggeredRef = useRef(false);
@@ -355,7 +338,6 @@ const requestAgentChange = useCallback(async (agentName: string) => {
     try {
       setSessionError(null);
       initialResponseTriggeredRef.current = false;
-      const normalizedAgentKey = normalizeScenarioKey(agentSetKey);
       const sessionInfo = await connect({
         agentSetKey,
         preferredAgentName: selectedAgentName,
@@ -368,12 +350,6 @@ const requestAgentChange = useCallback(async (agentName: string) => {
         clientCapabilities: { outputText: isTextOutputEnabled },
         clientTag: clientTag?.trim() || undefined,
       });
-      const resolvedMemoryKey = sessionInfo?.memoryKey ?? normalizedAgentKey;
-      setActiveMemoryKey(resolvedMemoryKey);
-      setMemoryKeysByScenario((prev) => ({
-        ...prev,
-        [normalizedAgentKey]: resolvedMemoryKey,
-      }));
     } catch (err) {
       console.error("Error connecting via SDK:", err);
       setSessionStatus("DISCONNECTED");
@@ -435,7 +411,6 @@ const requestAgentChange = useCallback(async (agentName: string) => {
   useEffect(() => {
     if (sessionStatus === 'DISCONNECTED' && !pendingVoiceReconnectRef.current) {
       setAgentSetKey(defaultAgentSetKey);
-      setActiveMemoryKey(null);
     }
   }, [sessionStatus]);
 
@@ -566,66 +541,6 @@ const requestAgentChange = useCallback(async (agentName: string) => {
     url.searchParams.set("codec", newCodec);
     window.location.replace(url.toString());
   };
-
-  const handleResetMemory = useCallback(async () => {
-    setIsResettingMemory(true);
-    const normalizedKey = normalizeScenarioKey(agentSetKey);
-    const storedKey = memoryKeysByScenario[normalizedKey] ?? activeMemoryKey ?? null;
-    const requestBody: Record<string, string> = { agentSetKey: normalizedKey };
-    if (storedKey) {
-      requestBody.memoryKey = storedKey;
-    }
-    if (clientTag?.trim()) {
-      requestBody.clientTag = clientTag.trim();
-    }
-    try {
-      const response = await fetch('/api/memory', {
-        method: 'DELETE',
-        headers: buildBffHeaders(),
-        body: JSON.stringify(requestBody),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        const reason = payload?.message ?? payload?.error ?? 'unknown';
-        throw new Error(reason);
-      }
-      const resolvedMemoryKey =
-        typeof payload?.memoryKey === 'string' ? payload.memoryKey : requestBody.memoryKey;
-      if (resolvedMemoryKey) {
-        setMemoryKeysByScenario((prev) => ({
-          ...prev,
-          [normalizedKey]: resolvedMemoryKey,
-        }));
-      }
-      addTranscriptBreadcrumb(uiText.memory.resetDoneBreadcrumb, {
-        agentSetKey: normalizedKey,
-        memoryKey: resolvedMemoryKey ?? requestBody.memoryKey ?? 'unknown',
-      });
-      setSessionError(null);
-      setActiveMemoryKey(null);
-      setMemoryKeysByScenario((prev) => {
-        const next = { ...prev };
-        delete next[normalizedKey];
-        return next;
-      });
-      // リセット直後はセッションを切断し、次回接続を完全に空の状態で開始させる
-      disconnectFromRealtime();
-    } catch (error) {
-      const message = (error as Error)?.message ?? 'unknown';
-      setSessionError(`${uiText.memory.resetFailedPrefix}${message}`);
-    } finally {
-      setIsResettingMemory(false);
-    }
-  }, [
-    activeMemoryKey,
-    addTranscriptBreadcrumb,
-    agentSetKey,
-    memoryKeysByScenario,
-    disconnectFromRealtime,
-    uiText.memory.resetDoneBreadcrumb,
-    uiText.memory.resetFailedPrefix,
-  ]);
-
   useEffect(() => {
     const storedPushToTalkUI = localStorage.getItem("pushToTalkUI");
     if (storedPushToTalkUI) {
@@ -789,14 +704,6 @@ const requestAgentChange = useCallback(async (agentName: string) => {
               className="border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] rounded-lg text-base px-2 py-1 w-36 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
           </div>
-
-          <button
-            onClick={handleResetMemory}
-            disabled={isResettingMemory}
-            className="ml-6 px-3 py-1.5 text-sm rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-muted)] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-          >
-            {isResettingMemory ? uiText.memory.resettingLabel : uiText.memory.resetLabel}
-          </button>
         </div>
       </div>
       {sessionError && (

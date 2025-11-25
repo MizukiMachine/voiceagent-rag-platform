@@ -5,6 +5,7 @@ import type { MemoryEntry, MemoryStore } from './memoryStore';
 import { FileMemoryStore } from './memoryStore';
 
 export const PERSISTENT_MEMORY_SOURCE = 'persistent_memory';
+export const PERSISTENT_MEMORY_ENABLED = (process.env.PERSISTENT_MEMORY_ENABLED ?? 'true') === 'true';
 
 // 外部からも型を利用できるように再エクスポート
 export type { MemoryEntry, MemoryStore } from './memoryStore';
@@ -36,6 +37,7 @@ export function resolveMemoryKey(
   metadata?: Record<string, any>,
   clientTag?: string | null,
 ): string | null {
+  if (!PERSISTENT_MEMORY_ENABLED) return null;
   if (typeof provided === 'string' && provided.trim()) {
     return provided.trim();
   }

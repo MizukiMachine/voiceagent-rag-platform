@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 
 import { useSessionSpectator } from "@/app/hooks/useSessionSpectator";
 
+const MEMORY_FEATURE_ENABLED = false;
+
 const BADGE_LABELS = {
   develop: "開発ブラウザ",
   glasses01: "ARグラス #1",
@@ -53,8 +55,6 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
   const tag = clientTag;
   const isValid = VALID_TAGS.has(tag as ValidTag);
   const spectator = useSessionSpectator();
-  const [resetNotice, setResetNotice] = useState<string | null>(null);
-  const [resetNoticeTone, setResetNoticeTone] = useState<"success" | "error">("success");
   const [profileSummary, setProfileSummary] = useState<string>("読み込み中…");
   const [profileError, setProfileError] = useState<string | null>(null);
 
@@ -69,7 +69,6 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
 
   const baseUrl = searchParams?.get("baseUrl") ?? undefined;
   const userId = searchParams?.get("userId") ?? "demo-user";
-  const canResetMemory = Boolean(spectator.scenarioKey);
 
   useEffect(() => {
     if (!isValid) return;
@@ -110,18 +109,6 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
     };
   }, [baseUrl, userId]);
 
-  const handleResetMemory = async () => {
-    setResetNotice(null);
-    const result = await spectator.resetMemory();
-    if (result.ok) {
-      setResetNoticeTone("success");
-      setResetNotice("記憶をリセットし、最新セッションを購読し直しました。");
-    } else {
-      setResetNoticeTone("error");
-      setResetNotice(result.message ?? "記憶リセットに失敗しました。");
-    }
-  };
-
   const badge = useMemo(
     () => (isValid ? BADGE_LABELS[tag as ValidTag] : tag),
     [isValid, tag],
@@ -145,34 +132,16 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
             <h1 className="text-2xl font-semibold mt-1">{badge} をモニター</h1>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleResetMemory}
-              disabled={!canResetMemory || spectator.isResettingMemory}
-              className="rounded-lg bg-rose-500/90 text-slate-50 text-xs font-semibold px-3 py-2 shadow-lg shadow-rose-500/30 disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-95 transition"
-            >
-              {spectator.isResettingMemory ? "リセット中…" : "記憶をリセット"}
-            </button>
             <div className="text-xs px-3 py-1 rounded-full bg-slate-800/60 border border-white/10">
               {spectator.status}
             </div>
           </div>
         </div>
         <p className="text-xs text-slate-200/80">
-          記憶リセットは「直前の会話コンテキスト」を消して再接続します。現在のセッションも再購読されます。
+          {MEMORY_FEATURE_ENABLED
+            ? "記憶リセットは「直前の会話コンテキスト」を消して再接続します。現在のセッションも再購読されます。"
+            : "永続メモリは無効化中のため、リセット操作は行えません。"}
         </p>
-
-        {resetNotice && (
-          <div
-            className={`rounded-lg px-3 py-2 border ${
-              resetNoticeTone === "success"
-                ? "border-emerald-400/40 bg-emerald-900/30 text-emerald-50 text-xs"
-                : "border-amber-400/50 bg-amber-900/30 text-amber-50 text-xs"
-            }`}
-          >
-            {resetNotice}
-          </div>
-        )}
-
         <p className="text-3xl font-bold text-amber-100">
           現在のシナリオ: {SCENARIO_LABELS[spectator.scenarioKey ?? ""] ?? spectator.scenarioKey ?? "解決中…"}
         </p>

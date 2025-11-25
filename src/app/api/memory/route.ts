@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import {
   getPersistentMemoryStore,
+  PERSISTENT_MEMORY_ENABLED,
   resolveMemoryKey,
 } from '../../../../services/coreData/persistentMemory';
 import { handleRouteError, requireBffSecret } from '../session/utils';
@@ -18,6 +19,13 @@ const resetSchema = z.object({
 
 export async function DELETE(request: Request) {
   try {
+    if (!PERSISTENT_MEMORY_ENABLED) {
+      return NextResponse.json(
+        { error: 'memory_disabled', message: 'Persistent memory is disabled.' },
+        { status: 400 },
+      );
+    }
+
     requireBffSecret(request);
     const json = await request.json().catch(() => ({}));
     const payload = resetSchema.parse(json);

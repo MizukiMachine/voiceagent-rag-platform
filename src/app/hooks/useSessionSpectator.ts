@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getTranscriptionEventStage } from '@/shared/realtimeTranscriptionEvents';
 import type { SessionStatus, SpectatorDirective, SpectatorEventLog, SpectatorTranscript } from '../types';
 
+const MEMORY_FEATURE_ENABLED = false;
+
 type TranscriptStage = 'completed' | 'delta';
 
 interface ConnectParams {
@@ -481,6 +483,11 @@ export function useSessionSpectator(): SessionSpectatorState {
   }, [connect]);
 
   const resetMemory = useCallback(async (): Promise<{ ok: boolean; message?: string }> => {
+    if (!MEMORY_FEATURE_ENABLED) {
+      const message = '永続メモリ機能は無効化されています。';
+      setLastError(message);
+      return { ok: false, message };
+    }
     const params = lastConnectParamsRef.current;
     const agentSetKey = scenarioKey ?? undefined;
     if (!params || !agentSetKey) {
