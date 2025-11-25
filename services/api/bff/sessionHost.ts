@@ -35,7 +35,12 @@ import { LlmScenarioNameClassifier } from '../../../framework/voice_gateway/LlmS
 import { ScenarioRouter, type ScenarioCommandForwarder } from '../../scenario/ScenarioRouter';
 import { ScenarioRegistry } from '../../scenario/ScenarioRegistry';
 import { ServerHotwordCueService, type HotwordCueService } from './hotwordCueService';
-import { classifyDeepReasoningIntent, runDeepReasoning, type ResponsesClient } from './sessionHost/deepReasoning';
+import {
+  classifyDeepReasoningIntent,
+  runDeepReasoning,
+  warmupModel,
+  type ResponsesClient,
+} from './sessionHost/deepReasoning';
 import { getUserProfile, resolveUserId } from '../../../services/nutrition/profileService';
 import {
   buildReplayEvents,

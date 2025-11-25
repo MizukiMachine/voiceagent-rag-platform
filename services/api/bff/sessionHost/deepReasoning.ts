@@ -25,8 +25,6 @@ const MAX_CHAR_LENGTH = 110;
 
 const DEFAULT_MAX_OUTPUT_TOKENS = Math.min(Number(process.env.DEEP_REASONING_MAX_OUTPUT_TOKENS ?? '') || 300, 800);
 
-let warmupPromise: Promise<void> | null = null;
-
 export async function runDeepReasoning(options: DeepReasoningOptions): Promise<DeepReasoningResult> {
   const { question, profileContext, client, logger, logSampleLimit = 800, maxOutputTokens } = options;
 
@@ -213,25 +211,21 @@ function trimToMaxChars(text: string, limit: number): string {
 }
 
 // 一度だけ Responses API に最小リクエストを送り、モデルのコールドスタート遅延を吸収する
-async function warmupModel(client: ResponsesClient, logger: StructuredLogger) {
-  if (warmupPromise) return warmupPromise;
-  warmupPromise = (async () => {
-    try {
-      await client.create({
-        model: 'gpt-5.1',
-        max_output_tokens: 1,
-        stream: false,
-        input: [
-          {
-            role: 'user',
-            content: [{ type: 'input_text', text: 'ping' }],
-          },
-        ],
-      } as any);
-      logger.info('Deep reasoning warmup completed');
-    } catch (error) {
-      logger.warn('Deep reasoning warmup failed (non-fatal)', { error });
-    }
-  })();
-  return warmupPromise;
+export async function warmupModel(client: ResponsesClient, logger: StructuredLogger) {
+  try {
+    await client.create({
+      model: 'gpt-5.1',
+      max_output_tokens: 1,
+      stream: false,
+      input: [
+        {
+          role: 'user',
+          content: [{ type: 'input_text', text: 'ping' }],
+        },
+      ],
+    } as any);
+    logger.info('Deep reasoning warmup completed');
+  } catch (error) {
+    logger.warn('Deep reasoning warmup failed (non-fatal)', { error });
+  }
 }
