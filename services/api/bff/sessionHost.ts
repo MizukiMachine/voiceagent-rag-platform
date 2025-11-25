@@ -264,6 +264,7 @@ interface SessionContext {
   memoryKey?: string | null;
   hasUserContent: boolean;
   hasLiveUserInput: boolean;
+  latestProfileContext?: string;
   hotwordListener?: HotwordListener;
   scenarioRouter?: ScenarioRouter;
   hotwordReminderTimer?: ReturnType<typeof setTimeout>;
@@ -968,7 +969,7 @@ export class SessionHost {
         await this.handleInputText(context, command);
         break;
       case 'input_audio':
-        this.handleInputAudio(context, command);
+        await this.handleInputAudio(context, command);
         break;
       case 'input_image':
         this.handleInputImage(context, command);
@@ -1070,10 +1071,11 @@ export class SessionHost {
 
     const isNutritionScenario = context.agentSetKey === 'nutrition';
     if (isNutritionScenario) {
+      const profileContext = await this.fetchAndInjectProfileContext(context, command.metadata);
       this.logger.info('Nutrition scenario: forcing deep reasoning pipeline', {
         sessionId: context.id,
       });
-      this.executeDeepReasoningPipeline(context, text, command.metadata).catch((error) => {
+      this.executeDeepReasoningPipeline(context, text, command.metadata, profileContext).catch((error) => {
         this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as usual', {
           sessionId: context.id,
           error,
@@ -1197,6 +1199,27 @@ export class SessionHost {
     return undefined;
   }
 
+  private async fetchAndInjectProfileContext(
+    context: SessionContext,
+    metadata?: Record<string, any>,
+  ): Promise<string | undefined> {
+    const profileContext = await this.fetchProfileContext(metadata);
+    if (!profileContext || profileContext.trim().length === 0) {
+      return profileContext;
+    }
+
+    if (context.latestProfileContext !== profileContext) {
+      context.latestProfileContext = profileContext;
+      this.enqueueTextMessage(
+        context,
+        'system',
+        '【内部メモ・読み上げ禁止】最新プロフィールを必ず考慮して回答してください。\n' + profileContext,
+      );
+    }
+
+    return profileContext;
+  }
+
   private startDeepReasoningJob(
     context: SessionContext,
     question?: string,
@@ -1267,8 +1290,9 @@ export class SessionHost {
     context: SessionContext,
     question: string,
     metadata?: Record<string, any>,
+    profileContextOverride?: string,
   ): Promise<void> {
-    const profileContext = await this.fetchProfileContext(metadata);
+    const profileContext = profileContextOverride ?? (await this.fetchProfileContext(metadata));
     this.startDeepReasoningJob(context, question, metadata, profileContext);
     const placeholderId = this.sendDeepReasoningPlaceholder(context);
 
@@ -1356,7 +1380,10 @@ export class SessionHost {
     context.manager.sendEvent({ type: 'response.create' });
   }
 
-  private handleInputAudio(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_audio' }>) {
+  private async handleInputAudio(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_audio' }>) {
+    if (context.agentSetKey === 'nutrition') {
+      await this.fetchAndInjectProfileContext(context);
+    }
     if (!BARGE_IN_ENABLED && context.isAssistantSpeaking) {
       this.logger.info('Dropping input_audio because assistant is speaking and barge-in is disabled', {
         sessionId: context.id,

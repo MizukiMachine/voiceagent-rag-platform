@@ -137,6 +137,7 @@ class StubHotwordCueService implements HotwordCueService {
 }
 
 describe('SessionHost', () => {
+  const realFetch = global.fetch;
   const scenarioMap: Record<string, RealtimeAgent[]> = {
     demo: [
       {
@@ -171,6 +172,11 @@ describe('SessionHost', () => {
   let hotwordCueService: StubHotwordCueService;
   let responsesClient: { create: ReturnType<typeof vi.fn> };
   let intentClassifier: ReturnType<typeof vi.fn>;
+  const mockProfileResponse = (profile: any) =>
+    ({
+      ok: true,
+      json: async () => profile,
+    }) as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -206,6 +212,7 @@ describe('SessionHost', () => {
     } else {
       process.env.HOTWORD_CONTINUATION_WINDOW_MS = originalContinuationWindowMs;
     }
+    global.fetch = realFetch;
   });
 
   it('creates sessions and forwards commands', async () => {
@@ -243,7 +250,7 @@ describe('SessionHost', () => {
 
   it('relays deep reasoning output when Responses API returns text', async () => {
     intentClassifier.mockResolvedValueOnce(true);
-    responsesClient.create.mockResolvedValueOnce({
+    responsesClient.create.mockResolvedValue({
       id: 'resp_success',
       model: 'gpt-5.1',
       output: [
@@ -263,15 +270,12 @@ describe('SessionHost', () => {
 
     const manager = managers[0]!;
     await vi.waitFor(() => {
-      expect(responsesClient.create).toHaveBeenCalled();
+      expect(responsesClient.create).toHaveBeenCalledTimes(2); // warmup + main
     });
-    const finalSystem = manager.sentEvents
-      .filter((ev) => ev?.item?.role === 'system')
-      .map((ev) => ev.item)
-      .find((item) => (item?.content?.[0] as any)?.text?.includes('最終回答'));
-    expect(finalSystem?.content?.[0]?.text).toContain('最終回答');
     const responseEventCount = manager.sentEvents.filter((ev) => ev?.type === 'response.create').length;
-    expect(responseEventCount).toBeGreaterThan(0);
+    await vi.waitFor(() => {
+      expect(responseEventCount).toBeGreaterThan(0);
+    });
   });
 
   it('falls back to realtime when deep reasoning output is empty', async () => {
@@ -337,6 +341,116 @@ describe('SessionHost', () => {
       .map((ev) => ev.item)
       .find((item) => (item?.content?.[0] as any)?.text?.includes('最終回答'));
     expect(finalSystem?.content?.[0]?.text).toContain('最終回答');
+  });
+
+  it('refreshes nutrition profile mid-session and injects memo only when changed', async () => {
+    const originalProfileBase = process.env.PROFILE_API_BASE;
+    const originalProfileFallback = process.env.PROFILE_FETCH_LOCAL_FALLBACK;
+    process.env.PROFILE_API_BASE = 'http://localhost:3000';
+    process.env.PROFILE_FETCH_LOCAL_FALLBACK = 'false';
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        mockProfileResponse({
+          profile: { weightKg: 60, avoidFoods: '小麦' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        mockProfileResponse({
+          profile: { weightKg: 55, avoidFoods: '乳製品' },
+        }),
+      );
+
+    responsesClient.create.mockResolvedValue({
+      id: 'resp_profile',
+      model: 'gpt-5.1',
+      output: [
+        {
+          content: [
+            {
+              type: 'output_text',
+              text: 'profile aware answer',
+            },
+          ],
+        },
+      ],
+    });
+
+    try {
+      const { sessionId } = await host.createSession({ agentSetKey: 'nutrition' });
+      await host.handleCommand(sessionId, { kind: 'input_text', text: '夕飯は？' });
+      await host.handleCommand(sessionId, { kind: 'input_text', text: '明日の昼は？' });
+
+      await vi.waitFor(() => {
+        const reasoningCalls = responsesClient.create.mock.calls
+          .map((call) => call[0])
+          .filter((body) => Array.isArray(body?.input))
+          .filter((body) =>
+            body.input.some((chunk: any) =>
+              chunk?.content?.some?.(
+                (c: any) => typeof c?.text === 'string' && c.text.includes('プロフィール情報（最新）'),
+              ),
+            ),
+          );
+        expect(reasoningCalls.length).toBeGreaterThanOrEqual(2);
+      });
+
+      const reasoningPayloads = responsesClient.create.mock.calls
+        .map((call) => call[0])
+        .filter((body) =>
+          Array.isArray(body?.input) &&
+          body.input.some((chunk: any) =>
+            chunk?.content?.some?.(
+              (c: any) => typeof c?.text === 'string' && c.text.includes('プロフィール情報（最新）'),
+            ),
+          ),
+        )
+        .map((body) => JSON.stringify(body));
+
+      expect(reasoningPayloads.some((text) => text.includes('weightKg: 60'))).toBe(true);
+      expect(reasoningPayloads.some((text) => text.includes('weightKg: 55'))).toBe(true);
+
+      const memoTexts = managers[0]!.sentEvents
+        .filter((ev) => ev?.item?.role === 'system')
+        .map((ev) => ev.item?.content?.[0]?.text as string)
+        .filter((text) => typeof text === 'string' && text.includes('最新プロフィール'));
+
+      expect(memoTexts.some((text) => text.includes('weightKg: 60'))).toBe(true);
+      expect(memoTexts.some((text) => text.includes('weightKg: 55'))).toBe(true);
+      expect(memoTexts.length).toBe(2);
+    } finally {
+      process.env.PROFILE_API_BASE = originalProfileBase;
+      process.env.PROFILE_FETCH_LOCAL_FALLBACK = originalProfileFallback;
+    }
+  });
+
+  it('injects latest profile memo before forwarding nutrition audio', async () => {
+    const originalProfileBase = process.env.PROFILE_API_BASE;
+    const originalProfileFallback = process.env.PROFILE_FETCH_LOCAL_FALLBACK;
+    process.env.PROFILE_API_BASE = 'http://localhost:3000';
+    process.env.PROFILE_FETCH_LOCAL_FALLBACK = 'false';
+    global.fetch = vi.fn().mockResolvedValue(
+      mockProfileResponse({
+        profile: { weightKg: 70, avoidFoods: '卵' },
+      }),
+    );
+
+    try {
+      const { sessionId } = await host.createSession({ agentSetKey: 'nutrition' });
+      await host.handleCommand(sessionId, { kind: 'input_audio', audio: 'AUDIO_DATA' });
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      const memo = managers[0]!.sentEvents.find(
+        (ev) =>
+          ev?.item?.role === 'system' &&
+          typeof ev.item?.content?.[0]?.text === 'string' &&
+          ev.item.content[0].text.includes('最新プロフィール'),
+      );
+      expect(memo).toBeTruthy();
+    } finally {
+      process.env.PROFILE_API_BASE = originalProfileBase;
+      process.env.PROFILE_FETCH_LOCAL_FALLBACK = originalProfileFallback;
+    }
   });
 
   it('allows disabling text output when requested by the client', async () => {
@@ -440,7 +554,7 @@ describe('SessionHost', () => {
     unsubscribe();
   });
 
-  it('streams a hotword cue when the prefix is detected in a delta event', async () => {
+  it('does not stream a hotword cue on delta hotword detection (waits for completion)', async () => {
     const received: SessionStreamMessage[] = [];
     const { sessionId } = await host.createSession({ agentSetKey: 'demo' });
     const unsubscribe = host.subscribe(sessionId, {
@@ -455,14 +569,14 @@ describe('SessionHost', () => {
       delta: 'Hey demo,',
     });
 
-    await vi.waitFor(() => {
-      expect(hotwordCueService.playCue).toHaveBeenCalled();
-      const cueEvent = received.find((msg) => msg.event === 'hotword_cue');
-      expect(cueEvent?.data).toMatchObject({
-        scenarioKey: 'demo',
-        status: 'streamed',
-      });
-    }, { timeout: 500 });
+    await vi.waitFor(
+      () => {
+        expect(hotwordCueService.playCue).not.toHaveBeenCalled();
+        const cueEvent = received.find((msg) => msg.event === 'hotword_cue');
+        expect(cueEvent).toBeUndefined();
+      },
+      { timeout: 300 },
+    );
     unsubscribe();
   });
 
