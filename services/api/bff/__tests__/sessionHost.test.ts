@@ -542,6 +542,20 @@ describe('SessionHost', () => {
     }
   });
 
+  it('includes recent meal logs in formatted profile context', () => {
+    const formatted = (host as any).formatProfileContext({
+      goalType: 'loss',
+      mealLogs: [
+        { description: '味噌ラーメン', recordedAt: '2025-11-25T12:00:00Z', timeOfDay: '昼' },
+        { description: 'グリルチキン', recordedAt: '2025-11-24T18:30:00Z' },
+      ],
+    });
+
+    expect(formatted).toContain('mealLogsRecent:');
+    expect(formatted).toContain('味噌ラーメン');
+    expect(formatted).toContain('mealLogCount: 2');
+  });
+
   it('injects latest profile memo before forwarding nutrition audio', async () => {
     const originalProfileBase = process.env.PROFILE_API_BASE;
     const originalProfileFallback = process.env.PROFILE_FETCH_LOCAL_FALLBACK;

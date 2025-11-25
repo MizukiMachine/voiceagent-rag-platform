@@ -1146,6 +1146,29 @@ export class SessionHost {
     push('todayMeals', profile.todayMeals ?? profile.today_meals);
     push('dinner', profile.dinner);
 
+    if (Array.isArray(profile.mealLogs) && profile.mealLogs.length > 0) {
+      const sorted = [...profile.mealLogs].sort((a, b) => {
+        const aTime = new Date(a?.recordedAt ?? 0).getTime();
+        const bTime = new Date(b?.recordedAt ?? 0).getTime();
+        return bTime - aTime;
+      });
+      const formatter = new Intl.DateTimeFormat('ja-JP', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const recent = sorted.slice(0, 6).map((log) => {
+        const timeLabel = log?.recordedAt ? formatter.format(new Date(log.recordedAt)) : '??-?? ??';
+        const slot = log?.timeOfDay ? `${log.timeOfDay}` : '';
+        const description = typeof log?.description === 'string' ? log.description.trim() : '';
+        const base = description || '内容未設定';
+        return slot ? `${timeLabel} ${slot}:${base}` : `${timeLabel}:${base}`;
+      });
+      push('mealLogsRecent', recent.join(' | '));
+      push('mealLogCount', profile.mealLogs.length);
+    }
+
     return lines.join('\n');
   }
 
