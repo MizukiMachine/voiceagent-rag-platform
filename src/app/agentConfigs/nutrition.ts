@@ -1,4 +1,5 @@
 import { RealtimeAgent, tool } from '@openai/agents/realtime';
+import { cookies } from 'next/headers';
 
 import { japaneseLanguagePreamble, commonInteractionRules, voiceResponsePreamble, buildSelfIntroductionRule } from './languagePolicy';
 import { switchAgentTool, switchScenarioTool } from './voiceControlTools';
@@ -82,7 +83,14 @@ const getProfileTool = tool({
   },
   execute: async (input: any) => {
     const userId = typeof input?.userId === 'string' ? input.userId : undefined;
-    const clientTag = typeof input?.clientTag === 'string' ? input.clientTag : undefined;
+    const cookieTag = (() => {
+      try {
+        return cookies().get('mcpc_client_tag')?.value;
+      } catch {
+        return undefined;
+      }
+    })();
+    const clientTag = typeof input?.clientTag === 'string' ? input.clientTag : cookieTag;
     const params = new URLSearchParams();
     if (userId) params.set('user_id', userId);
     if (clientTag) params.set('client_tag', clientTag);
@@ -133,6 +141,16 @@ const updateProfileTool = tool({
   },
   execute: async (input: any) => {
     const payload = { ...(input ?? {}) };
+    const cookieTag = (() => {
+      try {
+        return cookies().get('mcpc_client_tag')?.value;
+      } catch {
+        return undefined;
+      }
+    })();
+    if (!payload.clientTag && cookieTag) {
+      payload.clientTag = cookieTag;
+    }
     if (typeof payload.clientTag !== 'string' || !payload.clientTag.trim()) {
       throw new Error('clientTag is required for profile update');
     }

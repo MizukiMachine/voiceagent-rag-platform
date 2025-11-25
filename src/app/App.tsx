@@ -338,6 +338,9 @@ const requestAgentChange = useCallback(async (agentName: string) => {
     try {
       setSessionError(null);
       initialResponseTriggeredRef.current = false;
+      if (typeof document !== 'undefined' && clientTag?.trim()) {
+        document.cookie = `mcpc_client_tag=${encodeURIComponent(clientTag.trim())}; path=/; SameSite=Lax`;
+      }
       const sessionInfo = await connect({
         agentSetKey,
         preferredAgentName: selectedAgentName,
