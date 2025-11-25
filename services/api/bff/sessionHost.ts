@@ -1143,50 +1143,57 @@ export class SessionHost {
     const userId = typeof metadata?.userId === 'string' ? metadata.userId : undefined;
     const resolvedUserId = resolveUserId(userId);
 
-    // HTTP とローカルを並行取得し、updatedAt が新しい方を採用する。
     const httpTimeoutMs = Number(process.env.PROFILE_FETCH_TIMEOUT_MS ?? '') || 1200;
-    const base = process.env.INTERNAL_PROFILE_API_BASE ?? 'http://localhost:3000';
-    const query = resolvedUserId ? `?user_id=${encodeURIComponent(resolvedUserId)}` : '';
-    const url = `${base}/api/debug/profile${query}`;
+    const profileBase =
+      process.env.PROFILE_API_BASE?.trim() ||
+      process.env.INTERNAL_PROFILE_API_BASE?.trim() ||
+      process.env.NEXT_PUBLIC_PROFILE_API_BASE?.trim() ||
+      '';
+    const allowLocalFallback = (process.env.PROFILE_FETCH_LOCAL_FALLBACK ?? 'true') === 'true';
+    const ts = Date.now();
+    const query = resolvedUserId ? `?user_id=${encodeURIComponent(resolvedUserId)}&_=${ts}` : `?_=${ts}`;
+    const url = profileBase ? `${profileBase}/api/debug/profile${query}` : null;
 
-    const httpPromise = (async () => {
+    const httpProfile = await (async () => {
+      if (!url) return null;
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), httpTimeoutMs);
       try {
-        const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, signal: controller.signal });
-        if (!res.ok) return null;
+        const res = await fetch(url, {
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          this.logger.warn('Profile HTTP fetch failed', { url, status: res.status });
+          return null;
+        }
         const json: any = await res.json();
         return json?.profile ?? null;
       } catch (error) {
         const aborted = (error as any)?.name === 'AbortError';
-        this.logger[aborted ? 'info' : 'warn']('Profile HTTP fetch skipped', { url, aborted });
+        this.logger[aborted ? 'info' : 'warn']('Profile HTTP fetch skipped', { url, aborted, error });
         return null;
       } finally {
         clearTimeout(timer);
       }
     })();
 
-    const localPromise = (async () => {
+    if (httpProfile) {
+      return this.formatProfileContext(httpProfile);
+    }
+
+    if (allowLocalFallback) {
       try {
-        return await getUserProfile(resolvedUserId);
+        const localProfile = await getUserProfile(resolvedUserId);
+        return this.formatProfileContext(localProfile);
       } catch (error) {
         this.logger.warn('Local profile read failed', { userId: resolvedUserId, error });
-        return null;
+        return undefined;
       }
-    })();
-
-    const [httpProfile, localProfile] = await Promise.all([httpPromise, localPromise]);
-
-    const pickLatest = (...profiles: any[]) => {
-      return profiles
-        .filter((p) => p && typeof p === 'object')
-        .sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime())[0];
-    };
-
-    const latest = pickLatest(httpProfile, localProfile);
-    if (latest) {
-      return this.formatProfileContext(latest);
     }
+
+    this.logger.warn('Profile fetch fell back to none (local fallback disabled)', { userId: resolvedUserId });
     return undefined;
   }
 
