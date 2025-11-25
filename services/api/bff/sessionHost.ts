@@ -77,6 +77,7 @@ const HOTWORD_FUZZY_DISTANCE_THRESHOLD =
 const HOTWORD_MIN_CONFIDENCE = Number(process.env.HOTWORD_MIN_CONFIDENCE ?? '0.6');
 const HOTWORD_CUE_ENABLED = (process.env.HOTWORD_CUE_ENABLED ?? 'true') === 'true';
 const HOTWORD_SWITCH_DELAY_MS = Number(process.env.HOTWORD_SWITCH_DELAY_MS ?? '200');
+const ASSISTANT_SPEECH_IDLE_MS = 1200;
 const DEFAULT_HOTWORD_CONTINUATION_WINDOW_MS = 2000;
 const DEEP_REASONING_TRIGGERS = ['深く考えて', 'じっくり', '丁寧に考えて', '理由を詳しく', 'ステップを教えて'];
 const BARGE_IN_ENABLED = (process.env.BARGE_IN_ENABLED ?? 'true') === 'true';
@@ -268,6 +269,8 @@ interface SessionContext {
   scenarioRouter?: ScenarioRouter;
   hotwordReminderTimer?: ReturnType<typeof setTimeout>;
   hotwordCuePlayedItems: Set<string>;
+  isAssistantSpeaking: boolean;
+  assistantSilenceTimer?: ReturnType<typeof setTimeout>;
   transcribedItemIds: Set<string>;
   clientTag?: string;
   destroyed?: boolean;
@@ -442,6 +445,7 @@ export class SessionHost {
             if (itemId) {
               contextRef.current?.transcribedItemIds.add(itemId);
             }
+            this.trackAssistantSpeech(contextRef.current, payload);
             consumed = contextRef.current?.hotwordListener?.handleTranscriptionEvent(payload) ?? false;
           } catch (error) {
             this.logger.warn('Hotword listener failed to process event', {
@@ -850,6 +854,7 @@ export class SessionHost {
       subscribers: new Map(),
       emitter: new EventEmitter(),
       hotwordCuePlayedItems: new Set(),
+      isAssistantSpeaking: false,
       transcribedItemIds: new Set(),
       destroy: async (destroyOptions: DestroySessionOptions = {}) => {
         if (context.destroyed) {
@@ -1318,6 +1323,12 @@ export class SessionHost {
   }
 
   private handleInputAudio(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_audio' }>) {
+    if (!BARGE_IN_ENABLED && context.isAssistantSpeaking) {
+      this.logger.info('Dropping input_audio because assistant is speaking and barge-in is disabled', {
+        sessionId: context.id,
+      });
+      return;
+    }
     context.hasUserContent = true;
     context.hasLiveUserInput = true;
     context.manager.sendEvent({
@@ -1855,6 +1866,33 @@ export class SessionHost {
     context.emitter.emit('message', message);
   }
 
+  private trackAssistantSpeech(context: SessionContext | null, payload: any) {
+    if (!context || !payload) return;
+    const type = typeof payload?.type === 'string' ? payload.type : '';
+    const outputAudio =
+      type === 'response.output_audio.delta' ||
+      type === 'response.output_audio.chunk' ||
+      type === 'response.output_audio.done';
+    const responseDone = type === 'response.completed' || type === 'response.done';
+
+    if (outputAudio) {
+      context.isAssistantSpeaking = true;
+      if (context.assistantSilenceTimer) {
+        clearTimeout(context.assistantSilenceTimer);
+      }
+      context.assistantSilenceTimer = setTimeout(() => {
+        context.isAssistantSpeaking = false;
+        context.assistantSilenceTimer = undefined;
+      }, ASSISTANT_SPEECH_IDLE_MS);
+    } else if (responseDone) {
+      context.isAssistantSpeaking = false;
+      if (context.assistantSilenceTimer) {
+        clearTimeout(context.assistantSilenceTimer);
+        context.assistantSilenceTimer = undefined;
+      }
+    }
+  }
+
   private shouldForwardHistoryItem(context: SessionContext, item: any): boolean {
     const itemId =
       item?.id ?? item?.item_id ?? item?.itemId ?? item?.item?.id ?? item?.item?.itemId;
@@ -1877,6 +1915,10 @@ export class SessionHost {
     if (context.hotwordReminderTimer) {
       clearTimeout(context.hotwordReminderTimer);
       context.hotwordReminderTimer = undefined;
+    }
+    if (context.assistantSilenceTimer) {
+      clearTimeout(context.assistantSilenceTimer);
+      context.assistantSilenceTimer = undefined;
     }
     context.emitter.emit('cleanup');
     context.emitter.removeAllListeners();
