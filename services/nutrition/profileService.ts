@@ -62,6 +62,12 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
   const userId = resolveUserId(input.userId);
   const current = await getUserProfile(userId);
 
+  const normalizedMealLogAppend =
+    input.mealLogAppend ??
+    (typeof input.todayMealsAppend === 'string' && input.todayMealsAppend.trim()
+      ? { description: input.todayMealsAppend.trim(), timeOfDay: undefined }
+      : null);
+
   const next: UserProfile = {
     ...current,
     updatedAt: new Date().toISOString(),
@@ -79,7 +85,7 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
       typeof input.dietStyle === 'string' && input.dietStyle.trim()
         ? input.dietStyle.trim()
         : current.dietStyle,
-    mealLogs: appendMealLog(current.mealLogs ?? [], input.mealLogAppend),
+    mealLogs: appendMealLog(current.mealLogs ?? [], normalizedMealLogAppend),
     todayMeals: resolveTodayMeals(current.todayMeals, input.todayMeals, input.todayMealsAppend),
   };
 
