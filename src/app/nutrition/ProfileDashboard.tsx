@@ -72,9 +72,15 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string>('male-35-176-65');
+  const [mealLogAppendDraft, setMealLogAppendDraft] = useState('');
 
   const summary = useMemo(() => buildSummary(profile), [profile]);
-  const latestMeal = profile?.mealLogs?.at(-1);
+  const orderedMealLogs = useMemo(() => {
+    if (!profile?.mealLogs) return [];
+    return [...profile.mealLogs].sort(
+      (a, b) => new Date(b.recordedAt ?? 0).getTime() - new Date(a.recordedAt ?? 0).getTime(),
+    );
+  }, [profile?.mealLogs]);
 
   useEffect(() => {
     void loadProfile(userId);
@@ -115,7 +121,10 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
     setError(null);
     setMessage(null);
     try {
-      const payload = { clientTag, ...sanitizeForPatch(profile) };
+      const payload: Record<string, any> = { clientTag, ...sanitizeForPatch(profile) };
+      if (mealLogAppendDraft.trim()) {
+        payload.todayMealsAppend = mealLogAppendDraft.trim();
+      }
       const res = await fetch('/api/debug/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -126,6 +135,9 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
         setError(json?.issues ? '入力値を確認してください' : '保存に失敗しました');
       } else {
         setProfile(json.profile);
+        if (mealLogAppendDraft.trim()) {
+          setMealLogAppendDraft('');
+        }
         setMessage('保存しました。次の音声質問からこの値が使われます。');
       }
     } catch {
@@ -242,6 +254,15 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
               <div className="grid gap-4 md:grid-cols-2">
                 {fieldOrder.map((field) => renderField(field, profile, onFieldChange))}
               </div>
+              <FieldShell label="食事ログに追記（保存時に1件追加されます）">
+                <textarea
+                  className="min-h-[80px] rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
+                  placeholder="[昼] 玄米とサラダ / カフェラテ など"
+                  value={mealLogAppendDraft}
+                  onChange={(e) => setMealLogAppendDraft(e.target.value)}
+                />
+                <p className="text-xs text-emerald-200">内容を入力して「保存」を押すと mealLogs に1件追加されます。</p>
+              </FieldShell>
 
           <div className="flex flex-wrap gap-3">
             <button
@@ -272,15 +293,29 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
           <section className="mt-6 grid gap-4 rounded-2xl bg-slate-800/80 p-6 ring-1 ring-white/10">
             <h2 className="text-lg font-semibold text-white">利用プロフィールのサマリ</h2>
             <p className="text-sm text-emerald-100">{summary}</p>
-            {latestMeal && (
-              <p className="text-sm text-emerald-100">
-                直近の食事記録: {latestMeal.timeOfDay ? `[${latestMeal.timeOfDay}] ` : ''}
-                {latestMeal.description} ({new Date(latestMeal.recordedAt).toLocaleString()})
-              </p>
-            )}
-            {profile.todayMeals && (
-              <p className="text-sm text-emerald-100">今日の食事ログ: {profile.todayMeals}</p>
-            )}
+            <div className="space-y-1 text-sm text-emerald-100">
+              {profile.todayMeals && <p>今日の食事ログ: {profile.todayMeals}</p>}
+              {orderedMealLogs.length > 0 ? (
+                <div className="space-y-2">
+                  <p>保存済みの食事ログ（{orderedMealLogs.length}件）</p>
+                  <ol className="max-h-56 overflow-y-auto pr-1 space-y-1 text-slate-50">
+                    {orderedMealLogs.map((log, index) => (
+                      <li key={log.id ?? `${log.recordedAt}-${index}`} className="flex gap-2">
+                        <span className="text-xs text-emerald-200 w-6 text-right">
+                          {orderedMealLogs.length - index}.
+                        </span>
+                        <span className="flex-1">
+                          {(log.description ?? '').trim() || '内容未設定'}
+                          {log.recordedAt ? ` (${new Date(log.recordedAt).toLocaleString()})` : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ) : (
+                <p>食事ログはまだありません。</p>
+              )}
+            </div>
             <div className="grid gap-2 text-sm text-slate-100 md:grid-cols-3">
               <Metric label="BMI" value={profile.bmi ? profile.bmi.toFixed(1) : '未設定'} />
               <Metric

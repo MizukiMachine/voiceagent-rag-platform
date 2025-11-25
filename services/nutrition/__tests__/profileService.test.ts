@@ -109,7 +109,7 @@ describe('profileService', () => {
     expect(updated.todayMeals).toContain('バナナヨーグルト');
   });
 
-  it('replaces today mealLogs when todayMeals is set directly (dashboard edit)', async () => {
+  it('does not mutate stored mealLogs when only todayMeals is set directly', async () => {
     await getUserProfile(userId);
     await updateUserProfile({
       userId,
@@ -124,9 +124,25 @@ describe('profileService', () => {
     });
 
     expect(updated.mealLogs?.length).toBe(1);
-    expect(updated.mealLogs?.at(-1)?.description).toBe('ヨーグルト');
-    expect(updated.mealLogs?.at(-1)?.timeOfDay).toBeUndefined();
+    expect(updated.mealLogs?.at(0)?.description).toBe('ラーメン');
     expect(updated.todayMeals).toBe('ヨーグルト');
+  });
+
+  it('keeps appended logs even when todayMeals is provided in the same request', async () => {
+    await getUserProfile(userId);
+    await updateUserProfile({
+      userId,
+      mealLogAppend: { description: 'パンケーキ' },
+    });
+
+    const updated = await updateUserProfile({
+      userId,
+      mealLogAppend: { description: 'バナナジュース' },
+      todayMeals: 'バナナジュース',
+    });
+
+    expect(updated.mealLogs?.length).toBe(2);
+    expect(updated.mealLogs?.at(-1)?.description).toBe('バナナジュース');
   });
 
   it('resets all fields and logs when resetAll is true', async () => {
@@ -191,6 +207,16 @@ describe('profileService', () => {
     });
 
     expect(updated.mealLogs?.at(-1)?.description).toBe('カレーライス');
+  });
+
+  it('strips stray particle before time-of-day prefix when appending', async () => {
+    const updated = await updateUserProfile({
+      userId,
+      clientTag: 'develop',
+      mealLogAppend: { description: 'が[昼] 醤油ラーメン', timeOfDay: '昼' },
+    });
+
+    expect(updated.mealLogs?.at(-1)?.description).toBe('醤油ラーメン');
   });
 
   it('normalizes stored mealLogs with prefixes on load', async () => {

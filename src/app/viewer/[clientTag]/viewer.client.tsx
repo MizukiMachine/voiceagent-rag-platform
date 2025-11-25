@@ -47,24 +47,32 @@ function buildProfileSummary(profile: any): string {
   return parts.join(" / ");
 }
 
-function buildMealLogSummary(profile: any): { today: string | null; recent: string | null } {
+type MealHistoryEntry = { key: string; text: string };
+
+function buildMealLogSummary(profile: any): { today: string | null; history: MealHistoryEntry[] } {
   const today = typeof profile?.todayMeals === "string" && profile.todayMeals.trim()
     ? profile.todayMeals.trim()
     : null;
 
   const logs: any[] = Array.isArray(profile?.mealLogs) ? profile.mealLogs : [];
-  const recent = logs
+  const history = logs
     .slice()
-    .sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime())
-    .slice(-3)
-    .map((log) => {
-      const ts = log.recordedAt ? new Date(log.recordedAt).toLocaleString() : "";
-      const tod = log.timeOfDay ? `[${log.timeOfDay}] ` : "";
-      return `${tod}${log.description ?? ""}${ts ? ` (${ts})` : ""}`;
+    .sort((a, b) => {
+      const aTime = new Date(a.recordedAt ?? 0).getTime();
+      const bTime = new Date(b.recordedAt ?? 0).getTime();
+      return bTime - aTime;
     })
-    .join("\n");
+    .map((log, index) => {
+      const ts = log.recordedAt ? new Date(log.recordedAt).toLocaleString() : "";
+      const description = (log.description ?? "").trim() || "内容未設定";
+      const suffix = ts ? ` (${ts})` : "";
+      return {
+        key: log.id ?? `${ts}-${index}`,
+        text: `${description}${suffix}`.trim(),
+      };
+    });
 
-  return { today, recent: recent || null };
+  return { today, history };
 }
 
 type ValidTag = keyof typeof BADGE_LABELS;
@@ -78,7 +86,7 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
   const [profileSummary, setProfileSummary] = useState<string>("読み込み中…");
   const [profileError, setProfileError] = useState<string | null>(null);
   const [mealToday, setMealToday] = useState<string | null>(null);
-  const [mealRecent, setMealRecent] = useState<string | null>(null);
+  const [mealHistory, setMealHistory] = useState<MealHistoryEntry[]>([]);
 
   const resolvedBffKey = useMemo(() => {
     const qp = searchParams?.get("bffKey");
@@ -119,7 +127,7 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
         const mealSummary = buildMealLogSummary(json?.profile);
         setProfileSummary(summary || "未設定が多いため、ダッシュボードで入力してください。");
         setMealToday(mealSummary.today);
-        setMealRecent(mealSummary.recent);
+        setMealHistory(mealSummary.history);
         setProfileError(null);
       } catch (error: any) {
         if (abort) return;
@@ -179,16 +187,24 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
           ) : (
             <p className="text-sm text-amber-50 whitespace-pre-wrap leading-relaxed">{profileSummary}</p>
           )}
-          <div className="space-y-1 text-sm text-amber-50 whitespace-pre-wrap leading-relaxed">
+         <div className="space-y-1 text-sm text-amber-50 whitespace-pre-wrap leading-relaxed">
             {mealToday && <p>今日の食事ログ: {mealToday}</p>}
-            {mealRecent ? (
-              <p>
-                直近の食事記録(最大3件):
-                <br />
-                {mealRecent}
-              </p>
+            {mealHistory.length > 0 ? (
+              <div className="space-y-1">
+                <p>食事ログ（{mealHistory.length}件）:</p>
+                <ol className="space-y-1 text-amber-50/90">
+                  {mealHistory.map((entry, index) => (
+                    <li key={entry.key} className="flex gap-2 items-start">
+                      <span className="text-xs text-emerald-200 w-6 text-right">
+                        {mealHistory.length - index}.
+                      </span>
+                      <span className="flex-1">{entry.text}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
             ) : (
-              <p>直近の食事記録がまだありません。</p>
+              <p>食事ログがまだありません。</p>
             )}
           </div>
         </div>
