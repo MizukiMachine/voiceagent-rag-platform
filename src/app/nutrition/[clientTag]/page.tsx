@@ -1,6 +1,10 @@
 import ProfileDashboard from '../ProfileDashboard';
 
-export default function NutritionByTagPage({ params }: { params: { clientTag: string } }) {
-  const clientTag = params.clientTag;
+export default async function NutritionByTagPage({
+  params,
+}: {
+  params: Promise<{ clientTag: string }>;
+}) {
+  const { clientTag } = await params;
   return <ProfileDashboard clientTag={clientTag} />;
 }
