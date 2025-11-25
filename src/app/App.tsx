@@ -110,9 +110,9 @@ function App() {
     },
   );
   const [isBargeInDisabled, setIsBargeInDisabled] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') return true; // サーバ初期レンダリング時も無効化をデフォルトON
     const stored = localStorage.getItem('bargeInDisabled');
-    return stored ? stored === 'true' : false;
+    return stored ? stored === 'true' : true; // ストレージ未保存なら「無効化」チェックを初期ON
   });
   const [isTextOutputEnabled, setIsTextOutputEnabled] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
