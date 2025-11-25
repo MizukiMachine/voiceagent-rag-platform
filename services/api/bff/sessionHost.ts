@@ -84,6 +84,10 @@ const HOTWORD_SWITCH_DELAY_MS = Number(process.env.HOTWORD_SWITCH_DELAY_MS ?? '2
 const ASSISTANT_SPEECH_IDLE_MS = 1200;
 const DEFAULT_HOTWORD_CONTINUATION_WINDOW_MS = 2000;
 const DEEP_REASONING_TRIGGERS = ['深く考えて', 'じっくり', '丁寧に考えて', '理由を詳しく', 'ステップを教えて'];
+const GREETING_ONLY_PATTERNS = [
+  /^(ヘイ)?\s*メアリー[、。,\.！!です]*\s*(こんにちは|こんばんは|おはようございます)?\s*$/i,
+  /^(こんにちは|こんばんは|おはようございます|やあ|もしもし)[！!。．､, ]*$/i,
+];
 const BARGE_IN_ENABLED = (process.env.BARGE_IN_ENABLED ?? 'true') === 'true';
 
 function resolveHotwordContinuationWindowMs(): number {
@@ -1076,6 +1080,12 @@ export class SessionHost {
 
     const isNutritionScenario = context.agentSetKey === 'nutrition';
     if (isNutritionScenario) {
+      if (this.isGreetingOnly(text)) {
+        this.logger.info('Nutrition scenario: greeting detected, skip deep reasoning', { sessionId: context.id });
+        await this.fetchAndInjectProfileContext(context, command.metadata);
+        this.sendUserTextCommand(context, text, command.metadata);
+        return;
+      }
       const profileContext = await this.fetchAndInjectProfileContext(context, command.metadata);
       this.logger.info('Nutrition scenario: forcing deep reasoning pipeline', {
         sessionId: context.id,
@@ -1114,6 +1124,15 @@ export class SessionHost {
   private shouldForceDeepReasoning(text: string): boolean {
     const normalized = text ?? '';
     return DEEP_REASONING_TRIGGERS.some((kw) => normalized.includes(kw));
+  }
+
+  private isGreetingOnly(text: string): boolean {
+    const trimmed = (text ?? '').trim();
+    if (!trimmed) return false;
+    if (GREETING_ONLY_PATTERNS.some((re) => re.test(trimmed))) return true;
+    const length = trimmed.replace(/\s+/g, '').length;
+    if (length <= 10 && /^(こんにちは|こんばんは|おはよう|やあ|hi|hello)$/i.test(trimmed)) return true;
+    return false;
   }
 
   private formatProfileContext(profile: any): string {
