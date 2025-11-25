@@ -6,6 +6,10 @@ import type { UserProfile } from './types';
 export interface UserProfileStore {
   read(userId: string): Promise<UserProfile | null>;
   upsert(profile: UserProfile): Promise<void>;
+  mutate(
+    userId: string,
+    mutator: (profile: UserProfile | null) => Promise<UserProfile> | UserProfile,
+  ): Promise<UserProfile>;
 }
 
 interface FileUserProfileStoreOptions {
@@ -51,6 +55,20 @@ export class FileUserProfileStore implements UserProfileStore {
       const payload = await this.load();
       payload.profiles[profile.userId] = { ...profile };
       await this.save(payload);
+    });
+  }
+
+  async mutate(
+    userId: string,
+    mutator: (profile: UserProfile | null) => Promise<UserProfile> | UserProfile,
+  ): Promise<UserProfile> {
+    return this.exclusive(async () => {
+      const payload = await this.load();
+      const current = payload.profiles[userId] ? { ...payload.profiles[userId] } : null;
+      const next = await mutator(current);
+      payload.profiles[next.userId] = { ...next };
+      await this.save(payload);
+      return { ...next };
     });
   }
 

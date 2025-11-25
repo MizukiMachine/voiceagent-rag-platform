@@ -47,7 +47,12 @@ function buildProfileSummary(profile: any): string {
   return parts.join(" / ");
 }
 
-type MealHistoryEntry = { key: string; text: string };
+type MealHistoryEntry = {
+  key: string;
+  description: string;
+  recordedAt?: string;
+  timeOfDay?: string;
+};
 
 function buildMealLogSummary(profile: any): { today: string | null; history: MealHistoryEntry[] } {
   const today = typeof profile?.todayMeals === "string" && profile.todayMeals.trim()
@@ -62,15 +67,12 @@ function buildMealLogSummary(profile: any): { today: string | null; history: Mea
       const bTime = new Date(b.recordedAt ?? 0).getTime();
       return bTime - aTime;
     })
-    .map((log, index) => {
-      const ts = log.recordedAt ? new Date(log.recordedAt).toLocaleString() : "";
-      const description = (log.description ?? "").trim() || "内容未設定";
-      const suffix = ts ? ` (${ts})` : "";
-      return {
-        key: log.id ?? `${ts}-${index}`,
-        text: `${description}${suffix}`.trim(),
-      };
-    });
+    .map((log, index) => ({
+      key: log.id ?? `${log.recordedAt ?? "unknown"}-${index}`,
+      description: (log.description ?? "").trim() || "内容未設定",
+      recordedAt: log.recordedAt,
+      timeOfDay: log.timeOfDay,
+    }));
 
   return { today, history };
 }
@@ -87,6 +89,26 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [mealToday, setMealToday] = useState<string | null>(null);
   const [mealHistory, setMealHistory] = useState<MealHistoryEntry[]>([]);
+  const mealGroups = useMemo(() => {
+    if (mealHistory.length === 0) return [];
+    const formatter = new Intl.DateTimeFormat("ja-JP", { dateStyle: "long" });
+    const map = new Map<string, { label: string; entries: MealHistoryEntry[] }>();
+
+    mealHistory.forEach((entry) => {
+      const dateKey = entry.recordedAt ? entry.recordedAt.slice(0, 10) : "unknown";
+      if (!map.has(dateKey)) {
+        map.set(dateKey, {
+          label: entry.recordedAt ? formatter.format(new Date(entry.recordedAt)) : "日時未設定",
+          entries: [],
+        });
+      }
+      map.get(dateKey)!.entries.push(entry);
+    });
+
+    return Array.from(map.entries())
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([, group]) => group);
+  }, [mealHistory]);
 
   const resolvedBffKey = useMemo(() => {
     const qp = searchParams?.get("bffKey");
@@ -129,7 +151,7 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
         setMealToday(mealSummary.today);
         setMealHistory(mealSummary.history);
         setProfileError(null);
-      } catch (error: any) {
+      } catch {
         if (abort) return;
         setProfileError("プロフィール取得に失敗しました");
       }
@@ -190,18 +212,31 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
          <div className="space-y-1 text-sm text-amber-50 whitespace-pre-wrap leading-relaxed">
             {mealToday && <p>今日の食事ログ: {mealToday}</p>}
             {mealHistory.length > 0 ? (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <p>食事ログ（{mealHistory.length}件）:</p>
-                <ol className="space-y-1 text-amber-50/90">
-                  {mealHistory.map((entry, index) => (
-                    <li key={entry.key} className="flex gap-2 items-start">
-                      <span className="text-xs text-emerald-200 w-6 text-right">
-                        {mealHistory.length - index}.
-                      </span>
-                      <span className="flex-1">{entry.text}</span>
-                    </li>
+                <div className="max-h-[480px] overflow-y-auto pr-1 space-y-4 text-amber-50/90">
+                  {mealGroups.map((group) => (
+                    <div key={group.label} className="space-y-2">
+                      <p className="text-xs uppercase tracking-wide text-emerald-200">{group.label}</p>
+                      <ol className="space-y-2">
+                        {group.entries.map((entry) => (
+                          <li
+                            key={entry.key}
+                            className="rounded-lg border border-white/10 bg-slate-900/40 p-3 space-y-1"
+                          >
+                            <div className="flex items-center justify-between text-xs text-emerald-200">
+                              <span>{entry.timeOfDay ?? "記録"}</span>
+                              {entry.recordedAt && (
+                                <span>{new Date(entry.recordedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-amber-50">{entry.description}</p>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
                   ))}
-                </ol>
+                </div>
               </div>
             ) : (
               <p>食事ログがまだありません。</p>
