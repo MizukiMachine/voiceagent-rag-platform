@@ -47,7 +47,6 @@ const fieldOrder: Array<keyof Profile> = [
   'activityLevel',
   'avoidFoods',
   'dietStyle',
-  'todayMeals',
 ];
 
 const presets = [
@@ -72,8 +71,13 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<string>('male-35-176-65');
-  const [mealLogAppendDraft, setMealLogAppendDraft] = useState('');
+  const [mealLogDescription, setMealLogDescription] = useState('');
+  const [mealLogTimeOfDay, setMealLogTimeOfDay] = useState('朝');
+  const [logBusy, setLogBusy] = useState(false);
+  const [logError, setLogError] = useState<string | null>(null);
+  const [logMessage, setLogMessage] = useState<string | null>(null);
 
+  const timeOfDayOptions = ['朝', '昼', '夜', '間食', 'その他'];
   const summary = useMemo(() => buildSummary(profile), [profile]);
   const orderedMealLogs = useMemo(() => {
     if (!profile?.mealLogs) return [];
@@ -81,6 +85,32 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
       (a, b) => new Date(b.recordedAt ?? 0).getTime() - new Date(a.recordedAt ?? 0).getTime(),
     );
   }, [profile?.mealLogs]);
+  const groupedMealLogs = useMemo(() => {
+    if (orderedMealLogs.length === 0) return [];
+    const formatter = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'long' });
+    const map = new Map<
+      string,
+      { label: string; entries: typeof orderedMealLogs }
+    >();
+
+    orderedMealLogs.forEach((log) => {
+      const dateKey = log.recordedAt ? log.recordedAt.slice(0, 10) : 'unknown';
+      if (!map.has(dateKey)) {
+        map.set(dateKey, {
+          label: log.recordedAt ? formatter.format(new Date(log.recordedAt)) : '日時未設定',
+          entries: [],
+        });
+      }
+      map.get(dateKey)!.entries.push(log);
+    });
+
+    return Array.from(map.entries())
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([, group]) => ({
+        label: group.label,
+        entries: group.entries,
+      }));
+  }, [orderedMealLogs]);
 
   useEffect(() => {
     void loadProfile(userId);
@@ -122,9 +152,6 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
     setMessage(null);
     try {
       const payload: Record<string, any> = { clientTag, ...sanitizeForPatch(profile) };
-      if (mealLogAppendDraft.trim()) {
-        payload.todayMealsAppend = mealLogAppendDraft.trim();
-      }
       const res = await fetch('/api/debug/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -135,9 +162,6 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
         setError(json?.issues ? '入力値を確認してください' : '保存に失敗しました');
       } else {
         setProfile(json.profile);
-        if (mealLogAppendDraft.trim()) {
-          setMealLogAppendDraft('');
-        }
         setMessage('保存しました。次の音声質問からこの値が使われます。');
       }
     } catch {
@@ -168,6 +192,47 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
       setError('リセットに失敗しました');
     } finally {
       setBusy('idle');
+    }
+  }
+
+  async function appendMealLog() {
+    if (!profile) {
+      setLogError('プロフィールを読み込んでから追加してください');
+      return;
+    }
+    if (!mealLogDescription.trim()) {
+      setLogError('食事内容を入力してください');
+      return;
+    }
+    setLogBusy(true);
+    setLogError(null);
+    setLogMessage(null);
+    try {
+      const payload = {
+        clientTag,
+        userId: profile.userId ?? userId,
+        mealLogAppend: {
+          description: mealLogDescription.trim(),
+          timeOfDay: mealLogTimeOfDay === 'その他' ? undefined : mealLogTimeOfDay,
+        },
+      };
+      const res = await fetch('/api/debug/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setLogError('食事ログの追加に失敗しました');
+      } else {
+        setProfile(json.profile);
+        setMealLogDescription('');
+        setLogMessage('食事ログを追加しました');
+      }
+    } catch {
+      setLogError('食事ログの追加に失敗しました');
+    } finally {
+      setLogBusy(false);
     }
   }
 
@@ -254,15 +319,47 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
               <div className="grid gap-4 md:grid-cols-2">
                 {fieldOrder.map((field) => renderField(field, profile, onFieldChange))}
               </div>
-              <FieldShell label="食事ログに追記（保存時に1件追加されます）">
+              <section className="rounded-xl bg-slate-900/70 p-4 ring-1 ring-white/10 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-base font-semibold text-white">食事ログを手動で追記</h3>
+                  <p className="text-xs text-emerald-200/80">
+                    プロフィール保存とは別に、mealLogs に即時反映されます。
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {timeOfDayOptions.map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      onClick={() => setMealLogTimeOfDay(option)}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                        mealLogTimeOfDay === option
+                          ? 'bg-emerald-400 text-slate-900 shadow-lg shadow-emerald-900/30'
+                          : 'bg-slate-800 text-emerald-100 ring-1 ring-white/10 hover:ring-emerald-400'
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
                 <textarea
-                  className="min-h-[80px] rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-                  placeholder="[昼] 玄米とサラダ / カフェラテ など"
-                  value={mealLogAppendDraft}
-                  onChange={(e) => setMealLogAppendDraft(e.target.value)}
+                  className="w-full min-h-[160px] rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
+                  placeholder="例: 玄米150gと鶏むねのサラダ、味噌汁"
+                  value={mealLogDescription}
+                  onChange={(e) => setMealLogDescription(e.target.value)}
                 />
-                <p className="text-xs text-emerald-200">内容を入力して「保存」を押すと mealLogs に1件追加されます。</p>
-              </FieldShell>
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+                  <button
+                    onClick={appendMealLog}
+                    disabled={logBusy || !mealLogDescription.trim()}
+                    className="rounded-xl bg-emerald-400 px-4 py-2 font-semibold text-slate-900 shadow-lg shadow-emerald-900/30 hover:bg-emerald-300 disabled:opacity-50"
+                  >
+                    {logBusy ? '追加中…' : '食事ログに追加'}
+                  </button>
+                  {logError && <span className="text-rose-200 text-xs">{logError}</span>}
+                  {logMessage && <span className="text-emerald-200 text-xs">{logMessage}</span>}
+                </div>
+              </section>
 
           <div className="flex flex-wrap gap-3">
             <button
@@ -296,21 +393,35 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
             <div className="space-y-1 text-sm text-emerald-100">
               {profile.todayMeals && <p>今日の食事ログ: {profile.todayMeals}</p>}
               {orderedMealLogs.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <p>保存済みの食事ログ（{orderedMealLogs.length}件）</p>
-                  <ol className="max-h-56 overflow-y-auto pr-1 space-y-1 text-slate-50">
-                    {orderedMealLogs.map((log, index) => (
-                      <li key={log.id ?? `${log.recordedAt}-${index}`} className="flex gap-2">
-                        <span className="text-xs text-emerald-200 w-6 text-right">
-                          {orderedMealLogs.length - index}.
-                        </span>
-                        <span className="flex-1">
-                          {(log.description ?? '').trim() || '内容未設定'}
-                          {log.recordedAt ? ` (${new Date(log.recordedAt).toLocaleString()})` : ''}
-                        </span>
-                      </li>
+                  <div className="max-h-[420px] overflow-y-auto pr-1 space-y-4 text-slate-50">
+                    {groupedMealLogs.map((group) => (
+                      <div key={group.label} className="space-y-2">
+                        <p className="text-xs uppercase tracking-wide text-emerald-200">{group.label}</p>
+                        <ol className="space-y-1">
+                          {group.entries.map((log, index) => (
+                            <li
+                              key={log.id ?? `${log.recordedAt}-${index}`}
+                              className="rounded-lg bg-slate-900/50 px-3 py-2 border border-white/5 space-y-1"
+                            >
+                              <div className="flex items-center justify-between text-xs text-emerald-200">
+                                <span>{log.timeOfDay ?? '記録'}</span>
+                                {log.recordedAt && (
+                                  <span>
+                                    {new Date(log.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-slate-50">
+                                {(log.description ?? '').trim() || '内容未設定'}
+                              </p>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
                     ))}
-                  </ol>
+                  </div>
                 </div>
               ) : (
                 <p>食事ログはまだありません。</p>
@@ -363,7 +474,6 @@ function renderField(
     activityLevel: '活動量',
     avoidFoods: '避けたい食品（アレルギー・苦手を自由入力）',
     dietStyle: '食事スタイル（例: ベジタリアン/炭水化物控えめ）',
-    todayMeals: '今日の食事ログ',
   };
 
   const value = profile[key];
@@ -450,20 +560,6 @@ function renderField(
       </FieldShell>
     );
   }
-  if (key === 'todayMeals') {
-    return (
-      <FieldShell key={key} label={labelMap[key]}>
-        <textarea
-          className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-          rows={2}
-          placeholder="例: 朝はヨーグルトとバナナ、昼は鶏むねサラダと玄米"
-          value={(value as string | undefined) ?? ''}
-          onChange={(e) => onChange(key, e.target.value)}
-        />
-      </FieldShell>
-    );
-  }
-
   return (
     <FieldShell key={key} label={labelMap[key]}>
       {(() => {

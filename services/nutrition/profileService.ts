@@ -50,6 +50,7 @@ export async function getUserProfile(userId?: string | null, clientTag?: string 
       userId: resolvedId,
       updatedAt: now,
       ...DEFAULT_PROFILE,
+      mealLogs: [],
     };
 
   const profile = normalizeStoredProfile(baseProfile);
@@ -85,50 +86,61 @@ export interface UpdateProfileInput {
 export async function updateUserProfile(input: UpdateProfileInput): Promise<ProfileWithDerived> {
   const store = getUserProfileStore();
   const resolvedUserId = resolveUserIdWithTag(input.userId, input.clientTag);
-  const current = await getUserProfile(input.userId, input.clientTag);
   const now = new Date();
 
-  if (input.resetAll) {
-    const reset: UserProfile = {
+  const updated = await store.mutate(resolvedUserId, async (rawExisting) => {
+    const nowIso = now.toISOString();
+
+    if (input.resetAll) {
+      return {
+        userId: resolvedUserId,
+        updatedAt: nowIso,
+        ...DEFAULT_PROFILE,
+        mealLogs: [],
+        todayMeals: undefined,
+      };
+    }
+
+    const existing: UserProfile =
+      rawExisting ??
+      {
+        userId: resolvedUserId,
+        updatedAt: nowIso,
+        ...DEFAULT_PROFILE,
+        mealLogs: [],
+      };
+
+    const current = normalizeStoredProfile(existing);
+
+    const normalizedMealLogAppend = normalizeMealLogAppend(input);
+    const todayMealsDirect =
+      typeof input.todayMeals === 'string' && input.todayMeals.trim() ? input.todayMeals.trim() : null;
+
+    return {
+      ...current,
+      updatedAt: nowIso,
       userId: resolvedUserId,
-      updatedAt: now.toISOString(),
-      ...DEFAULT_PROFILE,
-      mealLogs: [],
-      todayMeals: undefined,
+      age: pickNumber(input.age, current.age),
+      sex: input.sex ?? current.sex,
+      heightCm: pickNumber(input.heightCm, current.heightCm),
+      weightKg: pickNumber(input.weightKg, current.weightKg),
+      goalType: (input.goalType as GoalType | undefined) ?? current.goalType,
+      activityLevel: (input.activityLevel as ActivityLevel | undefined) ?? current.activityLevel,
+      avoidFoods:
+        typeof input.avoidFoods === 'string' && input.avoidFoods.trim()
+          ? input.avoidFoods.trim()
+          : current.avoidFoods,
+      dietStyle:
+        typeof input.dietStyle === 'string' && input.dietStyle.trim()
+          ? input.dietStyle.trim()
+          : current.dietStyle,
+      mealLogs: resolveMealLogs(current.mealLogs ?? [], normalizedMealLogAppend, todayMealsDirect, now),
+      todayMeals: resolveTodayMeals(current.todayMeals, input.todayMeals, input.todayMealsAppend),
     };
-    await store.upsert(reset);
-    return withDerived(reset);
-  }
+  });
 
-  const normalizedMealLogAppend = normalizeMealLogAppend(input);
-  const todayMealsDirect = typeof input.todayMeals === 'string' && input.todayMeals.trim()
-    ? input.todayMeals.trim()
-    : null;
-
-  const next: UserProfile = {
-    ...current,
-    updatedAt: now.toISOString(),
-    userId: resolvedUserId,
-    age: pickNumber(input.age, current.age),
-    sex: input.sex ?? current.sex,
-    heightCm: pickNumber(input.heightCm, current.heightCm),
-    weightKg: pickNumber(input.weightKg, current.weightKg),
-    goalType: (input.goalType as GoalType | undefined) ?? current.goalType,
-    activityLevel: (input.activityLevel as ActivityLevel | undefined) ?? current.activityLevel,
-    avoidFoods:
-      typeof input.avoidFoods === 'string' && input.avoidFoods.trim()
-        ? input.avoidFoods.trim()
-        : current.avoidFoods,
-    dietStyle:
-      typeof input.dietStyle === 'string' && input.dietStyle.trim()
-        ? input.dietStyle.trim()
-        : current.dietStyle,
-    mealLogs: resolveMealLogs(current.mealLogs ?? [], normalizedMealLogAppend, todayMealsDirect, now),
-    todayMeals: resolveTodayMeals(current.todayMeals, input.todayMeals, input.todayMealsAppend),
-  };
-
-  await store.upsert(next);
-  return withDerived(next);
+  const normalized = normalizeStoredProfile(updated);
+  return withDerived(normalized);
 }
 
 // ------------------------------------------------------------

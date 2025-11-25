@@ -6,17 +6,41 @@ import { getUserProfile, updateUserProfile } from '../profileService';
 // Reset singleton store between tests by clearing require cache
 vi.mock('../profileStore', async () => {
   const actual = await vi.importActual<typeof import('../profileStore')>('../profileStore');
-  // Use in-memory stub for isolation
   const memory: Record<string, any> = {};
+  const FORCE_NONE = Symbol('force-none');
+  let forcedRead: any | typeof FORCE_NONE = FORCE_NONE;
+
+  const clone = <T,>(value: T): T =>
+    value === null || value === undefined ? (value as T) : JSON.parse(JSON.stringify(value));
+
   const mockStore = {
     async read(userId: string) {
-      return memory[userId] ?? null;
+      if (forcedRead !== FORCE_NONE) {
+        const payload = forcedRead === null ? null : clone(forcedRead);
+        forcedRead = FORCE_NONE;
+        return payload;
+      }
+      return clone(memory[userId] ?? null);
     },
     async upsert(profile: any) {
-      memory[profile.userId] = { ...profile };
+      memory[profile.userId] = clone(profile);
+    },
+    async mutate(userId: string, mutator: (profile: any | null) => Promise<any>) {
+      const current = clone(memory[userId] ?? null);
+      const next = await mutator(current);
+      memory[next.userId] = clone(next);
+      return clone(next);
+    },
+    __forceNextRead(payload?: any | null) {
+      if (payload === undefined) {
+        forcedRead = FORCE_NONE;
+        return;
+      }
+      forcedRead = payload ? clone(payload) : null;
     },
     __reset() {
       Object.keys(memory).forEach((key) => delete memory[key]);
+      forcedRead = FORCE_NONE;
     },
   };
 
@@ -126,6 +150,31 @@ describe('profileService', () => {
     expect(updated.mealLogs?.length).toBe(1);
     expect(updated.mealLogs?.at(0)?.description).toBe('ラーメン');
     expect(updated.todayMeals).toBe('ヨーグルト');
+  });
+
+  it('preserves existing mealLogs even if a stale snapshot is read before a todayMeals patch (regression)', async () => {
+    const store = getUserProfileStore() as any;
+    const baseline = await getUserProfile(userId);
+
+    await updateUserProfile({
+      userId,
+      mealLogAppend: { description: '鮭おにぎり', timeOfDay: '朝' },
+    });
+
+    const staleSnapshot = JSON.parse(JSON.stringify(baseline));
+    staleSnapshot.mealLogs = [];
+    store.__forceNextRead(staleSnapshot);
+
+    await updateUserProfile({
+      userId,
+      todayMeals: 'ヨーグルトとフルーツ',
+    });
+
+    store.__forceNextRead(undefined);
+
+    const profile = await getUserProfile(userId);
+    expect(profile.mealLogs?.length).toBe(1);
+    expect(profile.mealLogs?.at(0)?.description).toBe('鮭おにぎり');
   });
 
   it('keeps appended logs even when todayMeals is provided in the same request', async () => {

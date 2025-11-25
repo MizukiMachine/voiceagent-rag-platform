@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractMessageText } from "@/app/hooks/useHandleSessionHistory";
+import { extractMessageText, resolveFunctionCallName } from "@/app/hooks/useHandleSessionHistory";
 
 describe("extractMessageText", () => {
   it("returns concatenated plain text for input_text chunks", () => {
@@ -38,5 +38,19 @@ describe("extractMessageText", () => {
       { type: "audio", transcript: "kept" },
     ]);
     expect(text).toBe("kept");
+  });
+});
+
+describe("resolveFunctionCallName", () => {
+  it("returns undefined when functionCall is null", () => {
+    expect(resolveFunctionCallName(null)).toBeUndefined();
+  });
+
+  it("returns undefined when name is missing", () => {
+    expect(resolveFunctionCallName({})).toBeUndefined();
+  });
+
+  it("trims and returns the function name when present", () => {
+    expect(resolveFunctionCallName({ name: "  foo " })).toBe("foo");
   });
 });
