@@ -10,10 +10,9 @@ const DEFAULT_PROFILE: Omit<UserProfile, 'userId' | 'updatedAt'> = {
   sex: 'female',
   heightCm: 164,
   weightKg: 60,
-  targetWeightKg: 56,
   goalType: 'loss',
   activityLevel: 'moderate',
-  allergies: ['peanut'],
+  avoidFoods: undefined,
 };
 
 export function resolveUserId(input?: string | null): string {
@@ -49,15 +48,13 @@ export interface UpdateProfileInput {
   sex?: UserProfile['sex'] | null;
   heightCm?: number | null;
   weightKg?: number | null;
-  targetWeightKg?: number | null;
   goalType?: GoalType | null;
   activityLevel?: ActivityLevel | null;
-  allergies?: string[] | null;
-  dislikedFoods?: string[] | null;
+  avoidFoods?: string | null;
   dietStyle?: string | null;
   mealLogAppend?: { description: string; timeOfDay?: string } | null;
-  todayBreakfast?: string | null;
-  todayLunch?: string | null;
+  todayMeals?: string | null;
+  todayMealsAppend?: string | null;
 }
 
 export async function updateUserProfile(input: UpdateProfileInput): Promise<ProfileWithDerived> {
@@ -72,28 +69,18 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
     sex: input.sex ?? current.sex,
     heightCm: pickNumber(input.heightCm, current.heightCm),
     weightKg: pickNumber(input.weightKg, current.weightKg),
-    targetWeightKg: pickNumber(input.targetWeightKg, current.targetWeightKg),
     goalType: (input.goalType as GoalType | undefined) ?? current.goalType,
     activityLevel: (input.activityLevel as ActivityLevel | undefined) ?? current.activityLevel,
-    allergies: Array.isArray(input.allergies)
-      ? [...input.allergies]
-      : current.allergies ?? [],
-    dislikedFoods: Array.isArray(input.dislikedFoods)
-      ? [...input.dislikedFoods]
-      : current.dislikedFoods ?? [],
+    avoidFoods:
+      typeof input.avoidFoods === 'string' && input.avoidFoods.trim()
+        ? input.avoidFoods.trim()
+        : current.avoidFoods,
     dietStyle:
       typeof input.dietStyle === 'string' && input.dietStyle.trim()
         ? input.dietStyle.trim()
         : current.dietStyle,
     mealLogs: appendMealLog(current.mealLogs ?? [], input.mealLogAppend),
-    todayBreakfast:
-      typeof input.todayBreakfast === 'string' && input.todayBreakfast.trim()
-        ? input.todayBreakfast.trim()
-        : current.todayBreakfast,
-    todayLunch:
-      typeof input.todayLunch === 'string' && input.todayLunch.trim()
-        ? input.todayLunch.trim()
-        : current.todayLunch,
+    todayMeals: resolveTodayMeals(current.todayMeals, input.todayMeals, input.todayMealsAppend),
   };
 
   await store.upsert(next);
@@ -108,17 +95,12 @@ function withDerived(profile: UserProfile): ProfileWithDerived {
     profile.heightCm && profile.weightKg
       ? +(profile.weightKg / Math.pow(profile.heightCm / 100, 2)).toFixed(1)
       : undefined;
-  const weightDeltaKg =
-    typeof profile.weightKg === 'number' && typeof profile.targetWeightKg === 'number'
-      ? +(profile.weightKg - profile.targetWeightKg).toFixed(1)
-      : undefined;
   const estimatedTdeeKcal = estimateTdee(profile);
   const caloricBudgetAdvice = buildCaloricAdvice(profile, estimatedTdeeKcal);
 
   return {
     ...profile,
     bmi,
-    weightDeltaKg,
     estimatedTdeeKcal,
     caloricBudgetAdvice,
   };
@@ -152,6 +134,22 @@ function estimateTdee(profile: UserProfile): number | undefined {
   return Math.round(bmr * factor);
 }
 
+function resolveTodayMeals(
+  current: string | undefined,
+  direct?: string | null,
+  append?: string | null,
+): string | undefined {
+  const directTrimmed = typeof direct === 'string' && direct.trim() ? direct.trim() : undefined;
+  if (directTrimmed !== undefined) return directTrimmed;
+
+  const appendTrimmed = typeof append === 'string' && append.trim() ? append.trim() : undefined;
+  if (appendTrimmed) {
+    return current && current.trim() ? `${current.trim()} / ${appendTrimmed}` : appendTrimmed;
+  }
+
+  return current;
+}
+
 function buildCaloricAdvice(profile: UserProfile, tdee?: number): string | undefined {
   if (!tdee) {
     return undefined;
@@ -175,10 +173,5 @@ function pickNumber(candidate: number | null | undefined, fallback: number | und
 
 function resolveGoalType(profile: UserProfile): GoalType | undefined {
   if (profile.goalType) return profile.goalType;
-  if (typeof profile.weightKg !== 'number' || typeof profile.targetWeightKg !== 'number') {
-    return undefined;
-  }
-  const delta = profile.targetWeightKg - profile.weightKg;
-  if (Math.abs(delta) < 0.1) return 'maintain';
-  return delta < 0 ? 'loss' : 'gain';
+  return undefined;
 }

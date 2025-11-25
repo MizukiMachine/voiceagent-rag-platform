@@ -12,11 +12,9 @@ type Profile = {
   sex?: Sex;
   heightCm?: number;
   weightKg?: number;
-  targetWeightKg?: number;
   goalType?: GoalType;
   activityLevel?: ActivityLevel;
-  allergies?: string[];
-  dislikedFoods?: string[];
+  avoidFoods?: string;
   dietStyle?: string;
   mealLogs?: Array<{
     id: string;
@@ -24,11 +22,9 @@ type Profile = {
     timeOfDay?: string;
     recordedAt: string;
   }>;
-  todayBreakfast?: string;
-  todayLunch?: string;
+  todayMeals?: string;
   updatedAt: string;
   bmi?: number;
-  weightDeltaKg?: number;
   estimatedTdeeKcal?: number;
   caloricBudgetAdvice?: string;
 };
@@ -46,18 +42,25 @@ const sexLabels: Record<Sex, string> = {
 };
 
 const fieldOrder: Array<keyof Profile> = [
-  'age',
-  'sex',
-  'heightCm',
-  'weightKg',
-  'targetWeightKg',
+  // 基本属性はプリセットでまとめて設定するため除外
   'goalType',
   'activityLevel',
-  'allergies',
-  'dislikedFoods',
+  'avoidFoods',
   'dietStyle',
-  'todayBreakfast',
-  'todayLunch',
+  'todayMeals',
+];
+
+const presets = [
+  {
+    id: 'male-35-176-65',
+    label: '男性 35歳 176cm 65kg',
+    values: { age: 35, sex: 'male' as Sex, heightCm: 176, weightKg: 65 },
+  },
+  {
+    id: 'female-35-158-52',
+    label: '女性 35歳 158cm 52kg',
+    values: { age: 35, sex: 'female' as Sex, heightCm: 158, weightKg: 52 },
+  },
 ];
 
 type BusyState = 'idle' | 'loading' | 'saving';
@@ -68,6 +71,7 @@ export default function ProfileDashboard() {
   const [busy, setBusy] = useState<BusyState>('idle');
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<string>('male-35-176-65');
 
   const summary = useMemo(() => buildSummary(profile), [profile]);
   const latestMeal = profile?.mealLogs?.at(-1);
@@ -75,6 +79,20 @@ export default function ProfileDashboard() {
   useEffect(() => {
     void loadProfile(userId);
   }, [userId]);
+
+  // プリセット選択時に基本属性をまとめてセット
+  useEffect(() => {
+    if (!profile) return;
+    const preset = presets.find((p) => p.id === selectedPreset);
+    if (!preset) return;
+    const alreadyApplied =
+      profile.age === preset.values.age &&
+      profile.sex === preset.values.sex &&
+      profile.heightCm === preset.values.heightCm &&
+      profile.weightKg === preset.values.weightKg;
+    if (alreadyApplied) return;
+    setProfile({ ...profile, ...preset.values });
+  }, [selectedPreset, profile]);
 
   async function loadProfile(targetUser: string) {
     setBusy('loading');
@@ -119,13 +137,10 @@ export default function ProfileDashboard() {
   const onFieldChange = (key: keyof Profile, value: string) => {
     if (!profile) return;
     let nextValue: any = value;
-    if (['age', 'heightCm', 'weightKg', 'targetWeightKg'].includes(key)) {
+    if (['age', 'heightCm', 'weightKg'].includes(key)) {
       nextValue = value === '' ? undefined : Number(value);
     }
-    if (key === 'allergies' || key === 'dislikedFoods') {
-      const trimmed = value.trim();
-      nextValue = trimmed ? [trimmed] : [];
-    }
+    // avoidFoods は自由入力（カンマ区切りでない）
     setProfile({ ...profile, [key]: nextValue });
   };
 
@@ -170,6 +185,28 @@ export default function ProfileDashboard() {
 
           {profile ? (
             <>
+              <section className="rounded-xl bg-slate-900/70 p-4 ring-1 ring-white/10">
+                <h2 className="text-base font-semibold text-white mb-3">基本プロフィールプリセット</h2>
+                <div className="grid gap-3 text-base text-white md:grid-cols-2">
+                  {presets.map((preset) => (
+                    <label
+                      key={preset.id}
+                      className="flex cursor-pointer items-center gap-3 rounded-lg bg-slate-800/70 px-4 py-3 ring-1 ring-white/10 hover:ring-emerald-400 transition"
+                    >
+                      <input
+                        type="radio"
+                        name="profilePreset"
+                        value={preset.id}
+                        checked={selectedPreset === preset.id}
+                        onChange={(e) => setSelectedPreset(e.target.value)}
+                        className="accent-emerald-400 w-5 h-5"
+                      />
+                      <span className="font-semibold tracking-wide">{preset.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </section>
+
               <div className="grid gap-4 md:grid-cols-2">
                 {fieldOrder.map((field) => renderField(field, profile, onFieldChange))}
               </div>
@@ -202,22 +239,11 @@ export default function ProfileDashboard() {
                 {latestMeal.description} ({new Date(latestMeal.recordedAt).toLocaleString()})
               </p>
             )}
-            {profile.todayBreakfast && (
-              <p className="text-sm text-emerald-100">今日の朝ごはん: {profile.todayBreakfast}</p>
-            )}
-            {profile.todayLunch && (
-              <p className="text-sm text-emerald-100">今日の昼ごはん: {profile.todayLunch}</p>
+            {profile.todayMeals && (
+              <p className="text-sm text-emerald-100">今日の食事ログ: {profile.todayMeals}</p>
             )}
             <div className="grid gap-2 text-sm text-slate-100 md:grid-cols-3">
               <Metric label="BMI" value={profile.bmi ? profile.bmi.toFixed(1) : '未設定'} />
-              <Metric
-                label="目標差分"
-                value={
-                  profile.weightDeltaKg !== undefined
-                    ? `${profile.weightDeltaKg > 0 ? '+' : ''}${profile.weightDeltaKg} kg`
-                    : '未設定'
-                }
-              />
               <Metric
                 label="推定TDEE"
                 value={profile.estimatedTdeeKcal ? `${profile.estimatedTdeeKcal} kcal/日` : '未設定'}
@@ -238,8 +264,7 @@ export default function ProfileDashboard() {
                     : '未設定'
                 }
               />
-              <Metric label="アレルギー" value={profile.allergies?.join(', ') || 'なし/未設定'} />
-              <Metric label="苦手な食品" value={profile.dislikedFoods?.join(', ') || 'なし/未設定'} />
+              <Metric label="避けたい食品" value={profile.avoidFoods || 'なし/未設定'} />
               <Metric label="食事スタイル" value={profile.dietStyle || '未設定'} />
               <Metric label="最終更新" value={new Date(profile.updatedAt).toLocaleString()} />
             </div>
@@ -260,14 +285,11 @@ function renderField(
     sex: '性別',
     heightCm: '身長(cm)',
     weightKg: '体重(kg)',
-    targetWeightKg: '目標体重(kg)',
     goalType: '目標タイプ',
     activityLevel: '活動量',
-    allergies: 'アレルギー（カンマ区切り）',
-    dislikedFoods: '苦手な食品（カンマ区切り）',
+    avoidFoods: '避けたい食品（アレルギー・苦手を自由入力）',
     dietStyle: '食事スタイル（例: ベジタリアン/炭水化物控えめ）',
-    todayBreakfast: '今日の朝ごはん',
-    todayLunch: '今日の昼ごはん',
+    todayMeals: '今日の食事ログ',
   };
 
   const value = profile[key];
@@ -329,27 +351,14 @@ function renderField(
     );
   }
 
-  if (key === 'allergies') {
+  if (key === 'avoidFoods') {
     return (
       <FieldShell key={key} label={labelMap[key]}>
         <textarea
           className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
           rows={2}
-          placeholder="例: ピーナッツ、エビ"
-          value={(value as string[] | undefined)?.[0] ?? ''}
-          onChange={(e) => onChange(key, e.target.value)}
-        />
-      </FieldShell>
-    );
-  }
-  if (key === 'dislikedFoods') {
-    return (
-      <FieldShell key={key} label={labelMap[key]}>
-        <textarea
-          className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-          rows={2}
-          placeholder="例: ピーマン、セロリが苦手。脂っこいものは避けたい。"
-          value={(value as string[] | undefined)?.[0] ?? ''}
+          placeholder="例: 甲殻類アレルギー。揚げ物は避けたい。"
+          value={(value as string | undefined) ?? ''}
           onChange={(e) => onChange(key, e.target.value)}
         />
       </FieldShell>
@@ -367,13 +376,13 @@ function renderField(
       </FieldShell>
     );
   }
-  if (key === 'todayBreakfast' || key === 'todayLunch') {
+  if (key === 'todayMeals') {
     return (
       <FieldShell key={key} label={labelMap[key]}>
         <textarea
           className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
           rows={2}
-          placeholder={key === 'todayBreakfast' ? '例: ごはん、鮭、味噌汁' : '例: 玄米と鶏むね肉、サラダ'}
+          placeholder="例: 朝はヨーグルトとバナナ、昼は鶏むねサラダと玄米"
           value={(value as string | undefined) ?? ''}
           onChange={(e) => onChange(key, e.target.value)}
         />
@@ -425,15 +434,14 @@ function buildSummary(profile: Profile | null): string {
   if (profile.sex) parts.push(sexLabels[profile.sex]);
   if (profile.heightCm) parts.push(`身長${profile.heightCm}cm`);
   if (profile.weightKg) parts.push(`体重${profile.weightKg}kg`);
-  if (profile.targetWeightKg) parts.push(`目標${profile.targetWeightKg}kg`);
   if (profile.goalType) {
     const label = profile.goalType === 'loss' ? '減量' : profile.goalType === 'gain' ? '増量' : '維持';
     parts.push(`目標タイプ:${label}`);
   }
   if (profile.activityLevel) parts.push(activityLabels[profile.activityLevel]);
-  if (profile.allergies?.length) parts.push(`アレルギー:${profile.allergies.join(',')}`);
-  if (profile.dislikedFoods?.length) parts.push(`苦手:${profile.dislikedFoods.join(',')}`);
+  if (profile.avoidFoods) parts.push(`避けたい食品:${profile.avoidFoods}`);
   if (profile.dietStyle) parts.push(`スタイル:${profile.dietStyle}`);
+  if (profile.todayMeals) parts.push(`今日の食事:${profile.todayMeals}`);
   return parts.join(' / ') || '未設定項目が多いため、追加で入力してください。';
 }
 
@@ -444,14 +452,11 @@ function sanitizeForPatch(profile: Profile) {
     sex,
     heightCm,
     weightKg,
-    targetWeightKg,
     goalType,
     activityLevel,
-    allergies,
-    dislikedFoods,
+    avoidFoods,
     dietStyle,
-    todayBreakfast,
-    todayLunch,
+    todayMeals,
   } = profile;
   return {
     userId,
@@ -459,14 +464,11 @@ function sanitizeForPatch(profile: Profile) {
     sex,
     heightCm: numberOrUndefined(heightCm),
     weightKg: numberOrUndefined(weightKg),
-    targetWeightKg: numberOrUndefined(targetWeightKg),
     goalType,
     activityLevel,
-    allergies,
-    dislikedFoods,
+    avoidFoods: stringOrUndefined(avoidFoods),
     dietStyle: stringOrUndefined(dietStyle),
-    todayBreakfast: stringOrUndefined(todayBreakfast),
-    todayLunch: stringOrUndefined(todayLunch),
+    todayMeals: stringOrUndefined(todayMeals),
   };
 }
 

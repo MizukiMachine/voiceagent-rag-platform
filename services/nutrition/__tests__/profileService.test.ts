@@ -48,12 +48,10 @@ describe('profileService', () => {
     const updated = await updateUserProfile({
       userId,
       weightKg: 70,
-      targetWeightKg: 65,
       activityLevel: 'high',
     });
 
     expect(updated.weightKg).toBe(70);
-    expect(updated.weightDeltaKg).toBeCloseTo(5);
     expect(updated.caloricBudgetAdvice).toContain('減量目安');
   });
 
@@ -61,7 +59,6 @@ describe('profileService', () => {
     await getUserProfile(userId);
     const updated = await updateUserProfile({
       userId,
-      targetWeightKg: 50, // 乖離があっても維持を優先
       goalType: 'maintain',
     });
 

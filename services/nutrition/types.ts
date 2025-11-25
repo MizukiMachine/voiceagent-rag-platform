@@ -10,15 +10,12 @@ export interface UserProfile {
   sex?: BiologicalSex;
   heightCm?: number;
   weightKg?: number;
-  targetWeightKg?: number;
   goalType?: GoalType; // 明示的な目標タイプ（減量/維持/増量）
   activityLevel?: ActivityLevel;
-  allergies?: string[];
-  dislikedFoods?: string[];
+  avoidFoods?: string; // アレルギー・苦手食品を自由記述
   dietStyle?: string; // e.g., ベジタリアン, 炭水化物抜き など
   mealLogs?: MealLog[];
-  todayBreakfast?: string;
-  todayLunch?: string;
+  todayMeals?: string;
   updatedAt: string;
 }
 
@@ -31,7 +28,6 @@ export interface MealLog {
 
 export interface ProfileWithDerived extends UserProfile {
   bmi?: number;
-  weightDeltaKg?: number;
   estimatedTdeeKcal?: number;
   caloricBudgetAdvice?: string;
 }

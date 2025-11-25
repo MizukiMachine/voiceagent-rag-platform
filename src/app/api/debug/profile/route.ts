@@ -9,11 +9,9 @@ const patchSchema = z.object({
   sex: z.enum(['male', 'female', 'other']).optional(),
   heightCm: z.number().min(80).max(250).optional(),
   weightKg: z.number().min(20).max(300).optional(),
-  targetWeightKg: z.number().min(20).max(300).optional(),
   goalType: z.enum(['loss', 'maintain', 'gain']).optional(),
   activityLevel: z.enum(['low', 'moderate', 'high']).optional(),
-  allergies: z.array(z.string().trim().min(1)).optional(),
-  dislikedFoods: z.array(z.string().trim().min(1)).optional(),
+  avoidFoods: z.string().trim().min(1).max(400).optional(),
   dietStyle: z.string().trim().min(1).max(120).optional(),
   mealLogAppend: z
     .object({
@@ -21,8 +19,8 @@ const patchSchema = z.object({
       timeOfDay: z.string().trim().min(1).max(32).optional(),
     })
     .optional(),
-  todayBreakfast: z.string().trim().min(1).max(400).optional(),
-  todayLunch: z.string().trim().min(1).max(400).optional(),
+  todayMeals: z.string().trim().min(1).max(400).optional(),
+  todayMealsAppend: z.string().trim().min(1).max(400).optional(),
 });
 
 export async function GET(request: Request) {
