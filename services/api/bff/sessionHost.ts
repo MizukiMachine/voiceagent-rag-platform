@@ -1076,17 +1076,23 @@ export class SessionHost {
 
     const isNutritionScenario = context.agentSetKey === 'nutrition';
     if (isNutritionScenario) {
-      const profileContext = await this.fetchAndInjectProfileContext(context, command.metadata);
-      this.logger.info('Nutrition scenario: forcing deep reasoning pipeline', {
-        sessionId: context.id,
-      });
-      this.executeDeepReasoningPipeline(context, text, command.metadata, profileContext).catch((error) => {
-        this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as usual', {
-          sessionId: context.id,
-          error,
-        });
-        this.sendUserTextCommand(context, text, command.metadata);
-      });
+      await this.fetchAndInjectProfileContext(context, command.metadata);
+      // 栄養シナリオでは通常はリアルタイム応答。深考キーワードが入ったときのみ Responses API へ。
+      if (this.shouldForceDeepReasoning(text)) {
+        this.logger.info('Nutrition scenario: deep reasoning trigger hit', { sessionId: context.id });
+        this.executeDeepReasoningPipeline(context, text, command.metadata, context.latestProfileContext).catch(
+          (error) => {
+            this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as usual', {
+              sessionId: context.id,
+              error,
+            });
+            this.sendUserTextCommand(context, text, command.metadata);
+          },
+        );
+        return;
+      }
+
+      this.sendUserTextCommand(context, text, command.metadata);
       return;
     }
 
@@ -1146,9 +1152,13 @@ export class SessionHost {
     return lines.join('\n');
   }
 
-  private async fetchProfileContext(metadata?: Record<string, any>): Promise<string | undefined> {
+  private async fetchProfileContext(
+    metadata?: Record<string, any>,
+    clientTag?: string | null,
+  ): Promise<string | undefined> {
     const userId = typeof metadata?.userId === 'string' ? metadata.userId : undefined;
     const resolvedUserId = resolveUserId(userId);
+    const resolvedClientTag = typeof clientTag === 'string' && clientTag.trim() ? clientTag.trim() : undefined;
 
     const httpTimeoutMs = Number(process.env.PROFILE_FETCH_TIMEOUT_MS ?? '') || 1200;
     const profileBase =
@@ -1158,7 +1168,11 @@ export class SessionHost {
       '';
     const allowLocalFallback = (process.env.PROFILE_FETCH_LOCAL_FALLBACK ?? 'true') === 'true';
     const ts = Date.now();
-    const query = resolvedUserId ? `?user_id=${encodeURIComponent(resolvedUserId)}&_=${ts}` : `?_=${ts}`;
+    const queryParams = new URLSearchParams();
+    if (resolvedUserId) queryParams.set('user_id', resolvedUserId);
+    if (resolvedClientTag) queryParams.set('client_tag', resolvedClientTag);
+    queryParams.set('_', String(ts));
+    const query = `?${queryParams.toString()}`;
     const url = profileBase ? `${profileBase}/api/debug/profile${query}` : null;
 
     const httpProfile = await (async () => {
@@ -1192,7 +1206,7 @@ export class SessionHost {
 
     if (allowLocalFallback) {
       try {
-        const localProfile = await getUserProfile(resolvedUserId);
+        const localProfile = await getUserProfile(resolvedUserId, resolvedClientTag);
         return this.formatProfileContext(localProfile);
       } catch (error) {
         this.logger.warn('Local profile read failed', { userId: resolvedUserId, error });
@@ -1208,7 +1222,7 @@ export class SessionHost {
     context: SessionContext,
     metadata?: Record<string, any>,
   ): Promise<string | undefined> {
-    const profileContext = await this.fetchProfileContext(metadata);
+    const profileContext = await this.fetchProfileContext(metadata, context.clientTag);
     if (!profileContext || profileContext.trim().length === 0) {
       return profileContext;
     }

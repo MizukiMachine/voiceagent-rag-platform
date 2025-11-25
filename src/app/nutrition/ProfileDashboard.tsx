@@ -63,9 +63,9 @@ const presets = [
   },
 ];
 
-type BusyState = 'idle' | 'loading' | 'saving';
+type BusyState = 'idle' | 'loading' | 'saving' | 'resetting';
 
-export default function ProfileDashboard() {
+export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?: string }) {
   const [userId, setUserId] = useState('demo-user');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [busy, setBusy] = useState<BusyState>('idle');
@@ -78,7 +78,7 @@ export default function ProfileDashboard() {
 
   useEffect(() => {
     void loadProfile(userId);
-  }, [userId]);
+  }, [userId, clientTag]);
 
   // プリセット選択時に基本属性をまとめてセット
   useEffect(() => {
@@ -98,7 +98,8 @@ export default function ProfileDashboard() {
     setBusy('loading');
     setError(null);
     try {
-      const res = await fetch(`/api/debug/profile?user_id=${encodeURIComponent(targetUser)}`);
+      const params = new URLSearchParams({ user_id: targetUser, client_tag: clientTag });
+      const res = await fetch(`/api/debug/profile?${params.toString()}`);
       const json = await res.json();
       setProfile(json.profile);
     } catch {
@@ -114,7 +115,7 @@ export default function ProfileDashboard() {
     setError(null);
     setMessage(null);
     try {
-      const payload = sanitizeForPatch(profile);
+      const payload = { clientTag, ...sanitizeForPatch(profile) };
       const res = await fetch('/api/debug/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -129,6 +130,30 @@ export default function ProfileDashboard() {
       }
     } catch {
       setError('保存に失敗しました');
+    } finally {
+      setBusy('idle');
+    }
+  }
+
+  async function resetProfile() {
+    setBusy('resetting');
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/debug/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, resetAll: true, clientTag }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json?.issues ? 'リセットに失敗しました（入力値エラー）' : 'リセットに失敗しました');
+      } else {
+        setProfile(json.profile);
+        setMessage('全項目を初期状態にリセットしました。');
+      }
+    } catch {
+      setError('リセットに失敗しました');
     } finally {
       setBusy('idle');
     }
@@ -154,6 +179,7 @@ export default function ProfileDashboard() {
             <p className="text-sm text-emerald-100">
               ここで編集した値が、音声エージェント「メアリー」の回答にそのまま反映されます。
             </p>
+            <p className="mt-2 text-xs text-emerald-200">clientTag: {clientTag}</p>
           </div>
           <div className="flex gap-2 text-sm">
             <label className="flex items-center gap-2 rounded-lg bg-slate-800/70 px-3 py-2 ring-1 ring-emerald-500/40">
@@ -177,7 +203,13 @@ export default function ProfileDashboard() {
         <section className="mt-8 grid gap-6 rounded-2xl bg-white/5 p-6 shadow-xl ring-1 ring-white/10 backdrop-blur">
           <div className="flex flex-wrap items-center gap-3 text-sm text-emerald-100">
             <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-100">
-              {busy === 'loading' ? '読込中...' : busy === 'saving' ? '保存中...' : '編集できます'}
+              {busy === 'loading'
+                ? '読込中...'
+                : busy === 'saving'
+                  ? '保存中...'
+                  : busy === 'resetting'
+                    ? 'リセット中...'
+                    : '編集できます'}
             </span>
             {error && <span className="text-rose-200">{error}</span>}
             {message && <span className="text-emerald-200">{message}</span>}
@@ -211,18 +243,25 @@ export default function ProfileDashboard() {
                 {fieldOrder.map((field) => renderField(field, profile, onFieldChange))}
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={saveProfile}
-                  disabled={busy !== 'idle'}
-                  className="rounded-xl bg-emerald-400 px-4 py-2 font-semibold text-slate-900 shadow-lg shadow-emerald-900/30 hover:bg-emerald-300 disabled:opacity-60"
-                >
-                  保存してエージェントに反映
-                </button>
-                <p className="text-sm text-emerald-100">
-                  保存後、音声で「今日のランチどうする？」と聞くと最新プロフィールで回答が変わります。
-                </p>
-              </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={saveProfile}
+              disabled={busy !== 'idle'}
+              className="rounded-xl bg-emerald-400 px-4 py-2 font-semibold text-slate-900 shadow-lg shadow-emerald-900/30 hover:bg-emerald-300 disabled:opacity-60"
+            >
+              保存してエージェントに反映
+            </button>
+            <button
+              onClick={resetProfile}
+              disabled={busy !== 'idle'}
+              className="rounded-xl bg-rose-400 px-4 py-2 font-semibold text-slate-900 shadow-lg shadow-rose-900/30 hover:bg-rose-300 disabled:opacity-60"
+            >
+              すべてリセット
+            </button>
+            <p className="text-sm text-emerald-100">
+              保存後、音声で「今日のランチどうする？」と聞くと最新プロフィールで回答が変わります。
+            </p>
+          </div>
             </>
           ) : (
             <div className="text-emerald-100">プロフィールを読み込み中...</div>
