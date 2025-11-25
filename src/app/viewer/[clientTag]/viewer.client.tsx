@@ -110,6 +110,7 @@ export function ClientViewer({ clientTag }: { clientTag: string }) {
       try {
         const url = new URL(`/api/debug/profile`, origin || "http://localhost:3000");
         if (userId) url.searchParams.set("user_id", userId);
+        if (clientTag) url.searchParams.set("client_tag", clientTag);
         const res = await fetch(url.toString(), { headers: { "Content-Type": "application/json" } });
         if (!res.ok) throw new Error(`status ${res.status}`);
         const json = await res.json();

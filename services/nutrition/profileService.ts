@@ -4,6 +4,7 @@ import { getUserProfileStore } from './profileStore';
 import type { ActivityLevel, GoalType, MealLog, ProfileWithDerived, UserProfile } from './types';
 
 const DEFAULT_USER_ID = process.env.DEMO_USER_ID ?? 'demo-user';
+const DEFAULT_CLIENT_TAG = 'develop';
 
 const DEFAULT_PROFILE: Omit<UserProfile, 'userId' | 'updatedAt'> = {
   age: 32,
@@ -22,9 +23,22 @@ export function resolveUserId(input?: string | null): string {
   return DEFAULT_USER_ID;
 }
 
-export async function getUserProfile(userId?: string | null): Promise<ProfileWithDerived> {
+function resolveClientTag(input?: string | null): string {
+  if (typeof input === 'string' && input.trim()) {
+    return input.trim();
+  }
+  return DEFAULT_CLIENT_TAG;
+}
+
+function resolveUserIdWithTag(userId?: string | null, clientTag?: string | null): string {
+  const id = resolveUserId(userId);
+  const tag = resolveClientTag(clientTag);
+  return `${tag}:${id}`;
+}
+
+export async function getUserProfile(userId?: string | null, clientTag?: string | null): Promise<ProfileWithDerived> {
   const store = getUserProfileStore();
-  const resolvedId = resolveUserId(userId);
+  const resolvedId = resolveUserIdWithTag(userId, clientTag);
   const existing = await store.read(resolvedId);
   const now = new Date().toISOString();
   const profile: UserProfile =
@@ -44,6 +58,7 @@ export async function getUserProfile(userId?: string | null): Promise<ProfileWit
 
 export interface UpdateProfileInput {
   userId?: string | null;
+  clientTag?: string | null;
   age?: number | null;
   sex?: UserProfile['sex'] | null;
   heightCm?: number | null;
@@ -60,13 +75,13 @@ export interface UpdateProfileInput {
 
 export async function updateUserProfile(input: UpdateProfileInput): Promise<ProfileWithDerived> {
   const store = getUserProfileStore();
-  const userId = resolveUserId(input.userId);
-  const current = await getUserProfile(userId);
+  const resolvedUserId = resolveUserIdWithTag(input.userId, input.clientTag);
+  const current = await getUserProfile(input.userId, input.clientTag);
   const now = new Date();
 
   if (input.resetAll) {
     const reset: UserProfile = {
-      userId,
+      userId: resolvedUserId,
       updatedAt: now.toISOString(),
       ...DEFAULT_PROFILE,
       mealLogs: [],
@@ -84,6 +99,7 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
   const next: UserProfile = {
     ...current,
     updatedAt: now.toISOString(),
+    userId: resolvedUserId,
     age: pickNumber(input.age, current.age),
     sex: input.sex ?? current.sex,
     heightCm: pickNumber(input.heightCm, current.heightCm),

@@ -42,7 +42,7 @@ describe('profileService', () => {
   it('returns default profile with derived fields when missing', async () => {
     const profile = await getUserProfile(userId);
 
-    expect(profile.userId).toBe(userId);
+    expect(profile.userId).toBe(`develop:${userId}`);
     expect(profile.bmi).toBeDefined();
     expect(profile.estimatedTdeeKcal).toBeGreaterThan(0);
   });
@@ -144,5 +144,28 @@ describe('profileService', () => {
     expect(updated.todayMeals).toBeUndefined();
     expect(updated.age).toBe(32); // default
     expect(updated.dietStyle).toBeUndefined();
+  });
+
+  it('keeps profiles isolated per clientTag', async () => {
+    const tagA = 'develop';
+    const tagB = 'glasses01';
+
+    await updateUserProfile({
+      userId,
+      clientTag: tagA,
+      mealLogAppend: { description: 'Aの食事' },
+    });
+    await updateUserProfile({
+      userId,
+      clientTag: tagB,
+      mealLogAppend: { description: 'Bの食事' },
+    });
+
+    const profileA = await getUserProfile(userId, tagA);
+    const profileB = await getUserProfile(userId, tagB);
+
+    expect(profileA.mealLogs?.at(-1)?.description).toBe('Aの食事');
+    expect(profileB.mealLogs?.at(-1)?.description).toBe('Bの食事');
+    expect(profileA.userId).not.toBe(profileB.userId);
   });
 });

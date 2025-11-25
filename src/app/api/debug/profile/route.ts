@@ -13,6 +13,7 @@ const patchSchema = z.object({
   activityLevel: z.enum(['low', 'moderate', 'high']).optional(),
   avoidFoods: z.string().trim().min(1).max(400).optional(),
   dietStyle: z.string().trim().min(1).max(120).optional(),
+  clientTag: z.string().trim().min(1).max(120).optional(),
   mealLogAppend: z
     .object({
       description: z.string().trim().min(1),
@@ -27,7 +28,8 @@ const patchSchema = z.object({
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const userId = url.searchParams.get('user_id') ?? undefined;
-  const profile = await getUserProfile(userId);
+  const clientTag = url.searchParams.get('client_tag') ?? undefined;
+  const profile = await getUserProfile(userId, clientTag);
   return NextResponse.json({ profile });
 }
 

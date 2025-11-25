@@ -65,7 +65,7 @@ const presets = [
 
 type BusyState = 'idle' | 'loading' | 'saving' | 'resetting';
 
-export default function ProfileDashboard() {
+export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?: string }) {
   const [userId, setUserId] = useState('demo-user');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [busy, setBusy] = useState<BusyState>('idle');
@@ -78,7 +78,7 @@ export default function ProfileDashboard() {
 
   useEffect(() => {
     void loadProfile(userId);
-  }, [userId]);
+  }, [userId, clientTag]);
 
   // プリセット選択時に基本属性をまとめてセット
   useEffect(() => {
@@ -98,7 +98,8 @@ export default function ProfileDashboard() {
     setBusy('loading');
     setError(null);
     try {
-      const res = await fetch(`/api/debug/profile?user_id=${encodeURIComponent(targetUser)}`);
+      const params = new URLSearchParams({ user_id: targetUser, client_tag: clientTag });
+      const res = await fetch(`/api/debug/profile?${params.toString()}`);
       const json = await res.json();
       setProfile(json.profile);
     } catch {
@@ -114,7 +115,7 @@ export default function ProfileDashboard() {
     setError(null);
     setMessage(null);
     try {
-      const payload = sanitizeForPatch(profile);
+      const payload = { clientTag, ...sanitizeForPatch(profile) };
       const res = await fetch('/api/debug/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -142,7 +143,7 @@ export default function ProfileDashboard() {
       const res = await fetch('/api/debug/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, resetAll: true }),
+        body: JSON.stringify({ userId, resetAll: true, clientTag }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -178,6 +179,7 @@ export default function ProfileDashboard() {
             <p className="text-sm text-emerald-100">
               ここで編集した値が、音声エージェント「メアリー」の回答にそのまま反映されます。
             </p>
+            <p className="mt-2 text-xs text-emerald-200">clientTag: {clientTag}</p>
           </div>
           <div className="flex gap-2 text-sm">
             <label className="flex items-center gap-2 rounded-lg bg-slate-800/70 px-3 py-2 ring-1 ring-emerald-500/40">

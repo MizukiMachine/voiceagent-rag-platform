@@ -1,5 +1,5 @@
-import ProfileDashboard from './ProfileDashboard';
+import { redirect } from 'next/navigation';
 
 export default function NutritionPage() {
-  return <ProfileDashboard />;
+  redirect('/nutrition/develop');
 }
