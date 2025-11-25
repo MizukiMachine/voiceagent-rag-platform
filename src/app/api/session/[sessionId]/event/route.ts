@@ -47,7 +47,7 @@ async function buildImageCommandFromFormData(request: Request, sessionId: string
     imageMetadata?: {
       mimeType: string;
       size: number;
-      storagePath: string;
+      storagePath?: string;
       originalName?: string;
     };
   }
