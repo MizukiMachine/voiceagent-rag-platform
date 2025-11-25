@@ -15,6 +15,9 @@ vi.mock('../profileStore', async () => {
     async upsert(profile: any) {
       memory[profile.userId] = { ...profile };
     },
+    __reset() {
+      Object.keys(memory).forEach((key) => delete memory[key]);
+    },
   };
 
   return {
@@ -28,7 +31,8 @@ describe('profileService', () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2025-11-23T00:00:00Z'));
+    vi.setSystemTime(new Date('2025-11-25T00:00:00Z'));
+    (getUserProfileStore() as any).__reset?.();
   });
 
   afterEach(() => {
@@ -103,5 +107,25 @@ describe('profileService', () => {
     expect(updated.mealLogs?.at(-1)?.description).toBe('バナナヨーグルト');
     expect(updated.mealLogs?.at(-1)?.timeOfDay).toBeUndefined();
     expect(updated.todayMeals).toContain('バナナヨーグルト');
+  });
+
+  it('replaces today mealLogs when todayMeals is set directly (dashboard edit)', async () => {
+    await getUserProfile(userId);
+    await updateUserProfile({
+      userId,
+      mealLogAppend: { description: 'ラーメン', timeOfDay: '昼' },
+    });
+
+    vi.setSystemTime(new Date('2025-11-25T12:00:00Z'));
+
+    const updated = await updateUserProfile({
+      userId,
+      todayMeals: 'ヨーグルト',
+    });
+
+    expect(updated.mealLogs?.length).toBe(1);
+    expect(updated.mealLogs?.at(-1)?.description).toBe('ヨーグルト');
+    expect(updated.mealLogs?.at(-1)?.timeOfDay).toBeUndefined();
+    expect(updated.todayMeals).toBe('ヨーグルト');
   });
 });

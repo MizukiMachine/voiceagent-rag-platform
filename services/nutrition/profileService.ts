@@ -61,12 +61,16 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
   const store = getUserProfileStore();
   const userId = resolveUserId(input.userId);
   const current = await getUserProfile(userId);
+  const now = new Date();
 
   const normalizedMealLogAppend = normalizeMealLogAppend(input);
+  const todayMealsDirect = typeof input.todayMeals === 'string' && input.todayMeals.trim()
+    ? input.todayMeals.trim()
+    : null;
 
   const next: UserProfile = {
     ...current,
-    updatedAt: new Date().toISOString(),
+    updatedAt: now.toISOString(),
     age: pickNumber(input.age, current.age),
     sex: input.sex ?? current.sex,
     heightCm: pickNumber(input.heightCm, current.heightCm),
@@ -81,9 +85,7 @@ export async function updateUserProfile(input: UpdateProfileInput): Promise<Prof
       typeof input.dietStyle === 'string' && input.dietStyle.trim()
         ? input.dietStyle.trim()
         : current.dietStyle,
-    mealLogs: normalizedMealLogAppend
-      ? appendMealLog(current.mealLogs ?? [], normalizedMealLogAppend)
-      : current.mealLogs ?? [],
+    mealLogs: resolveMealLogs(current.mealLogs ?? [], normalizedMealLogAppend, todayMealsDirect, now),
     todayMeals: resolveTodayMeals(current.todayMeals, input.todayMeals, input.todayMealsAppend),
   };
 
@@ -133,9 +135,29 @@ function sanitizeMealLogAppend(
   return { description, timeOfDay };
 }
 
-function appendMealLog(existing: MealLog[], append?: { description: string; timeOfDay?: string } | null): MealLog[] {
+function resolveMealLogs(
+  existing: MealLog[],
+  append: { description: string; timeOfDay?: string } | null,
+  todayMealsDirect: string | null,
+  now: Date,
+): MealLog[] {
+  let next = existing;
+  if (append && append.description?.trim()) {
+    next = appendMealLog(next, append, now);
+  }
+  if (todayMealsDirect) {
+    next = replaceTodayMealLogs(next, todayMealsDirect, now);
+  }
+  return next;
+}
+
+function appendMealLog(
+  existing: MealLog[],
+  append?: { description: string; timeOfDay?: string } | null,
+  now: Date = new Date(),
+): MealLog[] {
   if (!append || !append.description?.trim()) return existing;
-  const nowIso = new Date().toISOString();
+  const nowIso = now.toISOString();
   const next: MealLog = {
     id: randomUUID(),
     description: append.description.trim(),
@@ -143,6 +165,23 @@ function appendMealLog(existing: MealLog[], append?: { description: string; time
     recordedAt: nowIso,
   };
   return [...existing.slice(-49), next]; // keep latest 50
+}
+
+function replaceTodayMealLogs(existing: MealLog[], description: string, now: Date): MealLog[] {
+  const todayKey = dateKeyUtc(now);
+  const filtered = existing.filter((log) => dateKeyUtc(new Date(log.recordedAt)) !== todayKey);
+  const nowIso = now.toISOString();
+  const replacement: MealLog = {
+    id: randomUUID(),
+    description,
+    timeOfDay: undefined,
+    recordedAt: nowIso,
+  };
+  return [...filtered.slice(-49), replacement];
+}
+
+function dateKeyUtc(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
 function estimateTdee(profile: UserProfile): number | undefined {
