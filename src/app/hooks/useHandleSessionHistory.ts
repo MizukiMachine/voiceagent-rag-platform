@@ -47,6 +47,12 @@ export const extractMessageText = (content: any[] = []): string => {
     .join("\n");
 };
 
+export const resolveFunctionCallName = (functionCall: any): string | undefined => {
+  if (!functionCall) return undefined;
+  const name = typeof functionCall?.name === 'string' ? functionCall.name.trim() : '';
+  return name && name.length > 0 ? name : undefined;
+};
+
 const extractImageAttachments = (content: any[] = []): TranscriptAttachment[] => {
   if (!Array.isArray(content)) return [];
   return content
@@ -123,19 +129,29 @@ export function useHandleSessionHistory() {
   /* ----------------------- event handlers ------------------------- */
 
   function handleAgentToolStart(details: any, _agent: any, functionCall: any) {
-    const lastFunctionCall = extractFunctionCallByName(functionCall.name, details?.context?.history);
-    const function_name = lastFunctionCall?.name;
-    const function_args = lastFunctionCall?.arguments;
-
-    addTranscriptBreadcrumb(
-      `function call: ${function_name}`,
-      function_args
-    );    
+    const functionName = resolveFunctionCallName(functionCall);
+    if (!functionName) {
+      console.warn('[handleAgentToolStart] missing function call metadata', { details });
+      return;
+    }
+    const lastFunctionCall = extractFunctionCallByName(functionName, details?.context?.history);
+    if (!lastFunctionCall) {
+      console.warn('[handleAgentToolStart] unable to locate function call in history', {
+        functionName,
+      });
+      return;
+    }
+    addTranscriptBreadcrumb(`function call: ${functionName}`, lastFunctionCall.arguments);
   }
   function handleAgentToolEnd(details: any, _agent: any, _functionCall: any, result: any) {
-    const lastFunctionCall = extractFunctionCallByName(_functionCall.name, details?.context?.history);
+    const functionName = resolveFunctionCallName(_functionCall);
+    if (!functionName) {
+      console.warn('[handleAgentToolEnd] missing function call metadata', { details });
+      return;
+    }
+    const lastFunctionCall = extractFunctionCallByName(functionName, details?.context?.history);
     addTranscriptBreadcrumb(
-      `function call result: ${lastFunctionCall?.name}`,
+      `function call result: ${functionName}`,
       maybeParseJson(result)
     );
   }
