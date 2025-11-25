@@ -4,4043 +4,452 @@
    - Environments: .env
 
  ✓ Starting...
- ✓ Ready in 1506ms
+ ✓ Ready in 1630ms
  ○ Compiling /api/viewer/session ...
- ✓ Compiled / in 2.8s (2210 modules)
+ ✓ Compiled /api/viewer/session in 934ms (905 modules)
 {"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
- GET /api/viewer/session?clientTag=glasses01 404 in 3293ms
- ○ Compiling /viewer/[clientTag] ...
- GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 3509ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 3515ms
-[envSetup] Loaded environment from .env (OPENAI_API_KEY=sk-p…dscA)
- GET / 200 in 3283ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:40:51.079Z'
-}
- ✓ Compiled /api/session/resolve in 3.4s (2208 modules)
+ GET /api/viewer/session?clientTag=glasses01 404 in 1351ms
+ ✓ Compiled /api/session/resolve in 169ms (907 modules)
 {"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
- GET /api/session/resolve?clientTag=glasses01 404 in 2949ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 1694ms
- GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 2229ms
-[envSetup] Loaded environment from .env (OPENAI_API_KEY=sk-p…dscA)
- GET / 200 in 289ms
- ✓ Compiled /api/client-logs in 247ms (2210 modules)
-{"severity":"INFO","message":"CLIENT LOG [client] session_warning session_warning","component":"client_log","labels":{"direction":"client","eventName":"session_warning session_warning"},"requestId":"79251b20-14e9-4195-a13e-ceea10400101","sessionId":null,"eventId":"79251b20-14e9-4195-a13e-ceea10400101","eventData":{"type":"session_warning","message":"Command ignored because session is not connected","sessionId":null,"requestId":"79251b20-14e9-4195-a13e-ceea10400101"},"createdAtMs":1764070853647}
- POST /api/client-logs 200 in 283ms
-[envSetup] Loaded environment from .env (OPENAI_API_KEY=sk-p…dscA)
- GET /viewer/glasses01 200 in 4270ms
- GET /viewer/develop 200 in 3078ms
- ✓ Compiled /nutrition/[clientTag] in 481ms (2218 modules)
+ GET /api/session/resolve?clientTag=glasses01 404 in 327ms
+{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
+{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
+[metric] {
+  namespace: 'bff.session',
+  type: 'counter',
+  name: 'bff.session.mcp_eager_success_total',
+  value: 1,
+  tags: { servers: 'google-calendar' },
+  timestamp: '2025-11-25T14:07:01.538Z'
+}
 {"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
- GET /api/viewer/session?clientTag=glasses01 404 in 101ms
-[envSetup] Loaded environment from .env (OPENAI_API_KEY=sk-p…dscA)
-[envSetup] Loaded environment from .env (OPENAI_API_KEY=sk-p…dscA)
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 195ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 195ms
- GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 205ms
+ GET /api/viewer/session?clientTag=glasses01 404 in 20ms
 {"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
- GET /api/session/resolve?clientTag=glasses01 404 in 54ms
- GET /nutrition/develop 200 in 1116ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 23ms
- GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 11ms
- ○ Compiling /api/session ...
- ✓ Compiled /api/session in 521ms (2221 modules)
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 13ms
+ ✓ Compiled /api/debug/profile in 287ms (909 modules)
+ PATCH /api/debug/profile 200 in 351ms
 {"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
- GET /api/viewer/session?clientTag=develop 404 in 351ms
- GET /api/viewer/session?clientTag=glasses01 404 in 352ms
-{"severity":"INFO","message":"CLIENT LOG [client] session_status session_status","component":"client_log","labels":{"direction":"client","eventName":"session_status session_status"},"requestId":"1bc605f4-d59a-4fe4-894f-5bdf2d4f1b14","sessionId":"050686c1-1c17-4d74-a384-b3c7aa40e336","eventId":"1bc605f4-d59a-4fe4-894f-5bdf2d4f1b14","eventData":{"type":"session_status","status":"CONNECTING","sessionId":"050686c1-1c17-4d74-a384-b3c7aa40e336","requestId":"1bc605f4-d59a-4fe4-894f-5bdf2d4f1b14"},"createdAtMs":1764070856564}
- POST /api/client-logs 200 in 632ms
-{"severity":"INFO","message":"Session created","component":"bff.session","sessionId":"sess_0de819db6f15","clientTag":"glasses01","agentSetKey":"graffity","preferredAgentName":"Graffity","reportedModalities":["audio","text"],"textOutputEnabled":true}
-{"severity":"INFO","message":"Hotword LLM classifier enabled","component":"bff.session","model":"gpt-5-mini","minConfidence":0.1}
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 17ms
-{"severity":"INFO","message":"Resolve by clientTag hit","component":"bff.session","clientTag":"glasses01","sessionId":"sess_0de819db6f15","agentSetKey":"graffity","preferredAgentName":"Graffity","status":"CONNECTING"}
- GET /api/session/resolve?clientTag=glasses01 200 in 24ms
-{"severity":"WARNING","message":"Deep reasoning warmup failed (non-fatal)","component":"bff.session","error":{"status":400,"headers":{},"requestID":"req_9e39d83f1b3a4d01a235b16c71367bf0","error":{"message":"Invalid 'max_output_tokens': integer below minimum value. Expected a value >= 16, but got 1 instead.","type":"invalid_request_error","param":"max_output_tokens","code":"integer_below_min_value"},"code":"integer_below_min_value","param":"max_output_tokens","type":"invalid_request_error"}}
- ✓ Compiled /api/session/[sessionId]/stream in 350ms (2223 modules)
-{"severity":"INFO","message":"Session connected","component":"bff.session","sessionId":"sess_0de819db6f15","agentSetKey":"graffity","preferredAgent":"Graffity"}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_connect_success_total',
-  value: 1,
-  tags: {},
-  timestamp: '2025-11-25T11:40:57.564Z'
-}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.created_total',
-  value: 1,
-  tags: {},
-  timestamp: '2025-11-25T11:40:57.565Z'
-}
- POST /api/session 200 in 1276ms
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:40:57.570Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:40:57.752Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:40:57.753Z'
-}
-{"severity":"INFO","message":"CLIENT LOG [server] ready ready","component":"client_log","labels":{"direction":"server","eventName":"ready ready"},"requestId":"5d54b5e9-6114-4028-b879-510b34fb774c","sessionId":"050686c1-1c17-4d74-a384-b3c7aa40e336","eventId":"5d54b5e9-6114-4028-b879-510b34fb774c","eventData":{"type":"ready","payload":{"sessionId":"sess_0de819db6f15"},"sessionId":"050686c1-1c17-4d74-a384-b3c7aa40e336","requestId":"5d54b5e9-6114-4028-b879-510b34fb774c"},"createdAtMs":1764070858525}
- POST /api/client-logs 200 in 49ms
-{"severity":"INFO","message":"CLIENT LOG [client] session_status session_status","component":"client_log","labels":{"direction":"client","eventName":"session_status session_status"},"requestId":"dbf21a94-6917-43b1-982b-f9b2e75b6028","sessionId":"050686c1-1c17-4d74-a384-b3c7aa40e336","eventId":"dbf21a94-6917-43b1-982b-f9b2e75b6028","eventData":{"type":"session_status","status":"CONNECTED","sessionId":"050686c1-1c17-4d74-a384-b3c7aa40e336","requestId":"dbf21a94-6917-43b1-982b-f9b2e75b6028"},"createdAtMs":1764070858525}
- POST /api/client-logs 200 in 51ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:40:58.378Z'
-}
- ○ Compiling /api/session/[sessionId]/event ...
- ✓ Compiled /api/session/[sessionId]/event in 823ms (2449 modules)
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 853ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 14ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'raw_event' },
-  timestamp: '2025-11-25T11:41:00.009Z'
-}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:00.009Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 1811ms
- POST /api/session/sess_0de819db6f15/event 200 in 1811ms
- POST /api/session/sess_0de819db6f15/event 200 in 1257ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:00.039Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 24ms
-[Exporter] Export trace traceId=trace_c256d8965c7d45f08ff81a59410fea75 name=session:create:graffity
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:00.084Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 41ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:00.128Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 41ms
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:00.183Z'
-}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:00.209Z'
-}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:00.256Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 40ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 11ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 14ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:00.748Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 40ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:01.019Z'
-}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:01.080Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 43ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:01.408Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 40ms
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:01.610Z'
-}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:01.904Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 40ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:01.998Z'
-}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:02.244Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 41ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 17ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:02.576Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 43ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:02.865Z'
-}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:03.072Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 43ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 19ms
- GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 25ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:03.408Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 42ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:03.732Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 40ms
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:03.915Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:03.916Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:03.917Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_added' },
-  timestamp: '2025-11-25T11:41:03.918Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:03.918Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:03.919Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:03.919Z'
-}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:04.048Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:04.137Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:04.141Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:04.152Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:04.161Z'
-}
-{"severity":"DEBUG","message":"Hotword prefix detected","component":"bff.session","sessionId":"sess_0de819db6f15","scenarioKey":"nutrition","stage":"delta","method":"prefix_regex","confidence":1}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:04.167Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:04.176Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:04.188Z'
-}
-{"severity":"INFO","message":"Hotword matched","component":"bff.session","sessionId":"sess_0de819db6f15","scenarioKey":"nutrition","commandPreview":"こんにちは。","method":"prefix_regex","confidence":1}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.hotword_cue_emitted_total',
-  value: 1,
-  tags: { scenario: 'nutrition' },
-  timestamp: '2025-11-25T11:41:04.213Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:04.213Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:04.213Z'
-}
-{"severity":"INFO","message":"Hotword detected for different scenario. Requesting switch.","component":"bff.session","currentScenario":"graffity","requestedScenario":"nutrition","commandPreview":"こんにちは。"}
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:04.230Z'
-}
- POST /api/session/sess_0de819db6f15/event 200 in 44ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 12ms
- GET /api/session/sess_0de819db6f15/stream?bffKey=dev-secret 200 in 6858ms
-{"severity":"INFO","message":"CLIENT LOG [client] session_status session_status","component":"client_log","labels":{"direction":"client","eventName":"session_status session_status"},"requestId":"e64a6179-dd55-44ba-87d4-367d2c870e43","sessionId":null,"eventId":"e64a6179-dd55-44ba-87d4-367d2c870e43","eventData":{"type":"session_status","status":"DISCONNECTED","sessionId":null,"requestId":"e64a6179-dd55-44ba-87d4-367d2c870e43"},"createdAtMs":1764070864978}
- POST /api/client-logs 200 in 48ms
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:04.717Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:04.717Z'
-}
- ○ Compiling /api/session/[sessionId] ...
- ✓ Compiled /api/session/[sessionId] in 702ms (2451 modules)
-{"severity":"INFO","message":"CLIENT LOG [client] session_status session_status","component":"client_log","labels":{"direction":"client","eventName":"session_status session_status"},"requestId":"201fd8b0-7719-4eed-9899-9716cf04bf2c","sessionId":"9ceea33b-8291-46f7-8ec3-861552054490","eventId":"201fd8b0-7719-4eed-9899-9716cf04bf2c","eventData":{"type":"session_status","status":"CONNECTING","sessionId":"9ceea33b-8291-46f7-8ec3-861552054490","requestId":"201fd8b0-7719-4eed-9899-9716cf04bf2c"},"createdAtMs":1764070864989}
- POST /api/client-logs 200 in 736ms
-(node:1743470) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 unhandledRejection listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
-(Use `node --trace-warnings ...` to show where the warning was created)
-{"severity":"INFO","message":"Session created","component":"bff.session","sessionId":"sess_980ff700d6fc","clientTag":"glasses01","agentSetKey":"nutrition","preferredAgentName":"Graffity","reportedModalities":["audio","text"],"textOutputEnabled":true}
-{"severity":"INFO","message":"Hotword LLM classifier enabled","component":"bff.session","model":"gpt-5-mini","minConfidence":0.1}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:05.190Z'
-}
-{"severity":"INFO","message":"Session connected","component":"bff.session","sessionId":"sess_980ff700d6fc","agentSetKey":"nutrition","preferredAgent":"Graffity"}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_connect_success_total',
-  value: 1,
-  tags: {},
-  timestamp: '2025-11-25T11:41:05.803Z'
-}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.created_total',
-  value: 1,
-  tags: {},
-  timestamp: '2025-11-25T11:41:05.804Z'
-}
- POST /api/session 200 in 1367ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:05.811Z'
-}
-{"severity":"INFO","message":"CLIENT LOG [client] session_status session_status","component":"client_log","labels":{"direction":"client","eventName":"session_status session_status"},"requestId":"57971f8b-2d2c-4b31-bcf7-cca975ae3c06","sessionId":"9ceea33b-8291-46f7-8ec3-861552054490","eventId":"57971f8b-2d2c-4b31-bcf7-cca975ae3c06","eventData":{"type":"session_status","status":"CONNECTED","sessionId":"9ceea33b-8291-46f7-8ec3-861552054490","requestId":"57971f8b-2d2c-4b31-bcf7-cca975ae3c06"},"createdAtMs":1764070866441}
- POST /api/client-logs 200 in 20ms
-{"severity":"INFO","message":"CLIENT LOG [server] ready ready","component":"client_log","labels":{"direction":"server","eventName":"ready ready"},"requestId":"7b7550b7-0d13-4d91-8c40-5f9d5c0f8492","sessionId":"9ceea33b-8291-46f7-8ec3-861552054490","eventId":"7b7550b7-0d13-4d91-8c40-5f9d5c0f8492","eventData":{"type":"ready","payload":{"sessionId":"sess_980ff700d6fc"},"sessionId":"9ceea33b-8291-46f7-8ec3-861552054490","requestId":"7b7550b7-0d13-4d91-8c40-5f9d5c0f8492"},"createdAtMs":1764070866441}
- POST /api/client-logs 200 in 38ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'raw_event' },
-  timestamp: '2025-11-25T11:41:05.981Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 117ms
-{"severity":"WARNING","message":"Deep reasoning warmup failed (non-fatal)","component":"bff.session","error":{"status":400,"headers":{},"requestID":"req_5da402e3eb0b4a799af2df398e8a718d","error":{"message":"Invalid 'max_output_tokens': integer below minimum value. Expected a value >= 16, but got 1 instead.","type":"invalid_request_error","param":"max_output_tokens","code":"integer_below_min_value"},"code":"integer_below_min_value","param":"max_output_tokens","type":"invalid_request_error"}}
-{"severity":"INFO","message":"Session disconnected","component":"bff.session","sessionId":"sess_0de819db6f15"}
-[metric] {
-  namespace: 'bff.session.sess_0de819db6f15',
-  type: 'counter',
-  name: 'session_disconnect_total',
-  value: 1,
-  tags: { stage: 'connected' },
-  timestamp: '2025-11-25T11:41:05.989Z'
-}
-{"severity":"INFO","message":"Session destroyed","component":"bff.session","sessionId":"sess_0de819db6f15","reason":"client_request","initiatedBy":"client"}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.closed_total',
-  value: 1,
-  tags: { initiatedBy: 'client', reason: 'client_request' },
-  timestamp: '2025-11-25T11:41:05.989Z'
-}
- DELETE /api/session/sess_0de819db6f15?reason=client_request 200 in 1555ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:05.996Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:05.999Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 118ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070866005 200 in 15ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_text' },
-  timestamp: '2025-11-25T11:41:06.026Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 138ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:06.136Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.154Z'
-}
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 19ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.185Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_added' },
-  timestamp: '2025-11-25T11:41:06.186Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:06.186Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.198Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:06.198Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.200Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_added' },
-  timestamp: '2025-11-25T11:41:06.200Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:06.200Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.201Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:06.201Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.206Z'
-}
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 22ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070866423 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:06.436Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 54ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.554Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_added' },
-  timestamp: '2025-11-25T11:41:06.555Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:06.555Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.556Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:06.556Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.569Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.570Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.576Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.590Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.592Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.601Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.697Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.714Z'
-}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:06.761Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070866751 200 in 10ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 52ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.812Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.813Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.813Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.837Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.848Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.897Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.913Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.916Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.927Z'
-}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:06.966Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:06.994Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.031Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.065Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.069Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.078Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.081Z'
-}
-{"severity":"INFO","message":"Viewer resolve hit","component":"bff.session","clientTag":"glasses01","sessionId":"sess_980ff700d6fc","scenarioKey":"nutrition","status":"CONNECTED"}
- GET /api/viewer/session?clientTag=glasses01 200 in 9ms
- GET /api/session/sess_0de819db6f15/stream?bffKey=dev-secret&_=1764070857294 200 in 10143ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.148Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.191Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.246Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070867243 200 in 17ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 46ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.277Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.314Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.361Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.373Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.374Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.375Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.376Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:07.376Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.378Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:07.378Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.381Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:07.390Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070867558 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:07.571Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 23ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070867919 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:07.932Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 55ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:08.075Z'
-}
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 11ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:08.301Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070868416 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:08.429Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 56ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_image' },
-  timestamp: '2025-11-25T11:41:08.527Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 17ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070868713 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:08.725Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 22ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:08.935Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:08.936Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:08.937Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070870232 200 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:10.245Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 55ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:10.503Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.623Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_added' },
-  timestamp: '2025-11-25T11:41:10.624Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:10.624Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.625Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:10.625Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.653Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.653Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.654Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.660Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.667Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.675Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070870732 200 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:10.745Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 56ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.765Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.782Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.879Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.880Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.881Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.881Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.921Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:10.966Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.021Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.023Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.039Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.045Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070871064 200 in 13ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 55ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.104Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.148Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.184Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.188Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.200Z'
-}
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 14ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.207Z'
-}
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 13ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.222Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.229Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.236Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.250Z'
-}
-[Exporter] Export trace traceId=trace_33166976a71a4d71a7154cec83383521 name=session:create:nutrition
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.311Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.348Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.383Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070871391 200 in 19ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 61ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.423Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.473Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.503Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.509Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.512Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.523Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.530Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.541Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.550Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.554Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.564Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.570Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.579Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.596Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.613Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.620Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.687Z'
-}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:11.712Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.725Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.766Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.802Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.839Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.881Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070871887 200 in 12ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 56ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.935Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.963Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:11.999Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.013Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.031Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.032Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.038Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.047Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.055Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.064Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.075Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.081Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.089Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.097Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.113Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.120Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 23ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.189Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 34ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070872206 200 in 9ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 26ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.222Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.263Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.309Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.360Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.387Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.429Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.485Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.514Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.523Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.532Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.542Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.548Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.560Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.567Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070872556 200 in 18ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.580Z'
-}
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 67ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.644Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.701Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.733Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.768Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.848Z'
-}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:12.861Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.950Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:12.996Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.047Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070873051 200 in 11ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 56ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.080Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.085Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.097Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.111Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.113Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.123Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.132Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.140Z'
-}
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 13ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.149Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.157Z'
-}
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 14ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.216Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.258Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.291Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.329Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.368Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070873380 200 in 17ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 57ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.407Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.454Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.506Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.535Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.544Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.563Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.564Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.565Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.569Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.584Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.588Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.602Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.612Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.637Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.683Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070873708 200 in 10ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 52ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.722Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.759Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.802Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.838Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.880Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.912Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.958Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:13.993Z'
-}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:13.997Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:14.043Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:14.112Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:14.124Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:14.125Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:14.125Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:14.126Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:14.126Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:14.127Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:14.127Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:14.138Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:14.140Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070874204 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:14.217Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 54ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070874543 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:14.555Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 54ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070874872 200 in 13ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:14.888Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 57ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:15.077Z'
-}
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:15.126Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:15.233Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070875368 200 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:15.381Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 57ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070875695 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:15.707Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 53ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:15.857Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:15.857Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070876024 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:16.035Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 52ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:16.302Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070876519 200 in 15ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:16.537Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 60ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070876847 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:16.859Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 52ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 9ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070877188 200 in 14ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:17.204Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 58ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:17.445Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070877680 200 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:17.694Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 54ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070878012 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:18.024Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 47ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070878339 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:18.351Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 54ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:18.584Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070878828 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:18.840Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 53ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 15ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.021Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.022Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.023Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_added' },
-  timestamp: '2025-11-25T11:41:19.023Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:19.023Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.024Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:19.024Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070879156 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:19.168Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 49ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.265Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.268Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.276Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.282Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.290Z'
-}
-{"severity":"DEBUG","message":"Hotword prefix detected","component":"bff.session","sessionId":"sess_980ff700d6fc","scenarioKey":"nutrition","stage":"delta","method":"prefix_regex","confidence":1}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.311Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.314Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.321Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.343Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.343Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.398Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.399Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.399Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.399Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.400Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.400Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.408Z'
-}
-{"severity":"INFO","message":"Hotword matched","component":"bff.session","sessionId":"sess_980ff700d6fc","scenarioKey":"nutrition","commandPreview":"その食事を食事ログに追加して。","method":"prefix_regex","confidence":1}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.hotword_cue_emitted_total',
-  value: 1,
-  tags: { scenario: 'nutrition' },
-  timestamp: '2025-11-25T11:41:19.430Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.430Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:19.430Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070879492 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:19.504Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 53ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:19.772Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:19.892Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:19.892Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 19ms
- GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 23ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070879988 200 in 12ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:20.003Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 60ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070880312 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:20.324Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 55ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070880804 200 in 12ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:20.819Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 59ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 11ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:20.927Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070881128 200 in 12ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:21.144Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 55ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_text' },
-  timestamp: '2025-11-25T11:41:21.433Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070881456 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:21.468Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 49ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.618Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:21.618Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.619Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_added' },
-  timestamp: '2025-11-25T11:41:21.619Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:21.619Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.620Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:21.620Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.621Z'
-}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:21.754Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.938Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_added' },
-  timestamp: '2025-11-25T11:41:21.938Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:21.938Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.939Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:21.940Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.940Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.941Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.944Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.951Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.959Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:21.969Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070881960 200 in 12ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:21.976Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 61ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.060Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.077Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.171Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.172Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.205Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.215Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.253Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.257Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.262Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.268Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.274Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070882284 200 in 10ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 54ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.342Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.364Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.403Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.407Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.414Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.422Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.432Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.442Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.444Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.460Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.463Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.513Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.571Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.597Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070882612 200 in 11ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 54ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.634Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.678Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.711Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.713Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.721Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.730Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.736Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.742Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.751Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.764Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.765Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.775Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.781Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.789Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.799Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.822Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.824Z'
-}
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 36ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 10ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.882Z'
-}
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:22.889Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.916Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.953Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:22.984Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.022Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.084Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.109Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070883104 200 in 12ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 58ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.144Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.183Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.234Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.271Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.309Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.345Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.383Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.423Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070883427 200 in 10ms
-{"severity":"INFO","message":"Dropping input_audio because assistant is speaking and barge-in is disabled","component":"bff.session","sessionId":"sess_980ff700d6fc"}
- POST /api/session/sess_980ff700d6fc/event 200 in 53ms
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.448Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.469Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.470Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.471Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.471Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:23.472Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.473Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'history_updated' },
-  timestamp: '2025-11-25T11:41:23.473Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.474Z'
-}
-[metric] {
-  namespace: 'bff.session.sess_980ff700d6fc',
-  type: 'counter',
-  name: 'session_events_total',
-  value: 1,
-  tags: { event: 'transport_event' },
-  timestamp: '2025-11-25T11:41:23.476Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070883755 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:23.768Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 53ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:24.035Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070884248 200 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:24.266Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 60ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070884583 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:24.596Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 53ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 11ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070884912 200 in 14ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:24.929Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 58ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:25.167Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070885404 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:25.417Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 56ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070885728 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:25.740Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 52ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070886055 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:26.068Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 52ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:26.332Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070886548 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:26.560Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 54ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 9ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070886883 200 in 9ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:26.895Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 51ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070887212 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:27.224Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 52ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:27.452Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 15ms
- GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 17ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070887704 200 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:27.717Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 50ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070888031 200 in 10ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:28.044Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 53ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070888360 200 in 14ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:28.376Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 59ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 9ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:28.608Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070888851 200 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:28.865Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 56ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070889180 200 in 15ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:29.197Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 60ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070889516 200 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:29.530Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 56ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:29.778Z'
-}
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070890008 200 in 12ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:30.023Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 57ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070890336 200 in 11ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:30.349Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 56ms
-{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"develop"}
- GET /api/viewer/session?clientTag=develop 404 in 10ms
-{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"develop"}
- GET /api/session/resolve?clientTag=develop 404 in 11ms
- GET /api/debug/profile?user_id=demo-user&client_tag=glasses01&_=1764070890660 200 in 13ms
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.event_forwarded_total',
-  value: 1,
-  tags: { kind: 'input_audio' },
-  timestamp: '2025-11-25T11:41:30.676Z'
-}
- POST /api/session/sess_980ff700d6fc/event 200 in 56ms
-{"severity":"INFO","message":"MCP server connected","component":"bff.session","id":"google-calendar"}
-{"severity":"INFO","message":"Eager MCP connect completed","component":"bff.session","servers":["google-calendar"]}
-[metric] {
-  namespace: 'bff.session',
-  type: 'counter',
-  name: 'bff.session.mcp_eager_success_total',
-  value: 1,
-  tags: { servers: 'google-calendar' },
-  timestamp: '2025-11-25T11:41:30.936Z'
-}
+ GET /api/viewer/session?clientTag=glasses01 404 in 140ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 17ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+ PATCH /api/debug/profile 200 in 17ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 13ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+ PATCH /api/debug/profile 200 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 13ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+ PATCH /api/debug/profile 200 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 13ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+ GET /api/debug/profile?user_id=demo-user&client_tag=glasses02 200 in 29ms
+ GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 44ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 40ms
+ GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 44ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 39ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 13ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 16ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+ GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 29ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 36ms
+ GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 41ms
+ GET /api/debug/profile?user_id=demo-user&client_tag=glasses02 200 in 42ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 15ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 13ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 15ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 13ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 13ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 16ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 15ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+ GET /api/debug/profile?user_id=demo-user&client_tag=glasses02 200 in 31ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 43ms
+ GET /api/debug/profile?user_id=demo-user&client_tag=develop 200 in 62ms
+ GET /api/debug/profile?user_id=demo-user&client_tag=glasses01 200 in 63ms
+ ○ Compiling /api/client-logs ...
+ ✓ Compiled /api/client-logs in 506ms (911 modules)
+{"severity":"INFO","message":"CLIENT LOG [client] event_log.ttl_cleanup","component":"client_log","labels":{"direction":"client","eventName":"event_log.ttl_cleanup"},"requestId":"92688b3a-cdd3-4d6a-9e97-3a3f9c32beae","sessionId":null,"eventId":"92688b3a-cdd3-4d6a-9e97-3a3f9c32beae","eventData":{"type":"event_log.ttl_cleanup","removedCount":1,"removedEventIds":["4c7c7bf8-5175-4e6a-bea0-b384998c6739"],"cutoffTimestampMs":1764079475302,"sessionId":null,"requestId":"92688b3a-cdd3-4d6a-9e97-3a3f9c32beae"},"createdAtMs":1764079775302}
+ POST /api/client-logs 200 in 578ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 675ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 18ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 13ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 15ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 14ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 10ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 9ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 12ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 8ms
+{"severity":"INFO","message":"Viewer resolve not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/viewer/session?clientTag=glasses01 404 in 11ms
+{"severity":"INFO","message":"Resolve by clientTag not found","component":"bff.session","clientTag":"glasses01"}
+ GET /api/session/resolve?clientTag=glasses01 404 in 11ms
 [?25h

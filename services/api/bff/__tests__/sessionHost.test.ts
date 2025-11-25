@@ -17,13 +17,19 @@ import {
   type RealtimeEnvironmentSnapshot,
   type SessionStreamMessage,
 } from '../sessionHost';
+import { RunContext } from '@openai/agents-core';
 import type { VoiceControlDirective } from '@/shared/voiceControl';
+import { executeGetUserProfileTool, executeUpdateUserProfileTool } from '@/app/agentConfigs/nutrition';
 import type { MemoryEntry, MemoryStore } from '../../../coreData/persistentMemory';
 import type { HotwordCueService, HotwordCueRequest, HotwordCueResult } from '../hotwordCueService';
 
-vi.mock('@openai/agents-core', () => ({
-  getOrCreateTrace: vi.fn((fn: () => any, _options?: unknown) => fn()),
-}));
+vi.mock('@openai/agents-core', async () => {
+  const actual = await vi.importActual<typeof import('@openai/agents-core')>('@openai/agents-core');
+  return {
+    ...actual,
+    getOrCreateTrace: vi.fn((fn: () => any, _options?: unknown) => fn()),
+  };
+});
 
 vi.mock('../../../../framework/voice_gateway/LlmScenarioNameClassifier', () => ({
   LlmScenarioNameClassifier: class {
@@ -166,6 +172,14 @@ describe('SessionHost', () => {
   };
   const originalContinuationWindowMs = process.env.HOTWORD_CONTINUATION_WINDOW_MS;
 
+  function restoreEnvVar(key: string, value: string | undefined) {
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+
   let host: SessionHost;
   let managers: FakeSessionManager[];
   let envSnapshot: RealtimeEnvironmentSnapshot;
@@ -231,6 +245,107 @@ describe('SessionHost', () => {
     expect(manager.sendEventMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'conversation.item.create' }),
     );
+  });
+
+  it('propagates clientTag into realtime extraContext metadata', async () => {
+    await host.createSession({
+      agentSetKey: 'nutrition',
+      clientTag: 'glasses01',
+      metadata: { userId: 'demo-user' },
+    });
+    const connectOptions = managers[0]!.lastConnectOptions;
+    expect(connectOptions?.extraContext?.clientTag).toBe('glasses01');
+    expect(connectOptions?.extraContext?.metadata?.clientTag).toBe('glasses01');
+    expect(connectOptions?.extraContext?.metadata?.userId).toBe('demo-user');
+  });
+
+  it('lets nutrition update_user_profile tool fall back to context clientTag', async () => {
+    const originalBase = process.env.INTERNAL_PROFILE_API_BASE;
+    process.env.INTERNAL_PROFILE_API_BASE = 'http://localhost:3000';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ profile: {} }),
+    });
+    const prevFetch = global.fetch;
+    global.fetch = fetchMock as any;
+    try {
+      await executeUpdateUserProfileTool(
+        { mealLogAppend: { description: '蒸し鶏とサラダ' } },
+        new RunContext({ clientTag: 'glasses01' }),
+      );
+    } finally {
+      global.fetch = prevFetch;
+      restoreEnvVar('INTERNAL_PROFILE_API_BASE', originalBase);
+    }
+    const [, init] = fetchMock.mock.calls[0]!;
+    const body = JSON.parse(init.body as string);
+    expect(body.clientTag).toBe('glasses01');
+  });
+
+  it('lets nutrition update_user_profile tool read clientTag from metadata context', async () => {
+    const originalBase = process.env.INTERNAL_PROFILE_API_BASE;
+    process.env.INTERNAL_PROFILE_API_BASE = 'http://localhost:3000';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ profile: {} }),
+    });
+    const prevFetch = global.fetch;
+    global.fetch = fetchMock as any;
+    try {
+      await executeUpdateUserProfileTool(
+        { mealLogAppend: { description: '焼き魚定食' } },
+        new RunContext({ metadata: { clientTag: 'glasses01' } }),
+      );
+    } finally {
+      global.fetch = prevFetch;
+      restoreEnvVar('INTERNAL_PROFILE_API_BASE', originalBase);
+    }
+    const [, init] = fetchMock.mock.calls[0]!;
+    const body = JSON.parse(init.body as string);
+    expect(body.clientTag).toBe('glasses01');
+  });
+
+  it('overrides mismatched clientTag values when nutrition update_user_profile runs', async () => {
+    const originalBase = process.env.INTERNAL_PROFILE_API_BASE;
+    process.env.INTERNAL_PROFILE_API_BASE = 'http://localhost:3000';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ profile: {} }),
+    });
+    const prevFetch = global.fetch;
+    global.fetch = fetchMock as any;
+    try {
+      await executeUpdateUserProfileTool(
+        { clientTag: 'BFF', mealLogAppend: { description: '焼き魚定食' } },
+        new RunContext({ clientTag: 'glasses01' }),
+      );
+    } finally {
+      global.fetch = prevFetch;
+      restoreEnvVar('INTERNAL_PROFILE_API_BASE', originalBase);
+    }
+    const [, init] = fetchMock.mock.calls[0]!;
+    const body = JSON.parse(init.body as string);
+    expect(body.clientTag).toBe('glasses01');
+  });
+
+  it('attaches context clientTag when nutrition get_user_profile runs', async () => {
+    const originalBase = process.env.INTERNAL_PROFILE_API_BASE;
+    process.env.INTERNAL_PROFILE_API_BASE = 'http://localhost:3000';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ profile: {} }),
+    });
+    const prevFetch = global.fetch;
+    global.fetch = fetchMock as any;
+    try {
+      await executeGetUserProfileTool({}, new RunContext({ clientTag: 'glasses01' }));
+    } finally {
+      global.fetch = prevFetch;
+      restoreEnvVar('INTERNAL_PROFILE_API_BASE', originalBase);
+    }
+    const [url] = fetchMock.mock.calls[0]!;
+    const parsed = new URL(url as string, 'http://localhost:3000');
+    expect(parsed.searchParams.get('client_tag')).toBe('glasses01');
   });
 
   it('omits response metadata when not provided', async () => {

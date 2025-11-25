@@ -32,6 +32,9 @@ function resolveClientTag(input?: string | null): string {
 
 function resolveUserIdWithTag(userId?: string | null, clientTag?: string | null): string {
   const id = resolveUserId(userId);
+  if (id.includes(':')) {
+    return id;
+  }
   const tag = resolveClientTag(clientTag);
   return `${tag}:${id}`;
 }
@@ -148,7 +151,11 @@ function withDerived(profile: UserProfile): ProfileWithDerived {
 }
 
 function stripTimePrefix(text: string): string {
-  return text.replace(/^\s*\[[^\]]+\]\s*/u, '').trim();
+  if (!text) return '';
+  let normalized = text.trim();
+  normalized = normalized.replace(/^が(?=\s*\[[^\]]+\])/u, '').trimStart();
+  normalized = normalized.replace(/^\s*\[[^\]]+\]\s*/u, '');
+  return normalized.trim();
 }
 
 function normalizeMealLogAppend(input: UpdateProfileInput): { description: string; timeOfDay?: string } | null {
@@ -177,17 +184,13 @@ function sanitizeMealLogAppend(
 function resolveMealLogs(
   existing: MealLog[],
   append: { description: string; timeOfDay?: string } | null,
-  todayMealsDirect: string | null,
+  _todayMealsDirect: string | null,
   now: Date,
 ): MealLog[] {
-  let next = existing;
   if (append && append.description?.trim()) {
-    next = appendMealLog(next, append, now);
+    return appendMealLog(existing, append, now);
   }
-  if (todayMealsDirect) {
-    next = replaceTodayMealLogs(next, todayMealsDirect, now);
-  }
-  return next;
+  return existing;
 }
 
 function appendMealLog(
@@ -204,23 +207,6 @@ function appendMealLog(
     recordedAt: nowIso,
   };
   return [...existing.slice(-49), next]; // keep latest 50
-}
-
-function replaceTodayMealLogs(existing: MealLog[], description: string, now: Date): MealLog[] {
-  const todayKey = dateKeyUtc(now);
-  const filtered = existing.filter((log) => dateKeyUtc(new Date(log.recordedAt)) !== todayKey);
-  const nowIso = now.toISOString();
-  const replacement: MealLog = {
-    id: randomUUID(),
-    description: stripTimePrefix(description),
-    timeOfDay: undefined,
-    recordedAt: nowIso,
-  };
-  return [...filtered.slice(-49), replacement];
-}
-
-function dateKeyUtc(d: Date): string {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
 function normalizeStoredProfile(profile: UserProfile): UserProfile {
