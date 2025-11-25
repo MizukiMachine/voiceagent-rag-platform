@@ -41,13 +41,19 @@ export async function getUserProfile(userId?: string | null, clientTag?: string 
   const resolvedId = resolveUserIdWithTag(userId, clientTag);
   const existing = await store.read(resolvedId);
   const now = new Date().toISOString();
-  const profile: UserProfile =
+  const baseProfile: UserProfile =
     existing ??
     {
       userId: resolvedId,
       updatedAt: now,
       ...DEFAULT_PROFILE,
     };
+
+  const profile = normalizeStoredProfile(baseProfile);
+
+  if (profile !== baseProfile) {
+    await store.upsert(profile);
+  }
 
   if (!existing) {
     await store.upsert(profile);
@@ -141,6 +147,10 @@ function withDerived(profile: UserProfile): ProfileWithDerived {
   };
 }
 
+function stripTimePrefix(text: string): string {
+  return text.replace(/^\s*\[[^\]]+\]\s*/u, '').trim();
+}
+
 function normalizeMealLogAppend(input: UpdateProfileInput): { description: string; timeOfDay?: string } | null {
   const fromExplicit = sanitizeMealLogAppend(input.mealLogAppend);
   if (fromExplicit) return fromExplicit;
@@ -157,7 +167,7 @@ function sanitizeMealLogAppend(
   raw?: { description?: string | null; timeOfDay?: string | null } | null,
 ): { description: string; timeOfDay?: string } | null {
   if (!raw) return null;
-  const description = typeof raw.description === 'string' ? raw.description.trim() : '';
+  const description = typeof raw.description === 'string' ? stripTimePrefix(raw.description) : '';
   if (!description) return null;
   const timeOfDay =
     typeof raw.timeOfDay === 'string' && raw.timeOfDay.trim() ? raw.timeOfDay.trim() : undefined;
@@ -202,7 +212,7 @@ function replaceTodayMealLogs(existing: MealLog[], description: string, now: Dat
   const nowIso = now.toISOString();
   const replacement: MealLog = {
     id: randomUUID(),
-    description,
+    description: stripTimePrefix(description),
     timeOfDay: undefined,
     recordedAt: nowIso,
   };
@@ -211,6 +221,24 @@ function replaceTodayMealLogs(existing: MealLog[], description: string, now: Dat
 
 function dateKeyUtc(d: Date): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+function normalizeStoredProfile(profile: UserProfile): UserProfile {
+  if (!profile.mealLogs?.length) return profile;
+  let mutated = false;
+  const normalizedLogs = profile.mealLogs.map((log) => {
+    const cleanDescription = typeof log.description === 'string' ? stripTimePrefix(log.description) : '';
+    if (cleanDescription !== log.description) {
+      mutated = true;
+    }
+    return {
+      ...log,
+      description: cleanDescription || log.description,
+    };
+  });
+
+  if (!mutated) return profile;
+  return { ...profile, mealLogs: normalizedLogs };
 }
 
 function estimateTdee(profile: UserProfile): number | undefined {

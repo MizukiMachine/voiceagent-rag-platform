@@ -168,4 +168,26 @@ describe('profileService', () => {
     expect(profileB.mealLogs?.at(-1)?.description).toBe('Bの食事');
     expect(profileA.userId).not.toBe(profileB.userId);
   });
+
+  it('strips time-of-day prefix when appending', async () => {
+    const updated = await updateUserProfile({
+      userId,
+      clientTag: 'develop',
+      mealLogAppend: { description: '[昼] カレーライス', timeOfDay: '昼' },
+    });
+
+    expect(updated.mealLogs?.at(-1)?.description).toBe('カレーライス');
+  });
+
+  it('normalizes stored mealLogs with prefixes on load', async () => {
+    // seed prefixed log
+    await updateUserProfile({
+      userId,
+      clientTag: 'develop',
+      mealLogAppend: { description: '[夜] ステーキ' },
+    });
+
+    const loaded = await getUserProfile(userId, 'develop');
+    expect(loaded.mealLogs?.at(-1)?.description).toBe('ステーキ');
+  });
 });
