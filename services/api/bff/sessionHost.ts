@@ -665,6 +665,10 @@ export class SessionHost {
       : null;
 
     const manager = this.sessionManagerFactory(hooks);
+    const sessionMetadata = { ...(options.metadata ?? {}) };
+    if (options.clientTag && !sessionMetadata.clientTag) {
+      sessionMetadata.clientTag = options.clientTag;
+    }
     const context = this.buildSessionContext({
       sessionId,
       options,
@@ -798,7 +802,8 @@ export class SessionHost {
       getEphemeralKey: async () => this.getRealtimeApiKey(),
       extraContext: {
         sessionLabel: options.sessionLabel,
-        metadata: options.metadata ?? {},
+        clientTag: options.clientTag,
+        metadata: sessionMetadata,
         clientCapabilities: options.clientCapabilities ?? {},
         requestScenarioChange: voiceControlHandlers.requestScenarioChange,
         requestAgentChange: voiceControlHandlers.requestAgentChange,
@@ -1076,23 +1081,15 @@ export class SessionHost {
 
     const isNutritionScenario = context.agentSetKey === 'nutrition';
     if (isNutritionScenario) {
-      await this.fetchAndInjectProfileContext(context, command.metadata);
-      // 栄養シナリオでは通常はリアルタイム応答。深考キーワードが入ったときのみ Responses API へ。
-      if (this.shouldForceDeepReasoning(text)) {
-        this.logger.info('Nutrition scenario: deep reasoning trigger hit', { sessionId: context.id });
-        this.executeDeepReasoningPipeline(context, text, command.metadata, context.latestProfileContext).catch(
-          (error) => {
-            this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as usual', {
-              sessionId: context.id,
-              error,
-            });
-            this.sendUserTextCommand(context, text, command.metadata);
-          },
-        );
-        return;
-      }
-
-      this.sendUserTextCommand(context, text, command.metadata);
+      const profileContext = await this.fetchAndInjectProfileContext(context, command.metadata);
+      this.logger.info('Nutrition scenario: deep reasoning pipeline engaged', { sessionId: context.id });
+      this.executeDeepReasoningPipeline(context, text, command.metadata, profileContext).catch((error) => {
+        this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as fallback', {
+          sessionId: context.id,
+          error,
+        });
+        this.sendUserTextCommand(context, text, command.metadata);
+      });
       return;
     }
 

@@ -68,6 +68,43 @@ ${commonInteractionRules}
 - ツール呼び出し時は必ず clientTag を渡す（metadata.clientTag など接続タグが取得できない場合は実行を中断し「タグが不明」とだけ伝える）。
 `;
 
+type NutritionToolContext = {
+  context?: {
+    clientTag?: string;
+    metadata?: Record<string, any>;
+  };
+};
+
+function resolveClientTag(input: any, runContext?: NutritionToolContext): string | undefined {
+  const inputValue = typeof input?.clientTag === 'string' ? input.clientTag.trim() : '';
+  if (inputValue) return inputValue;
+  const contextTag = typeof runContext?.context?.clientTag === 'string' ? runContext.context.clientTag.trim() : '';
+  if (contextTag) return contextTag;
+  const metadataTag =
+    typeof runContext?.context?.metadata?.clientTag === 'string'
+      ? runContext.context.metadata.clientTag.trim()
+      : '';
+  if (metadataTag) return metadataTag;
+  return undefined;
+}
+
+export async function executeGetUserProfileTool(input: any, runContext?: NutritionToolContext) {
+  const userId = typeof input?.userId === 'string' ? input.userId : undefined;
+  const clientTag = resolveClientTag(input, runContext);
+  const params = new URLSearchParams();
+  if (userId) params.set('user_id', userId);
+  if (clientTag) params.set('client_tag', clientTag);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const res = await fetch(buildApiUrl(`/api/debug/profile${query}`), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) {
+    throw new Error(`profile fetch failed: ${res.status}`);
+  }
+  const json = await res.json();
+  return json.profile;
+}
+
 const getProfileTool = tool({
   name: 'get_user_profile',
   description: '最新のユーザープロフィールを取得します。常に回答前に呼び出してください。',
@@ -80,23 +117,29 @@ const getProfileTool = tool({
     required: [],
     additionalProperties: false,
   },
-  execute: async (input: any) => {
-    const userId = typeof input?.userId === 'string' ? input.userId : undefined;
-    const clientTag = typeof input?.clientTag === 'string' ? input.clientTag : undefined;
-    const params = new URLSearchParams();
-    if (userId) params.set('user_id', userId);
-    if (clientTag) params.set('client_tag', clientTag);
-    const query = params.toString() ? `?${params.toString()}` : '';
-    const res = await fetch(buildApiUrl(`/api/debug/profile${query}`), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!res.ok) {
-      throw new Error(`profile fetch failed: ${res.status}`);
-    }
-    const json = await res.json();
-    return json.profile;
-  },
+  execute: async (input: any, runContext?: NutritionToolContext) => executeGetUserProfileTool(input, runContext),
 });
+
+export async function executeUpdateUserProfileTool(input: any, _runContext?: NutritionToolContext) {
+  const payload = { ...(input ?? {}) };
+  const resolvedClientTag = resolveClientTag(payload, _runContext);
+  if (resolvedClientTag && typeof payload.clientTag !== 'string') {
+    payload.clientTag = resolvedClientTag;
+  }
+  if (typeof payload.clientTag !== 'string' || !payload.clientTag.trim()) {
+    throw new Error('clientTag is required for profile update');
+  }
+  const res = await fetch(buildApiUrl('/api/debug/profile'), {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    throw new Error(`profile update failed: ${res.status}`);
+  }
+  const json = await res.json();
+  return json.profile;
+}
 
 const updateProfileTool = tool({
   name: 'update_user_profile',
@@ -131,22 +174,7 @@ const updateProfileTool = tool({
     required: [],
     additionalProperties: false,
   },
-  execute: async (input: any) => {
-    const payload = { ...(input ?? {}) };
-    if (typeof payload.clientTag !== 'string' || !payload.clientTag.trim()) {
-      throw new Error('clientTag is required for profile update');
-    }
-    const res = await fetch(buildApiUrl('/api/debug/profile'), {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      throw new Error(`profile update failed: ${res.status}`);
-    }
-    const json = await res.json();
-    return json.profile;
-  },
+  execute: async (input: any, runContext?: NutritionToolContext) => executeUpdateUserProfileTool(input, runContext),
 });
 
 const logMealTool = tool({
