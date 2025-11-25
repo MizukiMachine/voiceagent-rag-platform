@@ -149,7 +149,6 @@ export function useHandleSessionHistory() {
       console.warn('[handleAgentToolEnd] missing function call metadata', { details });
       return;
     }
-    const lastFunctionCall = extractFunctionCallByName(functionName, details?.context?.history);
     addTranscriptBreadcrumb(
       `function call result: ${functionName}`,
       maybeParseJson(result)

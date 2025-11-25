@@ -47,7 +47,6 @@ const fieldOrder: Array<keyof Profile> = [
   'activityLevel',
   'avoidFoods',
   'dietStyle',
-  'todayMeals',
 ];
 
 const presets = [
@@ -344,7 +343,7 @@ export default function ProfileDashboard({ clientTag = 'develop' }: { clientTag?
                   ))}
                 </div>
                 <textarea
-                  className="min-h-[100px] rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
+                  className="w-full min-h-[160px] rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
                   placeholder="例: 玄米150gと鶏むねのサラダ、味噌汁"
                   value={mealLogDescription}
                   onChange={(e) => setMealLogDescription(e.target.value)}
@@ -475,7 +474,6 @@ function renderField(
     activityLevel: '活動量',
     avoidFoods: '避けたい食品（アレルギー・苦手を自由入力）',
     dietStyle: '食事スタイル（例: ベジタリアン/炭水化物控えめ）',
-    todayMeals: '今日の食事ログ',
   };
 
   const value = profile[key];
@@ -562,20 +560,6 @@ function renderField(
       </FieldShell>
     );
   }
-  if (key === 'todayMeals') {
-    return (
-      <FieldShell key={key} label={labelMap[key]}>
-        <textarea
-          className="w-full rounded-lg bg-slate-800 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-emerald-400"
-          rows={2}
-          placeholder="例: 朝はヨーグルトとバナナ、昼は鶏むねサラダと玄米"
-          value={(value as string | undefined) ?? ''}
-          onChange={(e) => onChange(key, e.target.value)}
-        />
-      </FieldShell>
-    );
-  }
-
   return (
     <FieldShell key={key} label={labelMap[key]}>
       {(() => {
