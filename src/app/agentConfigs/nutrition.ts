@@ -68,29 +68,29 @@ ${commonInteractionRules}
 - ツール呼び出し時は必ず clientTag を渡す（metadata.clientTag など接続タグが取得できない場合は実行を中断し「タグが不明」とだけ伝える）。
 `;
 
-type NutritionToolContext = {
+type NutritionToolExecuteDetails = {
   context?: {
     clientTag?: string;
     metadata?: Record<string, any>;
   };
 };
 
-function resolveClientTag(input: any, runContext?: NutritionToolContext): string | undefined {
+function resolveClientTag(input: any, details?: NutritionToolExecuteDetails): string | undefined {
   const inputValue = typeof input?.clientTag === 'string' ? input.clientTag.trim() : '';
   if (inputValue) return inputValue;
-  const contextTag = typeof runContext?.context?.clientTag === 'string' ? runContext.context.clientTag.trim() : '';
+  const contextTag = typeof details?.context?.clientTag === 'string' ? details.context.clientTag.trim() : '';
   if (contextTag) return contextTag;
   const metadataTag =
-    typeof runContext?.context?.metadata?.clientTag === 'string'
-      ? runContext.context.metadata.clientTag.trim()
+    typeof details?.context?.metadata?.clientTag === 'string'
+      ? details.context.metadata.clientTag.trim()
       : '';
   if (metadataTag) return metadataTag;
   return undefined;
 }
 
-export async function executeGetUserProfileTool(input: any, runContext?: NutritionToolContext) {
+export async function executeGetUserProfileTool(input: any, details?: NutritionToolExecuteDetails) {
   const userId = typeof input?.userId === 'string' ? input.userId : undefined;
-  const clientTag = resolveClientTag(input, runContext);
+  const clientTag = resolveClientTag(input, details);
   const params = new URLSearchParams();
   if (userId) params.set('user_id', userId);
   if (clientTag) params.set('client_tag', clientTag);
@@ -117,12 +117,12 @@ const getProfileTool = tool({
     required: [],
     additionalProperties: false,
   },
-  execute: async (input: any, runContext?: NutritionToolContext) => executeGetUserProfileTool(input, runContext),
+  execute: async (input: any, details?: NutritionToolExecuteDetails) => executeGetUserProfileTool(input, details),
 });
 
-export async function executeUpdateUserProfileTool(input: any, _runContext?: NutritionToolContext) {
+export async function executeUpdateUserProfileTool(input: any, details?: NutritionToolExecuteDetails) {
   const payload = { ...(input ?? {}) };
-  const resolvedClientTag = resolveClientTag(payload, _runContext);
+  const resolvedClientTag = resolveClientTag(payload, details);
   if (resolvedClientTag && typeof payload.clientTag !== 'string') {
     payload.clientTag = resolvedClientTag;
   }
@@ -174,7 +174,7 @@ const updateProfileTool = tool({
     required: [],
     additionalProperties: false,
   },
-  execute: async (input: any, runContext?: NutritionToolContext) => executeUpdateUserProfileTool(input, runContext),
+  execute: async (input: any, details?: NutritionToolExecuteDetails) => executeUpdateUserProfileTool(input, details),
 });
 
 const logMealTool = tool({
