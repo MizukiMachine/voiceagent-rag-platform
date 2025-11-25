@@ -17,14 +17,19 @@ import {
   type RealtimeEnvironmentSnapshot,
   type SessionStreamMessage,
 } from '../sessionHost';
+import { RunContext } from '@openai/agents-core';
 import type { VoiceControlDirective } from '@/shared/voiceControl';
 import { executeGetUserProfileTool, executeUpdateUserProfileTool } from '@/app/agentConfigs/nutrition';
 import type { MemoryEntry, MemoryStore } from '../../../coreData/persistentMemory';
 import type { HotwordCueService, HotwordCueRequest, HotwordCueResult } from '../hotwordCueService';
 
-vi.mock('@openai/agents-core', () => ({
-  getOrCreateTrace: vi.fn((fn: () => any, _options?: unknown) => fn()),
-}));
+vi.mock('@openai/agents-core', async () => {
+  const actual = await vi.importActual<typeof import('@openai/agents-core')>('@openai/agents-core');
+  return {
+    ...actual,
+    getOrCreateTrace: vi.fn((fn: () => any, _options?: unknown) => fn()),
+  };
+});
 
 vi.mock('../../../../framework/voice_gateway/LlmScenarioNameClassifier', () => ({
   LlmScenarioNameClassifier: class {
@@ -266,7 +271,30 @@ describe('SessionHost', () => {
     try {
       await executeUpdateUserProfileTool(
         { mealLogAppend: { description: '蒸し鶏とサラダ' } },
-        { context: { clientTag: 'glasses01' } },
+        new RunContext({ clientTag: 'glasses01' }),
+      );
+    } finally {
+      global.fetch = prevFetch;
+      restoreEnvVar('INTERNAL_PROFILE_API_BASE', originalBase);
+    }
+    const [, init] = fetchMock.mock.calls[0]!;
+    const body = JSON.parse(init.body as string);
+    expect(body.clientTag).toBe('glasses01');
+  });
+
+  it('lets nutrition update_user_profile tool read clientTag from metadata context', async () => {
+    const originalBase = process.env.INTERNAL_PROFILE_API_BASE;
+    process.env.INTERNAL_PROFILE_API_BASE = 'http://localhost:3000';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ profile: {} }),
+    });
+    const prevFetch = global.fetch;
+    global.fetch = fetchMock as any;
+    try {
+      await executeUpdateUserProfileTool(
+        { mealLogAppend: { description: '焼き魚定食' } },
+        new RunContext({ metadata: { clientTag: 'glasses01' } }),
       );
     } finally {
       global.fetch = prevFetch;
@@ -287,7 +315,7 @@ describe('SessionHost', () => {
     const prevFetch = global.fetch;
     global.fetch = fetchMock as any;
     try {
-      await executeGetUserProfileTool({}, { context: { clientTag: 'glasses01' } });
+      await executeGetUserProfileTool({}, new RunContext({ clientTag: 'glasses01' }));
     } finally {
       global.fetch = prevFetch;
       restoreEnvVar('INTERNAL_PROFILE_API_BASE', originalBase);

@@ -1,4 +1,5 @@
 import { RealtimeAgent, tool } from '@openai/agents/realtime';
+import type { RunContext } from '@openai/agents-core';
 
 import { japaneseLanguagePreamble, commonInteractionRules, voiceResponsePreamble, buildSelfIntroductionRule } from './languagePolicy';
 import { switchAgentTool, switchScenarioTool } from './voiceControlTools';
@@ -65,32 +66,31 @@ ${commonInteractionRules}
 - ユーザーから「送った料理を食事ログに追加して」等の指示を受けたら、直近の画像から料理名・主な材料・量を要約し、update_user_profile の mealLogAppend で保存する（dashboardが参照する mealLogs 配列に追加）。
 - description 相当の文章だけ mealLogAppend に渡す。
 - ログ追加後は「食事ログに追加しました」と短く報告し、必要ならカロリー推定を添えた上で通常の助言に戻る。
-- ツール呼び出し時は必ず clientTag を渡す（metadata.clientTag など接続タグが取得できない場合は実行を中断し「タグが不明」とだけ伝える）。
+- clientTag は BFF から metadata.clientTag 経由で常に提供されるので、ユーザーへ確認を求めずに get_user_profile / update_user_profile を実行する。もし内部エラーで clientTag が取得できなかった場合のみ「タグが不明」とだけ伝え、再接続を依頼する。
 `;
 
-type NutritionToolExecuteDetails = {
-  context?: {
-    clientTag?: string;
-    metadata?: Record<string, any>;
-  };
+type NutritionToolContext = {
+  clientTag?: string;
+  metadata?: Record<string, any>;
 };
 
-function resolveClientTag(input: any, details?: NutritionToolExecuteDetails): string | undefined {
+function resolveClientTag(input: any, runContext?: RunContext<NutritionToolContext>): string | undefined {
   const inputValue = typeof input?.clientTag === 'string' ? input.clientTag.trim() : '';
   if (inputValue) return inputValue;
-  const contextTag = typeof details?.context?.clientTag === 'string' ? details.context.clientTag.trim() : '';
+  const contextData = runContext?.context ?? {};
+  const contextTag = typeof contextData.clientTag === 'string' ? contextData.clientTag.trim() : '';
   if (contextTag) return contextTag;
   const metadataTag =
-    typeof details?.context?.metadata?.clientTag === 'string'
-      ? details.context.metadata.clientTag.trim()
+    typeof contextData.metadata?.clientTag === 'string'
+      ? contextData.metadata.clientTag.trim()
       : '';
   if (metadataTag) return metadataTag;
   return undefined;
 }
 
-export async function executeGetUserProfileTool(input: any, details?: NutritionToolExecuteDetails) {
+export async function executeGetUserProfileTool(input: any, runContext?: RunContext<NutritionToolContext>) {
   const userId = typeof input?.userId === 'string' ? input.userId : undefined;
-  const clientTag = resolveClientTag(input, details);
+  const clientTag = resolveClientTag(input, runContext);
   const params = new URLSearchParams();
   if (userId) params.set('user_id', userId);
   if (clientTag) params.set('client_tag', clientTag);
@@ -105,7 +105,7 @@ export async function executeGetUserProfileTool(input: any, details?: NutritionT
   return json.profile;
 }
 
-const getProfileTool = tool({
+const getProfileTool = tool<any, NutritionToolContext>({
   name: 'get_user_profile',
   description: '最新のユーザープロフィールを取得します。常に回答前に呼び出してください。',
   parameters: {
@@ -117,12 +117,13 @@ const getProfileTool = tool({
     required: [],
     additionalProperties: false,
   },
-  execute: async (input: any, details?: NutritionToolExecuteDetails) => executeGetUserProfileTool(input, details),
+  execute: async (input: any, runContext?: RunContext<NutritionToolContext>) =>
+    executeGetUserProfileTool(input, runContext),
 });
 
-export async function executeUpdateUserProfileTool(input: any, details?: NutritionToolExecuteDetails) {
+export async function executeUpdateUserProfileTool(input: any, runContext?: RunContext<NutritionToolContext>) {
   const payload = { ...(input ?? {}) };
-  const resolvedClientTag = resolveClientTag(payload, details);
+  const resolvedClientTag = resolveClientTag(payload, runContext);
   if (resolvedClientTag && typeof payload.clientTag !== 'string') {
     payload.clientTag = resolvedClientTag;
   }
@@ -141,7 +142,7 @@ export async function executeUpdateUserProfileTool(input: any, details?: Nutriti
   return json.profile;
 }
 
-const updateProfileTool = tool({
+const updateProfileTool = tool<any, NutritionToolContext>({
   name: 'update_user_profile',
   description: 'デモ用途。プロフィールを更新して保存します。通常はダッシュボードから操作されます。',
   parameters: {
@@ -174,7 +175,8 @@ const updateProfileTool = tool({
     required: [],
     additionalProperties: false,
   },
-  execute: async (input: any, details?: NutritionToolExecuteDetails) => executeUpdateUserProfileTool(input, details),
+  execute: async (input: any, runContext?: RunContext<NutritionToolContext>) =>
+    executeUpdateUserProfileTool(input, runContext),
 });
 
 const logMealTool = tool({
