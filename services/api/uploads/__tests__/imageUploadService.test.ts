@@ -76,7 +76,8 @@ describe('imageUploadService', () => {
     expect(stored.mimeType).toBe('image/png');
     expect(stored.size).toBe(PNG_BYTES.length);
     expect(stored.base64).toBe(PNG_BYTES.toString('base64'));
-    const exists = await fs.stat(stored.storagePath);
+    expect(stored.storagePath).toBeDefined();
+    const exists = await fs.stat(stored.storagePath!);
     expect(exists.isFile()).toBe(true);
   });
 
@@ -121,6 +122,22 @@ describe('imageUploadService', () => {
     delete process.env.IMAGE_UPLOAD_TARGET;
     delete process.env.IMAGE_UPLOAD_GCS_BUCKET;
     delete process.env.IMAGE_UPLOAD_GCS_PREFIX;
+  });
+
+  it('skips persistence when memory target is selected', async () => {
+    process.env.IMAGE_UPLOAD_TARGET = 'memory';
+
+    const file = new File([PNG_BYTES], 'sample.png', { type: 'image/png' });
+    const stored = await persistImage({
+      file,
+      sessionId: 'sess_test',
+      maxBytes: 1024,
+    });
+
+    expect(stored.storagePath).toBeUndefined();
+    expect(stored.base64).toBe(PNG_BYTES.toString('base64'));
+
+    delete process.env.IMAGE_UPLOAD_TARGET;
   });
 
   it('throws when GCS target is selected without bucket', async () => {

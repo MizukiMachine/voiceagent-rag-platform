@@ -1,6 +1,7 @@
 substitutions:
   _REGION: asia-northeast1
   _SERVICE_NAME: ai-conversation-engine
+  _SERVICE_NAME_BACKUP: ai-conversation-engine-b
   _MCP_SERVICE_NAME: google-calendar-mcp
   _OPENAI_REALTIME_MODEL: gpt-realtime
   _OPENAI_REALTIME_TRANSCRIPTION_MODEL: gpt-4o-transcribe
@@ -192,6 +193,33 @@ steps:
         EOF
 
         gcloud run deploy "${_SERVICE_NAME}" \
+          --image="gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$SHORT_SHA" \
+          --region="${_REGION}" \
+          --platform=managed \
+          --allow-unauthenticated \
+          --port=3000 \
+          --memory=1Gi \
+          --quiet \
+          --set-secrets=OPENAI_API_KEY=OPENAI_API_KEY:latest,BFF_SERVICE_SHARED_SECRET=BFF_SERVICE_SHARED_SECRET:latest,NEXT_PUBLIC_BFF_KEY=NEXT_PUBLIC_BFF_KEY:latest,/var/secrets/google/credentials/google-oauth-desktop.json=google-oauth-desktop-json:latest,/var/secrets/google/token/google-oauth-token.json=google-oauth-token-json:latest,GOOGLE_CALENDAR_MCP_SHARED_SECRET=GOOGLE_CALENDAR_MCP_SHARED_SECRET:latest \
+          --env-vars-file=/workspace/main_env_vars.yaml
+
+  # 6b) Deploy backup service to Cloud Run
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [[ -s /workspace/mcp_url.txt ]]; then
+          MCP_URL=$(cat /workspace/mcp_url.txt)
+        else
+          MCP_URL=$(gcloud run services describe "${_MCP_SERVICE_NAME}" --region="${_REGION}" --platform=managed --format='value(status.url)')
+        fi
+        if [[ -z "$$MCP_URL" ]]; then
+          echo "Failed to determine MCP URL" >&2
+          exit 1
+        fi
+        gcloud run deploy "${_SERVICE_NAME_BACKUP}" \
           --image="gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$SHORT_SHA" \
           --region="${_REGION}" \
           --platform=managed \

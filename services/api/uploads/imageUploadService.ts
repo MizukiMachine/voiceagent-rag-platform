@@ -10,7 +10,7 @@ export interface StoredImage {
   size: number;
   mimeType: SupportedMimeType;
   originalName?: string;
-  storagePath: string;
+  storagePath?: string;
   base64: string;
 }
 
@@ -124,7 +124,7 @@ interface SaveOptions {
 }
 
 interface ImageStorage {
-  save(options: SaveOptions): Promise<string /* storagePath */>;
+  save(options: SaveOptions): Promise<string | undefined /* storagePath */>;
 }
 
 class LocalImageStorage implements ImageStorage {
@@ -134,6 +134,13 @@ class LocalImageStorage implements ImageStorage {
     await fs.mkdir(dir, { recursive: true });
     await fs.writeFile(storagePath, buffer);
     return storagePath;
+  }
+}
+
+class InMemoryImageStorage implements ImageStorage {
+  async save(): Promise<undefined> {
+    // 何も保存せずに実メディアを保持しない。base64は呼び出し元が返す。
+    return undefined;
   }
 }
 
@@ -177,6 +184,9 @@ function resolveStorage(): ImageStorage {
     }
     const prefix = process.env.IMAGE_UPLOAD_GCS_PREFIX;
     return new GcsImageStorage(bucket, prefix);
+  }
+  if (target === 'memory') {
+    return new InMemoryImageStorage();
   }
   return new LocalImageStorage();
 }
