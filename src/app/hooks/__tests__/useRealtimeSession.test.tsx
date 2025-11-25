@@ -430,7 +430,7 @@ describe('useRealtimeSession', () => {
       });
 
       await vi.waitFor(() => {
-        expect((globalThis as any).fetch).toHaveBeenCalledWith('/audio/hotword-chime.wav');
+        expect((globalThis as any).fetch).toHaveBeenCalledWith('/audio/4-ESM_Airy_Echo_Metallic_Alert_Notification_Synth_Electronic_Particle_Cute_Cartoon.wav');
         expect(audioPlayerMock.enqueue).toHaveBeenCalled();
       });
     } finally {

@@ -14,6 +14,7 @@ export interface ScenarioRouterOptions {
   logger?: Pick<StructuredLogger, 'info' | 'warn' | 'error' | 'debug'>;
   minimumCommandLength?: number;
   mergeWindowMs?: number;
+  scenarioSwitchDelayMs?: number;
 }
 
 interface PendingHotwordCommand {
@@ -30,6 +31,7 @@ export class ScenarioRouter {
   private readonly logger?: ScenarioRouterOptions['logger'];
   private readonly minimumCommandLength: number;
   private readonly mergeWindowMs: number;
+  private readonly scenarioSwitchDelayMs: number;
   private pendingHotwordCommand: PendingHotwordCommand | null = null;
 
   constructor(options: ScenarioRouterOptions) {
@@ -39,6 +41,7 @@ export class ScenarioRouter {
     this.logger = options.logger;
     this.minimumCommandLength = Math.max(options.minimumCommandLength ?? 1, 1);
     this.mergeWindowMs = Math.max(options.mergeWindowMs ?? 3000, 0);
+    this.scenarioSwitchDelayMs = Math.max(options.scenarioSwitchDelayMs ?? 0, 0);
   }
 
   setCurrentScenarioKey(next: string): void {
@@ -68,6 +71,9 @@ export class ScenarioRouter {
       requestedScenario: match.scenarioKey,
       commandPreview: commandText.slice(0, 60),
     });
+    if (this.scenarioSwitchDelayMs > 0) {
+      await this.sleep(this.scenarioSwitchDelayMs);
+    }
     await this.forwarder.interruptActiveResponse();
     await this.voiceControl.requestScenarioChange(match.scenarioKey, {
       initialCommand: commandText,
@@ -141,5 +147,9 @@ export class ScenarioRouter {
 
   private normalize(value: string): string {
     return value?.trim().toLowerCase() ?? '';
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
   }
 }

@@ -19,7 +19,7 @@ export class PcmAudioPlayer {
 
   async enqueue(base64: string) {
     if (!base64) return;
-    const audioBuffer = this.decodePcmChunk(base64);
+    const audioBuffer = await this.decodeAudioChunk(base64);
     const source = this.audioContext.createBufferSource();
     source.buffer = audioBuffer;
     source.connect(this.gainNode);
@@ -53,13 +53,17 @@ export class PcmAudioPlayer {
     }
   }
 
-  private decodePcmChunk(base64: string): AudioBuffer {
-    const binary = atob(base64);
-    const buffer = new ArrayBuffer(binary.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < binary.length; i += 1) {
-      view[i] = binary.charCodeAt(i);
+  private async decodeAudioChunk(base64: string): Promise<AudioBuffer> {
+    const buffer = this.base64ToArrayBuffer(base64);
+
+    // 1) WAVなどヘッダ付きの場合: AudioContextに任せて適正サンプルレートでデコード
+    try {
+      return await this.audioContext.decodeAudioData(buffer.slice(0));
+    } catch {
+      // ヘッダなしPCMの場合は下にフォールバック
     }
+
+    // 2) ヘッダなしPCMを 16bit LE / mono / context.sampleRate で解釈
     const int16 = new Int16Array(buffer);
     const floatData = new Float32Array(int16.length);
     for (let i = 0; i < int16.length; i += 1) {
@@ -68,5 +72,15 @@ export class PcmAudioPlayer {
     const audioBuffer = this.audioContext.createBuffer(1, floatData.length, this.audioContext.sampleRate);
     audioBuffer.copyToChannel(floatData, 0);
     return audioBuffer;
+  }
+
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binary = atob(base64);
+    const buffer = new ArrayBuffer(binary.length);
+    const view = new Uint8Array(buffer);
+    for (let i = 0; i < binary.length; i += 1) {
+      view[i] = binary.charCodeAt(i);
+    }
+    return buffer;
   }
 }

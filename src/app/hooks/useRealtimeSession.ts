@@ -11,7 +11,7 @@ import { isVoiceControlDirective, type VoiceControlDirective } from '@/shared/vo
 
 const BUILD_TIME_BFF_KEY = process.env.NEXT_PUBLIC_BFF_KEY;
 const CLIENT_DISCONNECT_REASON = 'client_request';
-const HOTWORD_CUE_ASSET_PATH = '/audio/hotword-chime.wav';
+const HOTWORD_CUE_ASSET_PATH = '/audio/4-ESM_Airy_Echo_Metallic_Alert_Notification_Synth_Electronic_Particle_Cute_Cartoon.wav';
 
 function addFallbackItemId(event: any) {
   if (!event || typeof event !== 'object') return event;
@@ -143,34 +143,6 @@ export function createTransportEventHandler({
   };
 }
 
-function extractPcmFromWav(buffer: ArrayBuffer): ArrayBuffer {
-  const view = new DataView(buffer);
-  const readChunkId = (offset: number) =>
-    String.fromCharCode(
-      view.getUint8(offset),
-      view.getUint8(offset + 1),
-      view.getUint8(offset + 2),
-      view.getUint8(offset + 3),
-    );
-
-  if (readChunkId(0) !== 'RIFF' || readChunkId(8) !== 'WAVE') {
-    throw new Error('Invalid WAV header');
-  }
-
-  let offset = 12;
-  while (offset + 8 <= buffer.byteLength) {
-    const chunkId = readChunkId(offset);
-    const chunkSize = view.getUint32(offset + 4, true);
-    offset += 8;
-    if (chunkId === 'data') {
-      return buffer.slice(offset, offset + chunkSize);
-    }
-    offset += chunkSize + (chunkSize % 2);
-  }
-
-  throw new Error('WAV data chunk not found');
-}
-
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   let binary = '';
   const bytes = new Uint8Array(buffer);
@@ -252,7 +224,8 @@ export function useRealtimeSession(
           }
           return response.arrayBuffer();
         })
-        .then((buffer) => arrayBufferToBase64(extractPcmFromWav(buffer)));
+        // WAVヘッダごとBase64にして、再生側でサンプルレートを尊重してデコードする
+        .then((buffer) => arrayBufferToBase64(buffer));
     }
     const base64 = await hotwordCueFetchPromiseRef.current;
     hotwordCueBase64Ref.current = base64;
