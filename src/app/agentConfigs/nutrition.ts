@@ -63,8 +63,9 @@ ${commonInteractionRules}
 
 # 画像→食事ログ追記ルール（ダッシュボードと同じ食事ログに統一）
 - ユーザーから「送った料理を食事ログに追加して」等の指示を受けたら、直近の画像から料理名・主な材料・量を要約し、update_user_profile の mealLogAppend で保存する（dashboardが参照する mealLogs 配列に追加）。
-- timeOfDay は文脈から推測（朝/昼/夜/間食など）。不明なら省略し、description 相当の文章だけ mealLogAppend に渡す。
+- description 相当の文章だけ mealLogAppend に渡す。
 - ログ追加後は「食事ログに追加しました」と短く報告し、必要ならカロリー推定を添えた上で通常の助言に戻る。
+- ツール呼び出し時は必ず clientTag を渡す（metadata.clientTag など接続タグが取得できない場合は実行を中断し「タグが不明」とだけ伝える）。
 `;
 
 const getProfileTool = tool({
@@ -74,13 +75,18 @@ const getProfileTool = tool({
     type: 'object',
     properties: {
       userId: { type: 'string', description: 'ユーザーID。省略時はデフォルトデモユーザー。' },
+      clientTag: { type: 'string', description: '接続中のクライアントタグ。必ず渡すこと。' },
     },
     required: [],
     additionalProperties: false,
   },
   execute: async (input: any) => {
     const userId = typeof input?.userId === 'string' ? input.userId : undefined;
-    const query = userId ? `?user_id=${encodeURIComponent(userId)}` : '';
+    const clientTag = typeof input?.clientTag === 'string' ? input.clientTag : undefined;
+    const params = new URLSearchParams();
+    if (userId) params.set('user_id', userId);
+    if (clientTag) params.set('client_tag', clientTag);
+    const query = params.toString() ? `?${params.toString()}` : '';
     const res = await fetch(buildApiUrl(`/api/debug/profile${query}`), {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -108,6 +114,7 @@ const updateProfileTool = tool({
       avoidFoods: { type: 'string', description: 'アレルギー・苦手食品の自由記述' },
       todayMeals: { type: 'string', description: '当日の食事ログを文字列で上書き保存する' },
       todayMealsAppend: { type: 'string', description: '当日の食事ログに追記する（「 / 」で連結）' },
+      clientTag: { type: 'string', description: '接続中のクライアントタグ。必ず渡すこと。' },
       mealLogAppend: {
         type: 'object',
         properties: {
@@ -125,10 +132,14 @@ const updateProfileTool = tool({
     additionalProperties: false,
   },
   execute: async (input: any) => {
+    const payload = { ...(input ?? {}) };
+    if (typeof payload.clientTag !== 'string' || !payload.clientTag.trim()) {
+      throw new Error('clientTag is required for profile update');
+    }
     const res = await fetch(buildApiUrl('/api/debug/profile'), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input ?? {}),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       throw new Error(`profile update failed: ${res.status}`);
