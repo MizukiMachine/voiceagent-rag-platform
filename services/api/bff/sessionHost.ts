@@ -52,6 +52,12 @@ import {
   type MemoryStore,
   type MemoryEntry,
 } from '../../coreData/persistentMemory';
+import {
+  getCurrentTimeInTimeZone,
+  IntlTimeContextProvider,
+  TimeContextProvider,
+  timeContextProviderToken,
+} from '../../../framework/time/TimeContextProvider';
 
 const SESSION_TTL_MS = 10 * 60 * 1000;
 const SESSION_MAX_LIFETIME_MS = 30 * 60 * 1000;
@@ -92,36 +98,6 @@ function resolveHotwordContinuationWindowMs(): number {
     return configured;
   }
   return DEFAULT_HOTWORD_CONTINUATION_WINDOW_MS;
-}
-
-function getCurrentTimeInTimeZone(timeZone: string): { currentTimeIso: string; timeZone: string } {
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    timeZoneName: 'shortOffset',
-  }).formatToParts(now);
-
-  const pick = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
-  const date = `${pick('year')}-${pick('month')}-${pick('day')}`;
-  const time = `${pick('hour')}:${pick('minute')}:${pick('second')}`;
-
-  const tzName = pick('timeZoneName'); // e.g., "GMT+9" or "GMT+09:00"
-  let offset = '+00:00';
-  const match = tzName.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/);
-  if (match) {
-    const sign = match[1];
-    const hours = match[2].padStart(2, '0');
-    const minutes = (match[3] ?? '00').padStart(2, '0');
-    offset = `${sign}${hours}:${minutes}`;
-  }
-
-  return { currentTimeIso: `${date}T${time}${offset}`, timeZone };
 }
 
 export type SessionCommand =
@@ -168,6 +144,7 @@ export interface CreateSessionOptions {
   metadata?: Record<string, any>;
   memoryKey?: string | null;
   memoryEnabled?: boolean;
+   timeZone?: string;
 }
 
 export interface CreateSessionResult {
@@ -183,6 +160,8 @@ export interface CreateSessionResult {
     primary: string;
   };
   capabilityWarnings: string[];
+  timeZone: string;
+  currentTimeIso: string;
 }
 
 export interface ResolveSessionResult {
@@ -319,6 +298,8 @@ interface SessionHostDeps {
   responsesClientFactory?: () => ResponsesClient;
   intentClassifier?: (text: string) => Promise<boolean>;
   deepReasoningLogSampleLimit?: number;
+  timeContextProvider?: TimeContextProvider;
+  defaultTimeZone?: string;
 }
 
 export class SessionHost {
@@ -332,7 +313,7 @@ export class SessionHost {
   private readonly scenarioMcpBindings: Record<string, ScenarioMcpBinding>;
   private readonly inspectEnvironment: () => RealtimeEnvironmentSnapshot;
   private readonly mcpRegistry?: McpServerRegistry;
-  private readonly registryServiceManager?: ServiceManager;
+  private readonly registryServiceManager: ServiceManager;
   private readonly memoryStore: MemoryStore;
   private readonly scenarioRegistry: ScenarioRegistry;
   private readonly hotwordCueService: HotwordCueService;
@@ -343,6 +324,7 @@ export class SessionHost {
   private readonly intentClassifier: (text: string) => Promise<boolean>;
   private readonly deepReasoningLogSampleLimit: number;
   private readonly deepReasoningTimeoutMs: number;
+  private readonly timeContextProvider: TimeContextProvider;
 
   constructor(deps: SessionHostDeps = {}) {
     this.logger = deps.logger ?? createStructuredLogger({ component: 'bff.session' });
@@ -381,12 +363,16 @@ export class SessionHost {
       deps.intentClassifier ??
       ((text: string) => classifyDeepReasoningIntent(text, this.responsesClientFactory(), this.logger));
 
+    this.registryServiceManager = deps.serviceManager ?? new ServiceManager({ logger: this.logger });
+    this.timeContextProvider =
+      deps.timeContextProvider ??
+      this.registerAndGetTimeContextProvider(this.registryServiceManager, deps.defaultTimeZone);
+
     const mcpConfigs = loadMcpServersFromEnv();
     const hasBindings = Object.values(this.scenarioMcpBindings).some(
       (binding) => binding.requiredMcpServers?.length > 0,
     );
     if (hasBindings && Object.keys(mcpConfigs).length > 0) {
-      this.registryServiceManager = deps.serviceManager ?? new ServiceManager();
       this.mcpRegistry =
         deps.mcpRegistry ??
         new McpServerRegistry({
@@ -417,6 +403,20 @@ export class SessionHost {
       });
     }
     return new OpenAIAgentSetResolver(this.scenarioMap);
+  }
+
+  private registerAndGetTimeContextProvider(
+    serviceManager: ServiceManager,
+    defaultTimeZone?: string,
+  ): TimeContextProvider {
+    if (!serviceManager.has(timeContextProviderToken)) {
+      serviceManager.register(
+        timeContextProviderToken,
+        () => new IntlTimeContextProvider({ defaultTimeZone, logger: this.logger }),
+        { eager: true },
+      );
+    }
+    return serviceManager.get(timeContextProviderToken);
   }
 
   private createSessionHooks(
@@ -794,7 +794,15 @@ export class SessionHost {
       });
     }
 
-    const { currentTimeIso, timeZone } = getCurrentTimeInTimeZone('Asia/Tokyo');
+    const timeContext = this.timeContextProvider.getContext(options.timeZone);
+    if (timeContext.usedFallback) {
+      this.logger.warn('timezone fallback applied for session', {
+        sessionId,
+        requestedTimeZone: timeContext.requestedTimeZone,
+        timeZone: timeContext.timeZone,
+        reason: timeContext.fallbackReason ?? 'missing',
+      });
+    }
 
     await manager.connect({
       agentSetKey: options.agentSetKey,
@@ -808,8 +816,8 @@ export class SessionHost {
         requestScenarioChange: voiceControlHandlers.requestScenarioChange,
         requestAgentChange: voiceControlHandlers.requestAgentChange,
         persistentMemoryKey: memoryKey ?? undefined,
-        currentTimeIso,
-        timeZone,
+        currentTimeIso: timeContext.currentTimeIso,
+        timeZone: timeContext.timeZone,
       },
       outputGuardrails: [guardrail],
       outputModalities: resolvedModalities,
@@ -843,6 +851,8 @@ export class SessionHost {
         key: options.agentSetKey,
         primary: agentSet[0]?.name ?? 'agent',
       },
+      timeZone: timeContext.timeZone,
+      currentTimeIso: timeContext.currentTimeIso,
     };
   }
 

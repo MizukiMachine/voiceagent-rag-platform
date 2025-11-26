@@ -15,6 +15,7 @@ export const createSessionSchema = z.object({
     })
     .optional(),
   metadata: z.record(z.any()).optional(),
+  timeZone: z.string().min(1).optional(),
 });
 
 const inputTextSchema = z.object({

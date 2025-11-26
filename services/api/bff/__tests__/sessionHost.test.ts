@@ -191,6 +191,16 @@ describe('SessionHost', () => {
       ok: true,
       json: async () => profile,
     }) as any;
+  const createStubLogger = (warnMock = vi.fn()) => {
+    const logger: any = {
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn: warnMock,
+      error: vi.fn(),
+      with: () => logger,
+    };
+    return logger;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -235,6 +245,8 @@ describe('SessionHost', () => {
     expect(result.streamUrl).toContain(result.sessionId);
     expect(result.allowedModalities).toEqual(['audio', 'text']);
     expect(result.textOutputEnabled).toBe(true);
+    expect(result.timeZone).toBeDefined();
+    expect(result.currentTimeIso).toMatch(/T\d{2}:\d{2}:\d{2}/);
 
     const manager = managers[0]!;
     const status = await host.handleCommand(result.sessionId, {
@@ -245,6 +257,75 @@ describe('SessionHost', () => {
     expect(manager.sendEventMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'conversation.item.create' }),
     );
+  });
+
+  it('passes explicit timeZone into extraContext and result', async () => {
+    const timeContextProvider = {
+      getContext: vi.fn(() => ({
+        currentTimeIso: '2025-01-01T00:00:00+09:00',
+        timeZone: 'Asia/Tokyo',
+        usedFallback: false,
+      })),
+    };
+    managers = [];
+    host = new SessionHost({
+      scenarioMap,
+      sessionManagerFactory: (hooks) => {
+        const mgr = new FakeSessionManager(hooks);
+        managers.push(mgr);
+        return mgr;
+      },
+      now: () => Date.now(),
+      envInspector: () => envSnapshot,
+      hotwordCueService,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
+      memoryStore: new InMemoryMemoryStore(),
+      timeContextProvider: timeContextProvider as any,
+    });
+
+    const result = await host.createSession({ agentSetKey: 'demo', timeZone: 'Asia/Tokyo' });
+    expect(timeContextProvider.getContext).toHaveBeenCalledWith('Asia/Tokyo');
+    expect(managers[0]!.lastConnectOptions?.extraContext?.timeZone).toBe('Asia/Tokyo');
+    expect(result.timeZone).toBe('Asia/Tokyo');
+    expect(result.currentTimeIso).toBe('2025-01-01T00:00:00+09:00');
+  });
+
+  it('logs warning when timezone fallback is applied', async () => {
+    const warn = vi.fn();
+    const logger = createStubLogger(warn);
+    const timeContextProvider = {
+      getContext: vi.fn(() => ({
+        currentTimeIso: '2025-01-01T00:00:00+09:00',
+        timeZone: 'Asia/Tokyo',
+        usedFallback: true,
+        fallbackReason: 'missing',
+        requestedTimeZone: null,
+      })),
+    };
+    managers = [];
+    host = new SessionHost({
+      scenarioMap,
+      sessionManagerFactory: (hooks) => {
+        const mgr = new FakeSessionManager(hooks);
+        managers.push(mgr);
+        return mgr;
+      },
+      now: () => Date.now(),
+      envInspector: () => envSnapshot,
+      hotwordCueService,
+      responsesClientFactory: () => responsesClient as any,
+      intentClassifier,
+      memoryStore: new InMemoryMemoryStore(),
+      timeContextProvider: timeContextProvider as any,
+      logger,
+    });
+
+    await host.createSession({ agentSetKey: 'demo' });
+
+    expect(warn).toHaveBeenCalledWith('timezone fallback applied for session', expect.objectContaining({
+      reason: 'missing',
+    }));
   });
 
   it('propagates clientTag into realtime extraContext metadata', async () => {
