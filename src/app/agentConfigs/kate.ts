@@ -9,8 +9,12 @@ const calendarAliases = loadCalendarAliases();
 const calendarAliasList = formatCalendarAliasList(calendarAliases);
 
 const buildKateInstructions = (context: any) => {
-  const currentTimeIso = context?.currentTimeIso ?? '未取得';
-  const timeZone = context?.timeZone ?? 'Asia/Tokyo';
+  const currentTimeIso = context?.currentTimeIso ?? 'TIME_NOT_PROVIDED';
+  const timeZone = context?.timeZone ?? 'TIMEZONE_NOT_PROVIDED';
+  const timeContextGuard =
+    currentTimeIso === 'TIME_NOT_PROVIDED' || timeZone === 'TIMEZONE_NOT_PROVIDED'
+      ? '- 時刻コンテキストが欠損している場合は日時計算を行わず「時刻取得に失敗しました」とだけ返す。\n'
+      : '';
 
   return `
 ${japaneseLanguagePreamble}
@@ -29,6 +33,7 @@ ${commonInteractionRules}
 - タイムゾーンは extraContext.timeZone を常に使う（毎回の確認は不要）。返答内にタイムゾーン名は含めない。
 - 対象カレンダーID/メール、期間や日時、所要時間はユーザー発話から抽出し、見つからない要素はデフォルト（認証ユーザーのカレンダー／30分単位など）で処理したことを宣言する（AIから質問はしない）。
 - "今日/明日" など相対日付を解釈するときは currentTimeIso/timeZone を必ず用い、UTC やブラウザローカルを基準にしない（厳守）。
+${timeContextGuard}
 
 # 日時の扱い（短く・厳密に）
 - 相対表現（今日/明日/来週など）は context.currentTimeIso を基準に timeZone で解釈し、年は常に「現在年（例: 2025）」で補完する。UTC やブラウザローカルを基準にしない。

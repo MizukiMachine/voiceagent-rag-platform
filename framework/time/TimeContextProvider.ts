@@ -62,7 +62,7 @@ export class IntlTimeContextProvider implements TimeContextProvider {
     fallbackReason?: 'missing' | 'invalid';
   } {
     if (this.isValidTimeZone(timeZone)) {
-      return { timeZone: timeZone!, usedFallback: false };
+      return { timeZone, usedFallback: false };
     }
 
     return {
@@ -72,7 +72,8 @@ export class IntlTimeContextProvider implements TimeContextProvider {
     };
   }
 
-  private isValidTimeZone(timeZone?: string | null): boolean {
+  // 型ガードで非nullな string を保証し、呼び出し側での non-null アサーションを不要にする
+  private isValidTimeZone(timeZone?: string | null): timeZone is string {
     if (!timeZone) return false;
     try {
       new Intl.DateTimeFormat('en-US', { timeZone });
@@ -107,12 +108,14 @@ export function getCurrentTimeInTimeZone(timeZone: string): { currentTimeIso: st
   const tzName = pick('timeZoneName'); // e.g., "GMT+9" or "GMT+09:00"
   let offset = '+00:00';
   const match = tzName.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/);
-  if (match) {
-    const sign = match[1];
-    const hours = match[2].padStart(2, '0');
-    const minutes = (match[3] ?? '00').padStart(2, '0');
-    offset = `${sign}${hours}:${minutes}`;
+  if (!match) {
+    throw new Error(`Failed to parse timezone offset for ${timeZone} from ${tzName}`);
   }
+
+  const sign = match[1];
+  const hours = match[2].padStart(2, '0');
+  const minutes = (match[3] ?? '00').padStart(2, '0');
+  offset = `${sign}${hours}:${minutes}`;
 
   return { currentTimeIso: `${date}T${time}${offset}`, timeZone };
 }

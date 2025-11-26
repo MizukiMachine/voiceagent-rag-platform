@@ -40,7 +40,24 @@ describe('IntlTimeContextProvider', () => {
     expect(result.timeZone).toBe('Asia/Tokyo');
     expect(result.usedFallback).toBe(true);
     expect(result.fallbackReason).toBe('invalid');
-    expect(warn).toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith('timezone fallback applied', {
+      requestedTimeZone: 'Invalid/Zone',
+      fallbackTimeZone: 'Asia/Tokyo',
+      reason: 'invalid',
+    });
+  });
+
+  it('sets fallbackReason properly for missing and invalid', () => {
+    const warn = vi.fn();
+    const provider = new IntlTimeContextProvider({
+      defaultTimeZone: 'Asia/Tokyo',
+      logger: { warn } as any,
+    });
+    const missing = provider.getContext(null);
+    expect(missing.fallbackReason).toBe('missing');
+
+    const invalid = provider.getContext('Bad/TZ');
+    expect(invalid.fallbackReason).toBe('invalid');
   });
 });
 
