@@ -321,11 +321,15 @@ describe('SessionHost', () => {
       logger,
     });
 
-    await host.createSession({ agentSetKey: 'demo' });
+    const result = await host.createSession({ agentSetKey: 'demo' });
 
-    expect(warn).toHaveBeenCalledWith('timezone fallback applied for session', expect.objectContaining({
+    expect(warn).toHaveBeenCalledWith('timezone fallback applied for session', {
+      sessionId: expect.stringMatching(/^sess_/),
+      requestedTimeZone: null,
+      timeZone: 'Asia/Tokyo',
       reason: 'missing',
-    }));
+    });
+    expect(result.capabilityWarnings).toContain('timezone_fallback:missing:null');
   });
 
   it('propagates clientTag into realtime extraContext metadata', async () => {

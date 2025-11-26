@@ -413,7 +413,6 @@ export class SessionHost {
       serviceManager.register(
         timeContextProviderToken,
         () => new IntlTimeContextProvider({ defaultTimeZone, logger: this.logger }),
-        { eager: true },
       );
     }
     return serviceManager.get(timeContextProviderToken);
@@ -803,6 +802,12 @@ export class SessionHost {
         reason: timeContext.fallbackReason ?? 'missing',
       });
     }
+    const capabilityWarnings = [...envSnapshot.warnings];
+    if (timeContext.usedFallback) {
+      capabilityWarnings.push(
+        `timezone_fallback:${timeContext.fallbackReason ?? 'missing'}:${timeContext.requestedTimeZone ?? 'null'}`,
+      );
+    }
 
     await manager.connect({
       agentSetKey: options.agentSetKey,
@@ -846,13 +851,13 @@ export class SessionHost {
       allowedModalities: reportedModalities,
       textOutputEnabled,
       memoryKey,
-      capabilityWarnings: envSnapshot.warnings,
       agentSet: {
         key: options.agentSetKey,
         primary: agentSet[0]?.name ?? 'agent',
       },
       timeZone: timeContext.timeZone,
       currentTimeIso: timeContext.currentTimeIso,
+      capabilityWarnings,
     };
   }
 

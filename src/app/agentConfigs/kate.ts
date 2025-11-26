@@ -8,9 +8,37 @@ import { switchAgentTool, switchScenarioTool } from './voiceControlTools';
 const calendarAliases = loadCalendarAliases();
 const calendarAliasList = formatCalendarAliasList(calendarAliases);
 
+const FALLBACK_TIME_ZONE = 'Asia/Tokyo';
+
+const buildIsoInZone = (timeZone: string): string => {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'shortOffset',
+  }).formatToParts(now);
+
+  const pick = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
+  const date = `${pick('year')}-${pick('month')}-${pick('day')}`;
+  const time = `${pick('hour')}:${pick('minute')}:${pick('second')}`;
+  const tzName = pick('timeZoneName');
+  const match = tzName.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/);
+  const offset = match ? `${match[1]}${match[2].padStart(2, '0')}:${(match[3] ?? '00').padStart(2, '0')}` : '+00:00';
+  return `${date}T${time}${offset}`;
+};
+
 const buildKateInstructions = (context: any) => {
-  const currentTimeIso = context?.currentTimeIso ?? '未取得';
-  const timeZone = context?.timeZone ?? 'Asia/Tokyo';
+  const hasTimeContext = Boolean(context?.currentTimeIso && context?.timeZone);
+  const currentTimeIso = context?.currentTimeIso ?? buildIsoInZone(FALLBACK_TIME_ZONE);
+  const timeZone = context?.timeZone ?? FALLBACK_TIME_ZONE;
+  const timeContextGuard = hasTimeContext
+    ? ''
+    : `- 時刻コンテキストが欠損している場合はサーバ既定TZ(${FALLBACK_TIME_ZONE})で計算済み。ユーザーには言及しない。\n`;
 
   return `
 ${japaneseLanguagePreamble}
@@ -29,6 +57,7 @@ ${commonInteractionRules}
 - タイムゾーンは extraContext.timeZone を常に使う（毎回の確認は不要）。返答内にタイムゾーン名は含めない。
 - 対象カレンダーID/メール、期間や日時、所要時間はユーザー発話から抽出し、見つからない要素はデフォルト（認証ユーザーのカレンダー／30分単位など）で処理したことを宣言する（AIから質問はしない）。
 - "今日/明日" など相対日付を解釈するときは currentTimeIso/timeZone を必ず用い、UTC やブラウザローカルを基準にしない（厳守）。
+${timeContextGuard}
 
 # 日時の扱い（短く・厳密に）
 - 相対表現（今日/明日/来週など）は context.currentTimeIso を基準に timeZone で解釈し、年は常に「現在年（例: 2025）」で補完する。UTC やブラウザローカルを基準にしない。
