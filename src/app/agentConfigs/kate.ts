@@ -8,13 +8,37 @@ import { switchAgentTool, switchScenarioTool } from './voiceControlTools';
 const calendarAliases = loadCalendarAliases();
 const calendarAliasList = formatCalendarAliasList(calendarAliases);
 
+const FALLBACK_TIME_ZONE = 'Asia/Tokyo';
+
+const buildIsoInZone = (timeZone: string): string => {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'shortOffset',
+  }).formatToParts(now);
+
+  const pick = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
+  const date = `${pick('year')}-${pick('month')}-${pick('day')}`;
+  const time = `${pick('hour')}:${pick('minute')}:${pick('second')}`;
+  const tzName = pick('timeZoneName');
+  const match = tzName.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/);
+  const offset = match ? `${match[1]}${match[2].padStart(2, '0')}:${(match[3] ?? '00').padStart(2, '0')}` : '+00:00';
+  return `${date}T${time}${offset}`;
+};
+
 const buildKateInstructions = (context: any) => {
-  const currentTimeIso = context?.currentTimeIso ?? 'TIME_NOT_PROVIDED';
-  const timeZone = context?.timeZone ?? 'TIMEZONE_NOT_PROVIDED';
-  const timeContextGuard =
-    currentTimeIso === 'TIME_NOT_PROVIDED' || timeZone === 'TIMEZONE_NOT_PROVIDED'
-      ? '- 時刻コンテキストが欠損している場合は日時計算を行わず「時刻取得に失敗しました」とだけ返す。\n'
-      : '';
+  const hasTimeContext = Boolean(context?.currentTimeIso && context?.timeZone);
+  const currentTimeIso = context?.currentTimeIso ?? buildIsoInZone(FALLBACK_TIME_ZONE);
+  const timeZone = context?.timeZone ?? FALLBACK_TIME_ZONE;
+  const timeContextGuard = hasTimeContext
+    ? ''
+    : `- 時刻コンテキストが欠損している場合はサーバ既定TZ(${FALLBACK_TIME_ZONE})で計算済み。ユーザーには言及しない。\n`;
 
   return `
 ${japaneseLanguagePreamble}
