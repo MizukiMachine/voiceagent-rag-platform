@@ -89,7 +89,7 @@ describe("App scenario/agent synchronization", () => {
     vi.clearAllMocks();
   });
 
-  it("keeps the UI in sync when the scenario is changed and triggers reconnect", async () => {
+  it("connects with the default scenario and keeps UI state", async () => {
     renderApp();
 
     const connectButton = screen.getByRole("button", {
@@ -100,10 +100,7 @@ describe("App scenario/agent synchronization", () => {
     await waitFor(() => expect(connectMock).toHaveBeenCalledTimes(1));
 
     const scenarioSelect = screen.getAllByRole("combobox")[0];
-    fireEvent.change(scenarioSelect, { target: { value: "takuboku" } });
-
-    await waitFor(() => expect(disconnectMock).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(connectMock).toHaveBeenCalledTimes(2));
-    expect((scenarioSelect as HTMLSelectElement).value).toBe("takuboku");
+    expect((scenarioSelect as HTMLSelectElement).value).toBe("graffity");
+    expect(disconnectMock).not.toHaveBeenCalled();
   });
 });

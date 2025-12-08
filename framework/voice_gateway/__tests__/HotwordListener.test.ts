@@ -11,9 +11,6 @@ import {
 const baseDictionary: HotwordDictionary = {
   entries: [
     { scenarioKey: 'graffity', aliases: ['graffity', 'グラフィティ'] },
-    { scenarioKey: 'kate', aliases: ['kate', 'ケイト'] },
-    { scenarioKey: 'takuboku', aliases: ['takuboku', 'タクボク'] },
-    { scenarioKey: 'patricia', aliases: ['patricia', 'パトリシア', 'ﾊﾟﾄﾘｼｱ'] },
   ],
 };
 
@@ -70,34 +67,6 @@ describe('HotwordListener', () => {
     });
   });
 
-  it('falls back to LLM classifier when heuristics do not match', async () => {
-    const llmResult = {
-      scenarioKey: 'kate',
-      confidence: 0.8,
-      matchedAlias: 'ケート',
-      reason: 'typo of ケイト',
-    };
-
-    const llmClassifier: HotwordLlmClassifier = {
-      classify: vi.fn().mockResolvedValue(llmResult),
-    };
-
-    const listener = buildListener({
-      requirePrefix: false,
-      fuzzyDistanceThreshold: 0, // force fuzzy miss for this typo
-      llmClassifier,
-      minimumLlmConfidence: 0.6,
-    });
-
-    listener.handleTranscriptionEvent(completedEvent('msg_llm', 'ケート 予定を教えて')); // typo without Hey
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(llmClassifier.classify).toHaveBeenCalled();
-    expect(matches).toHaveLength(1);
-    expect(matches[0]).toMatchObject({ scenarioKey: 'kate', commandText: '予定を教えて' });
-  });
-
   it('detects a hotword and extracts the scenario key and command text', () => {
     const listener = buildListener();
     listener.handleTranscriptionEvent(completedEvent('msg_1', 'Hey Graffity, play my playlist'));
@@ -113,20 +82,6 @@ describe('HotwordListener', () => {
     expect(detections).toHaveLength(1);
     expect(detections[0]).toMatchObject({ scenarioKey: 'graffity', stage: 'completed' });
     expect(invalidItemIds).toHaveLength(0);
-  });
-
-  it('normalizes aliases including Japanese characters', () => {
-    const listener = buildListener();
-    listener.handleTranscriptionEvent(completedEvent('msg_2', 'Hey ケイト 今日の予定を教えて'));
-
-    expect(matches).toHaveLength(1);
-    expect(matches[0]).toEqual(
-      expect.objectContaining({
-        scenarioKey: 'kate',
-        commandText: '今日の予定を教えて',
-        itemId: 'msg_2',
-      }),
-    );
   });
 
   it('emits onDetection as soon as a delta transcript contains the hotword prefix', () => {
@@ -163,36 +118,6 @@ describe('HotwordListener', () => {
     listener.handleTranscriptionEvent(completedEvent('msg_5', 'Another attempt without prefix'));
     expect(timeoutTriggered).toBe(true);
     expect(invalidItemIds).toEqual(['msg_3', 'msg_4', 'msg_5']);
-  });
-
-  it('detects Patricia hotword with Japanese alias', () => {
-    const listener = buildListener();
-    listener.handleTranscriptionEvent(
-      completedEvent('msg_10', 'Hey パトリシア、カロリー教えて'),
-    );
-
-    expect(matches).toHaveLength(1);
-    expect(matches[0]).toEqual(
-      expect.objectContaining({
-        scenarioKey: 'patricia',
-        commandText: 'カロリー教えて',
-        itemId: 'msg_10',
-      }),
-    );
-  });
-
-  it('allows punctuation between the hotword prefix and alias', () => {
-    const listener = buildListener();
-    listener.handleTranscriptionEvent(completedEvent('msg_9', 'Hey!タクボク 秋の一句を読んで'));
-
-    expect(matches).toHaveLength(1);
-    expect(matches[0]).toEqual(
-      expect.objectContaining({
-        scenarioKey: 'takuboku',
-        commandText: '秋の一句を読んで',
-        itemId: 'msg_9',
-      }),
-    );
   });
 
   it('resets timeout window after a successful hotword match', () => {

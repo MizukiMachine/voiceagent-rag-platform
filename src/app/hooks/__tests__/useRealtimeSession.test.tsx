@@ -331,13 +331,13 @@ describe('useRealtimeSession', () => {
 
     await act(async () => {
       listener?.({
-        data: JSON.stringify({ action: 'switchScenario', scenarioKey: 'kate' }),
+        data: JSON.stringify({ action: 'switchScenario', scenarioKey: 'graffity' }),
       } as MessageEvent<string>);
     });
 
     expect(voiceCallback).toHaveBeenCalledWith({
       action: 'switchScenario',
-      scenarioKey: 'kate',
+      scenarioKey: 'graffity',
     });
   });
 

@@ -68,8 +68,8 @@ describe('viewer API routes', () => {
       clientTag: 'glasses02',
       sessionId: 'sess_new',
       streamUrl: '/api/session/sess_new/stream',
-      scenarioKey: 'kate',
-      memoryKey: 'kate',
+      scenarioKey: 'graffity',
+      memoryKey: 'graffity',
       status: 'CONNECTED',
     });
 
@@ -79,7 +79,7 @@ describe('viewer API routes', () => {
         'Content-Type': 'application/json',
         'x-bff-key': 'secret',
       },
-      body: JSON.stringify({ clientTag: 'glasses02', sessionId: 'sess_new', scenarioKey: 'kate' }),
+      body: JSON.stringify({ clientTag: 'glasses02', sessionId: 'sess_new', scenarioKey: 'graffity' }),
     });
 
     const response = await registerViewerSession(request);
@@ -88,6 +88,6 @@ describe('viewer API routes', () => {
     expect(response.status).toBe(200);
     expect(payload.sessionId).toBe('sess_new');
     expect(payload.clientTag).toBe('glasses02');
-    expect(sessionHostMock.registerViewerSession).toHaveBeenCalledWith('glasses02', 'sess_new', 'kate');
+    expect(sessionHostMock.registerViewerSession).toHaveBeenCalledWith('glasses02', 'sess_new', 'graffity');
   });
 });
