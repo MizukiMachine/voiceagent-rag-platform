@@ -15,9 +15,6 @@ const BADGE_LABELS = {
 
 const SCENARIO_LABELS: Record<string, string> = {
   graffity: "Graffityエージェント",
-  nutrition: "食事アドバイザー：メアリー",
-  kate: "秘書エージェント：ケイト",
-  takuboku: "短歌ライター：タクボク",
 };
 
 function buildProfileSummary(profile: any): string {

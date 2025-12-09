@@ -81,21 +81,6 @@ describe('ScenarioRouter', () => {
     }
   });
 
-  it('requests a scenario change when a different hotword arrives', async () => {
-    const match = makeMatch({
-      scenarioKey: 'kate',
-      commandText: '今日の予定を教えて',
-    });
-
-    await router.handleHotwordMatch(match);
-
-    expect(forwarder.replaceTranscriptWithText).not.toHaveBeenCalled();
-    expect(forwarder.interruptActiveResponse).toHaveBeenCalledTimes(1);
-    expect(voiceControl.requestScenarioChange).toHaveBeenCalledWith('kate', {
-      initialCommand: '今日の予定を教えて',
-    });
-  });
-
   it('ignores empty hotword commands even when the scenario matches', async () => {
     await router.handleHotwordMatch(makeMatch({ commandText: '' }));
 

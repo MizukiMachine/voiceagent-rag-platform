@@ -41,7 +41,6 @@ import {
   warmupModel,
   type ResponsesClient,
 } from './sessionHost/deepReasoning';
-import { getUserProfile, resolveUserId } from '../../../services/nutrition/profileService';
 import {
   buildReplayEvents,
   getPersistentMemoryStore,
@@ -1094,20 +1093,6 @@ export class SessionHost {
       return;
     }
 
-    const isNutritionScenario = context.agentSetKey === 'nutrition';
-    if (isNutritionScenario) {
-      const profileContext = await this.fetchAndInjectProfileContext(context, command.metadata);
-      this.logger.info('Nutrition scenario: deep reasoning pipeline engaged', { sessionId: context.id });
-      this.executeDeepReasoningPipeline(context, text, command.metadata, profileContext).catch((error) => {
-        this.logger.error('Deep reasoning pipeline failed; forwarding to realtime as fallback', {
-          sessionId: context.id,
-          error,
-        });
-        this.sendUserTextCommand(context, text, command.metadata);
-      });
-      return;
-    }
-
     const keywordHit = this.shouldForceDeepReasoning(text);
     const llmHit = keywordHit ? true : await this.intentClassifier(text);
 
@@ -1132,146 +1117,6 @@ export class SessionHost {
   private shouldForceDeepReasoning(text: string): boolean {
     const normalized = text ?? '';
     return DEEP_REASONING_TRIGGERS.some((kw) => normalized.includes(kw));
-  }
-
-  private formatProfileContext(profile: any): string {
-    if (!profile || typeof profile !== 'object') return '';
-    const lines: string[] = [];
-    const push = (label: string, value: any) => {
-      if (value === undefined || value === null) return;
-      if (Array.isArray(value)) {
-        if (value.length === 0) return;
-        lines.push(`${label}: ${value.join(', ')}`);
-        return;
-      }
-      if (typeof value === 'object') return;
-      const str = String(value).trim();
-      if (str.length === 0) return;
-      lines.push(`${label}: ${str}`);
-    };
-
-    push('goalType', profile.goalType);
-    push('activityLevel', profile.activityLevel);
-    push('age', profile.age);
-    push('sex', profile.sex);
-    push('heightCm', profile.heightCm);
-    push('weightKg', profile.weightKg);
-    push('avoidFoods', profile.avoidFoods ?? profile.allergies ?? profile.dislikedFoods);
-    push('recentMeals', profile.recentMeals ?? profile.recent_meals);
-    push('todayMeals', profile.todayMeals ?? profile.today_meals);
-    push('dinner', profile.dinner);
-
-    if (Array.isArray(profile.mealLogs) && profile.mealLogs.length > 0) {
-      const sorted = [...profile.mealLogs].sort((a, b) => {
-        const aTime = new Date(a?.recordedAt ?? 0).getTime();
-        const bTime = new Date(b?.recordedAt ?? 0).getTime();
-        return bTime - aTime;
-      });
-      const formatter = new Intl.DateTimeFormat('ja-JP', {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      const recent = sorted.slice(0, 6).map((log) => {
-        const timeLabel = log?.recordedAt ? formatter.format(new Date(log.recordedAt)) : '??-?? ??';
-        const slot = log?.timeOfDay ? `${log.timeOfDay}` : '';
-        const description = typeof log?.description === 'string' ? log.description.trim() : '';
-        const base = description || '内容未設定';
-        return slot ? `${timeLabel} ${slot}:${base}` : `${timeLabel}:${base}`;
-      });
-      push('mealLogsRecent', recent.join(' | '));
-      push('mealLogCount', profile.mealLogs.length);
-    }
-
-    return lines.join('\n');
-  }
-
-  private async fetchProfileContext(
-    metadata?: Record<string, any>,
-    clientTag?: string | null,
-  ): Promise<string | undefined> {
-    const userId = typeof metadata?.userId === 'string' ? metadata.userId : undefined;
-    const resolvedUserId = resolveUserId(userId);
-    const resolvedClientTag = typeof clientTag === 'string' && clientTag.trim() ? clientTag.trim() : undefined;
-
-    const httpTimeoutMs = Number(process.env.PROFILE_FETCH_TIMEOUT_MS ?? '') || 1200;
-    const profileBase =
-      process.env.PROFILE_API_BASE?.trim() ||
-      process.env.INTERNAL_PROFILE_API_BASE?.trim() ||
-      process.env.NEXT_PUBLIC_PROFILE_API_BASE?.trim() ||
-      '';
-    const allowLocalFallback = (process.env.PROFILE_FETCH_LOCAL_FALLBACK ?? 'true') === 'true';
-    const ts = Date.now();
-    const queryParams = new URLSearchParams();
-    if (resolvedUserId) queryParams.set('user_id', resolvedUserId);
-    if (resolvedClientTag) queryParams.set('client_tag', resolvedClientTag);
-    queryParams.set('_', String(ts));
-    const query = `?${queryParams.toString()}`;
-    const url = profileBase ? `${profileBase}/api/debug/profile${query}` : null;
-
-    const httpProfile = await (async () => {
-      if (!url) return null;
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), httpTimeoutMs);
-      try {
-        const res = await fetch(url, {
-          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
-          cache: 'no-store',
-          signal: controller.signal,
-        });
-        if (!res.ok) {
-          this.logger.warn('Profile HTTP fetch failed', { url, status: res.status });
-          return null;
-        }
-        const json: any = await res.json();
-        return json?.profile ?? null;
-      } catch (error) {
-        const aborted = (error as any)?.name === 'AbortError';
-        this.logger[aborted ? 'info' : 'warn']('Profile HTTP fetch skipped', { url, aborted, error });
-        return null;
-      } finally {
-        clearTimeout(timer);
-      }
-    })();
-
-    if (httpProfile) {
-      return this.formatProfileContext(httpProfile);
-    }
-
-    if (allowLocalFallback) {
-      try {
-        const localProfile = await getUserProfile(resolvedUserId, resolvedClientTag);
-        return this.formatProfileContext(localProfile);
-      } catch (error) {
-        this.logger.warn('Local profile read failed', { userId: resolvedUserId, error });
-        return undefined;
-      }
-    }
-
-    this.logger.warn('Profile fetch fell back to none (local fallback disabled)', { userId: resolvedUserId });
-    return undefined;
-  }
-
-  private async fetchAndInjectProfileContext(
-    context: SessionContext,
-    metadata?: Record<string, any>,
-  ): Promise<string | undefined> {
-    const profileContext = await this.fetchProfileContext(metadata, context.clientTag);
-    if (!profileContext || profileContext.trim().length === 0) {
-      return profileContext;
-    }
-
-    if (context.latestProfileContext !== profileContext) {
-      context.latestProfileContext = profileContext;
-      this.enqueueTextMessage(
-        context,
-        'system',
-        '【内部メモ・読み上げ禁止】最新プロフィールを必ず考慮して回答してください。\n' + profileContext,
-      );
-    }
-
-    return profileContext;
   }
 
   private startDeepReasoningJob(
@@ -1346,7 +1191,7 @@ export class SessionHost {
     metadata?: Record<string, any>,
     profileContextOverride?: string,
   ): Promise<void> {
-    const profileContext = profileContextOverride ?? (await this.fetchProfileContext(metadata));
+    const profileContext = profileContextOverride;
     this.startDeepReasoningJob(context, question, metadata, profileContext);
     const placeholderId = this.sendDeepReasoningPlaceholder(context);
 
@@ -1435,9 +1280,6 @@ export class SessionHost {
   }
 
   private async handleInputAudio(context: SessionContext, command: Extract<SessionCommand, { kind: 'input_audio' }>) {
-    if (context.agentSetKey === 'nutrition') {
-      await this.fetchAndInjectProfileContext(context);
-    }
     if (!BARGE_IN_ENABLED && context.isAssistantSpeaking) {
       this.logger.info('Dropping input_audio because assistant is speaking and barge-in is disabled', {
         sessionId: context.id,
