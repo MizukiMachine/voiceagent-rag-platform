@@ -351,11 +351,17 @@ export function useRealtimeSession(
           },
           'session_error',
         );
-        // サーバ側でセッションが強制終了された場合、クライアント状態を即座に切断扱いにする
-        detachStreamListeners();
-        sessionStateRef.current?.eventSource.close();
-        sessionStateRef.current = null;
-        updateStatus('DISCONNECTED');
+        const shouldDisconnect =
+          payload?.retryable === false ||
+          payload?.status === 'TERMINATED' ||
+          payload?.fatal === true;
+        if (shouldDisconnect) {
+          // サーバ側でセッションが強制終了された場合のみ切断扱いにする
+          detachStreamListeners();
+          sessionStateRef.current?.eventSource.close();
+          sessionStateRef.current = null;
+          updateStatus('DISCONNECTED');
+        }
       });
       addListener('voice_control', (payload) => {
         if (isVoiceControlDirective(payload)) {

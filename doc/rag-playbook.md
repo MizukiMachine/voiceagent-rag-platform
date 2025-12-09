@@ -37,3 +37,8 @@ split -b 95m huge.pdf huge_chunk_
 
 > File Search ストア作成と Drive 同期は `doc/GCP_FILE_SEARCH_SETUP.md` の手順で実施します。実運用ログは `doc/baseline/` 配下に追記してください。
 
+## 7. BFF ロギング / セキュリティ
+- File Search へのクエリは BFF サーバーのみが実行し、ブラウザからの直接呼び出しは禁止（`doc_search` ツール経由でのみ利用）。
+- BFF の構造化ログに `clientTag`, `scenarioKey`, `query`, `hit数`, `tookMs` を残す（Cloud Logging で `component="rag"` を検索）。
+- サービスアカウント鍵は Secret Manager または `.secrets/file-search-admin.json`（git ignore済み）で管理し、共有を最小化する。
+- 誤同期や削除の操作ログを `doc/baseline/rag-YYYY-MM-DD.log` に追記し、実施者・対象フォルダ・コマンド・結果を残す。

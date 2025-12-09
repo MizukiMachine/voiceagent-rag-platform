@@ -170,7 +170,7 @@ export function upsertTranscriptItems(
     });
   }
 
-  return next.slice(-100);
+  return next.slice(-50);
 }
 
 function generateId(prefix: string): string {

@@ -57,6 +57,14 @@ import {
   TimeContextProvider,
   timeContextProviderToken,
 } from '../../../framework/time/TimeContextProvider';
+import {
+  GeminiFileSearchRetriever,
+  NullRetriever,
+  RagService,
+  ragRetrieverToken,
+  ragServiceToken,
+  loadGeminiFileSearchConfigFromEnv,
+} from '../../rag';
 
 const SESSION_TTL_MS = 10 * 60 * 1000;
 const SESSION_MAX_LIFETIME_MS = 30 * 60 * 1000;
@@ -366,6 +374,7 @@ export class SessionHost {
     this.timeContextProvider =
       deps.timeContextProvider ??
       this.registerAndGetTimeContextProvider(this.registryServiceManager, deps.defaultTimeZone);
+    this.registerRagServices(this.registryServiceManager);
 
     const mcpConfigs = loadMcpServersFromEnv();
     const hasBindings = Object.values(this.scenarioMcpBindings).some(
@@ -415,6 +424,40 @@ export class SessionHost {
       );
     }
     return serviceManager.get(timeContextProviderToken);
+  }
+
+  private registerRagServices(serviceManager: ServiceManager) {
+    const config = loadGeminiFileSearchConfigFromEnv();
+    if (!config) {
+      this.logger.info('Gemini File Search config missing; ragService not registered');
+      serviceManager.register(ragRetrieverToken, () => new NullRetriever());
+      serviceManager.register(
+        ragServiceToken,
+        () => new RagService({ retriever: serviceManager.get(ragRetrieverToken), logger: this.logger }),
+      );
+      return;
+    }
+
+    serviceManager.register(
+      ragRetrieverToken,
+      () => new GeminiFileSearchRetriever(config),
+      {
+        dispose: async (instance) => {
+          if (typeof (instance as any).close === 'function') {
+            await (instance as any).close();
+          }
+        },
+      },
+    );
+    serviceManager.register(
+      ragServiceToken,
+      () => new RagService({ retriever: serviceManager.get(ragRetrieverToken), logger: this.logger }),
+    );
+    this.logger.info('Gemini File Search retriever registered', {
+      location: config.location,
+      storeId: config.storeId,
+      servingConfigId: config.servingConfigId,
+    });
   }
 
   private createSessionHooks(
@@ -807,6 +850,7 @@ export class SessionHost {
         `timezone_fallback:${timeContext.fallbackReason ?? 'missing'}:${timeContext.requestedTimeZone ?? 'null'}`,
       );
     }
+    const ragService = this.registryServiceManager.get(ragServiceToken);
 
     await manager.connect({
       agentSetKey: options.agentSetKey,
@@ -822,6 +866,8 @@ export class SessionHost {
         persistentMemoryKey: memoryKey ?? undefined,
         currentTimeIso: timeContext.currentTimeIso,
         timeZone: timeContext.timeZone,
+        scenarioKey: options.agentSetKey,
+        ragService,
       },
       outputGuardrails: [guardrail],
       outputModalities: resolvedModalities,

@@ -1,0 +1,9 @@
+B2B RAG doc_search dry-run (mock)
+date: 2025-12-09T00:00:00Z
+env: local (File Search credentials not provided; used mocked HTTP responses)
+steps:
+- unit: GeminiFileSearchRetriever maps request/response and propagates filter/topK (mocked fetch)
+- unit: RagService adds citeTag + summary
+- integration: doc_search tool returns summary to agent context with scenarioKey/clientTag
+notes:
+- Replace with real File Search run once SA/key + servingConfig are configured.

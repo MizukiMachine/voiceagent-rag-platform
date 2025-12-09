@@ -6,8 +6,8 @@ OpenAI Realtime API + Agents SDK デモです。
 ## TL;DR
 - Realtime API と @openai/agents@0.3.0 を使ったマルチエージェントのPoC実装
 - Next.js 15 + React 19 + TypeScript で構築し、UIは日本語化済み
-- 5つのデモシナリオを試せる（Graffity / Schedule Coordinator* / Patricia / Mark / Takuboku）
-- Simple / Retail / Chat Supervisor などの旧シナリオは無効化済みで、UI からは Graffity・Schedule Coordinator (Kate)・Patricia・Mark・Takuboku の5種類のみ選択できます。
+- 5つのデモシナリオを試せる（Graffity / Schedule Coordinator* / Patricia / Mark / Takuboku）＋ **B2B向けRAGシナリオ（Gemini File Search連携）**
+- Simple / Retail / Chat Supervisor などの旧シナリオは無効化済みで、UI からは Graffity・Schedule Coordinator (Kate)・Patricia・Mark・Takuboku・B2B RAG (File Search) の6種類を選択できます。
 - *Schedule Coordinator は Google Calendar MCP を使う kate シナリオのことです。
 - デフォルト応対は Graffity シナリオ（短く丁寧な日本語アシスタント）
 - Google カレンダー MCP と連携した「Schedule Coordinator」シナリオを追加し、複数人の空き時間比較と予定登録まで実行可能
@@ -33,7 +33,7 @@ OpenAI Realtime API + Agents SDK デモです。
 2. **1. API化**: SessionManager抽出、Next.js API Route化、zodバリデーションと共通エラーハンドラの導入
 3. **2. 画像入力**: `/api/session/{id}/event` に画像・メタデータを追加し、ストレージへのオフロードHookを設計
 4. **3. MCP対応**: ServiceManager配下にMCPプラグインを登録し、シナリオごとのオン/オフ切替を実装
-5. **4. File Search統合**: Google Drive分類/容量設計に沿って同期し、RAGハンドラから File Search を叩く
+5. **4. File Search統合**: Google Drive分類/容量設計に沿って同期し、RAGハンドラから File Search を叩く。B2B RAGシナリオと doc_search ツールで引用付き回答を返す。
 
 ## MCP接続基盤（2025-11追加）
 - 人が読みやすいYAML設定に対応しました。`config/mcp.servers.yaml`（例: `config/mcp.servers.yaml.example` をコピー）にサーバー一覧を記述すると、自動で接続・ライフサイクル管理します。
