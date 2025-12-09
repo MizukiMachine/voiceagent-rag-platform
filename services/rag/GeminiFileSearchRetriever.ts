@@ -32,8 +32,15 @@ export class GeminiFileSearchRetriever implements RagRetriever {
   private readonly auth: GoogleAuth;
   private readonly fetchImpl: typeof fetch;
   private readonly servingConfig: string;
+  private tokenCache: { token: string; expiresAt: number } | null = null;
+  private readonly requestTimeoutMs: number;
 
   constructor(config: GeminiFileSearchConfig, options: GeminiFileSearchRetrieverOptions = {}) {
+    if (!config.serviceAccountKeyPath) {
+      throw new Error(
+        'Gemini File Search requires FILE_SEARCH_SA_KEY_PATH (or GOOGLE_APPLICATION_CREDENTIALS) to be set.',
+      );
+    }
     this.config = config;
     this.auth = new GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/cloud-platform'],
@@ -41,6 +48,7 @@ export class GeminiFileSearchRetriever implements RagRetriever {
     });
     this.fetchImpl = options.fetchImpl ?? fetch;
     this.servingConfig = buildServingConfigResource(config);
+    this.requestTimeoutMs = Number(process.env.FILE_SEARCH_TIMEOUT_MS ?? '') || 15_000;
   }
 
   async search(params: RagSearchParams): Promise<RagRetrieverResult> {
@@ -70,7 +78,7 @@ export class GeminiFileSearchRetriever implements RagRetriever {
 
     const token = await this.getAccessToken();
     const started = Date.now();
-    const response = await this.fetchImpl(url.toString(), {
+    const response = await this.fetchWithTimeout(url.toString(), {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -94,16 +102,43 @@ export class GeminiFileSearchRetriever implements RagRetriever {
   }
 
   private async getAccessToken(): Promise<string> {
+    const now = Date.now();
+    if (this.tokenCache && this.tokenCache.expiresAt > now + 5_000) {
+      return this.tokenCache.token;
+    }
     const client = await this.auth.getClient();
     const tokenResponse = await client.getAccessToken();
     if (!tokenResponse || !tokenResponse.token) {
       throw new Error('Failed to acquire access token for File Search');
     }
+    const expiresInSec =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (tokenResponse as any)?.res?.data?.expires_in && Number((tokenResponse as any).res.data.expires_in);
+    const ttlMs = Number.isFinite(expiresInSec) ? Math.max(0, expiresInSec * 1000 - 10_000) : 5 * 60 * 1000;
+    this.tokenCache = { token: tokenResponse.token, expiresAt: now + ttlMs };
     return tokenResponse.token;
+  }
+
+  private async fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.requestTimeoutMs);
+    try {
+      return await this.fetchImpl(url, { ...init, signal: controller.signal });
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        throw new Error(`Gemini File Search request timed out after ${this.requestTimeoutMs}ms`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 }
 
 function toRetrieverDocument(result: SearchResponse['results'][number]): RagRetrieverDocument {
+  if (!result) {
+    return { id: 'unknown', snippet: undefined };
+  }
   const document = result?.document ?? {};
   const derived = document.derivedStructData ?? {};
   const struct = document.structData ?? {};
@@ -127,32 +162,21 @@ function pickSnippet(
   struct: Record<string, any>,
   document: SearchResponse['results'][number]['document'],
 ): string | undefined {
-  const candidates: Array<string | undefined> = [];
+  if (!document) return undefined;
 
-  if (Array.isArray(derived.snippets)) {
-    candidates.push(derived.snippets[0]);
-  }
-  if (Array.isArray(struct.snippets)) {
-    candidates.push(struct.snippets[0]);
-  }
-  if (Array.isArray(derived.extractive_answers)) {
-    candidates.push(derived.extractive_answers[0]?.content);
-  }
-  if (Array.isArray(struct.extractive_answers)) {
-    candidates.push(struct.extractive_answers[0]?.content);
-  }
-  if (typeof derived.content === 'string') {
-    candidates.push(derived.content);
-  }
-  if (typeof struct.content === 'string') {
-    candidates.push(struct.content);
-  }
-  const inline = document?.content?.inlineDocument?.content;
-  if (typeof inline === 'string') {
-    candidates.push(inline);
-  }
+  const orderedCandidates: Array<string | undefined> = [
+    Array.isArray(derived.snippets) ? derived.snippets[0] : undefined,
+    Array.isArray(struct.snippets) ? struct.snippets[0] : undefined,
+    Array.isArray(derived.extractive_answers) ? derived.extractive_answers[0]?.content : undefined,
+    Array.isArray(struct.extractive_answers) ? struct.extractive_answers[0]?.content : undefined,
+    typeof derived.content === 'string' ? derived.content : undefined,
+    typeof struct.content === 'string' ? struct.content : undefined,
+    typeof document?.content?.inlineDocument?.content === 'string'
+      ? document.content.inlineDocument.content
+      : undefined,
+  ];
 
-  return candidates.find((value) => typeof value === 'string' && value.trim().length > 0);
+  return orderedCandidates.find((value) => typeof value === 'string' && value.trim().length > 0);
 }
 
 async function safeReadText(response: Response): Promise<string> {

@@ -29,7 +29,7 @@ export class RagService {
       ...item,
       citeTag: `[FS-${idx + 1}]`,
       source: 'gemini_file_search',
-      snippet: sanitizeSnippet(item.snippet),
+      snippet: redactSensitiveText(sanitizeSnippet(item.snippet)),
       title: item.title ?? inferTitle(item),
     }));
 
@@ -57,11 +57,8 @@ export class RagService {
 }
 
 function sanitizeSnippet(snippet?: string): string | undefined {
-  if (!snippet) return snippet;
-  return snippet
-    .replace(/\s+/g, ' ')
-    .replace(/\u0000/g, '')
-    .trim();
+  if (!snippet) return '';
+  return snippet.replace(/\s+/g, ' ').replace(/\u0000/g, '').trim();
 }
 
 function inferTitle(item: { uri?: string; id?: string; metadata?: Record<string, any> }): string | undefined {
@@ -97,4 +94,13 @@ function truncate(text: string, max: number): string {
 
 function snippetNormalize(snippet: string): string {
   return snippet.replace(/\s+/g, ' ').trim();
+}
+
+function redactSensitiveText(input?: string): string | undefined {
+  if (!input) return input;
+  // 簡易的なPIIパターンを除去（メールアドレス・10桁以上の数字列）
+  const redacted = input
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[redacted-email]')
+    .replace(/\b\d{10,}\b/g, '[redacted-number]');
+  return redacted;
 }

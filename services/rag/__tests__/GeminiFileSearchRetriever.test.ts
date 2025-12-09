@@ -12,6 +12,7 @@ const baseConfig: GeminiFileSearchConfig = {
   apiEndpoint: 'example.com',
   apiVersion: 'v1beta',
   defaultTopK: 5,
+  serviceAccountKeyPath: '/tmp/fake.json',
 };
 
 describe('GeminiFileSearchRetriever', () => {

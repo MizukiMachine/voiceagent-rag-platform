@@ -1,4 +1,5 @@
 import { tool } from '@openai/agents/realtime';
+import { z } from 'zod';
 
 type RagServiceHandle = {
   searchDocuments: (params: {
@@ -33,13 +34,25 @@ export const docSearchTool = tool({
       scenarioKey?: string;
       clientTag?: string;
     };
-    if (!ctx.ragService?.searchDocuments) {
+    if (!ctx.ragService || typeof ctx.ragService.searchDocuments !== 'function') {
       return {
         success: false,
         message: 'RAG retriever is not configured on the server.',
       };
     }
-    const { query, topK, filter } = input as any;
+    const schema = z.object({
+      query: z.string().min(1),
+      topK: z.number().int().min(1).max(10).optional(),
+      filter: z.string().trim().min(1).optional(),
+    });
+    const parsed = schema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: `Invalid doc_search parameters: ${parsed.error.issues.map((i) => i.message).join(', ')}`,
+      };
+    }
+    const { query, topK, filter } = parsed.data;
     try {
       const result = await ctx.ragService.searchDocuments({
         query,
