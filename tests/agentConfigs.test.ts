@@ -6,7 +6,7 @@ import {
   defaultAgentSetKey,
 } from '@/app/agentConfigs';
 
-const EXPECTED_SCENARIOS = ['graffity'];
+const EXPECTED_SCENARIOS = ['graffity', 'b2b_rag'];
 
 describe('agentConfigs', () => {
   it('公開シナリオをMed/Tech抜きの許可リストに限定する', () => {

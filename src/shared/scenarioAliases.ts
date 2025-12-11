@@ -27,6 +27,12 @@ export const scenarioAliasMap: Record<string, string[]> = {
     'Crafty',
     'grašti',
   ],
+  b2b_rag: [
+    'mirza',
+    'MiRZA',
+    'ミルザ',
+    'みるざ',
+  ],
 };
 
 const aliasLookup = Object.entries(scenarioAliasMap).reduce<Record<string, string>>((acc, [key, aliases]) => {
