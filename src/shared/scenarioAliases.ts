@@ -28,14 +28,10 @@ export const scenarioAliasMap: Record<string, string[]> = {
     'grašti',
   ],
   b2b_rag: [
-    'b2b',
-    'B2B',
-    'b2b rag',
-    'b2bドキュメント',
-    'ドキュメント検索',
-    '資料検索',
-    '法人rag',
-    '企業rag',
+    'mirza',
+    'MiRZA',
+    'ミルザ',
+    'みるざ',
   ],
 };
 

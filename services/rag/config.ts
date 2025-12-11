@@ -9,6 +9,10 @@ export type GeminiFileSearchConfig = {
   apiEndpoint: string;
   apiVersion: 'v1' | 'v1beta';
   defaultTopK: number;
+  /** Generative Language API key. If present, API-key based retriever can be used. */
+  apiKey?: string;
+  /** Gemini File Search store resource name (fileSearchStores/xxx). Required for API-key retriever. */
+  fileSearchStoreName?: string;
   serviceAccountKeyPath?: string;
 };
 
@@ -34,6 +38,8 @@ export function loadGeminiFileSearchConfigFromEnv(env: Env = process.env): Gemin
   const apiVersion = (env.FILE_SEARCH_API_VERSION as GeminiFileSearchConfig['apiVersion']) ?? 'v1beta';
   const defaultTopK = Number(env.FILE_SEARCH_DEFAULT_TOP_K ?? '') || 5;
   const serviceAccountKeyPath = resolveKeyPath(env.FILE_SEARCH_SA_KEY_PATH ?? env.GOOGLE_APPLICATION_CREDENTIALS);
+  const apiKey = env.GEMINI_API_KEY ?? env.FILE_SEARCH_API_KEY;
+  const fileSearchStoreName = env.GEMINI_FILE_SEARCH_STORE ?? env.FILE_SEARCH_STORE_NAME;
 
   return {
     projectId,
@@ -44,6 +50,8 @@ export function loadGeminiFileSearchConfigFromEnv(env: Env = process.env): Gemin
     apiEndpoint,
     apiVersion,
     defaultTopK,
+    apiKey,
+    fileSearchStoreName,
     serviceAccountKeyPath,
   };
 }

@@ -4,12 +4,12 @@ import { docSearchTool } from './ragTools';
 import { switchScenarioTool, switchAgentTool } from './voiceControlTools';
 
 export const b2bRagAgent = new RealtimeAgent({
-  name: 'B2B Doc Ranger',
+  name: 'MiRZA',
   voice: 'marin',
   instructions: `
 ${japaneseLanguagePreamble}
 ${voiceResponsePreamble}
-${buildSelfIntroductionRule('B2B Doc Ranger')}
+${buildSelfIntroductionRule('MiRZA（ミルザ）')}
 
 # 目的
 - B2B向け問い合わせに対し、Gemini File Search で見つかった社内ドキュメントを根拠に回答する。

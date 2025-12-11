@@ -7,3 +7,4 @@ steps:
 - integration: doc_search tool returns summary to agent context with scenarioKey/clientTag
 notes:
 - Replace with real File Search run once SA/key + servingConfig are configured.
+2025-12-09T19:28:29+09:00 ✅ upload_to_file_search_store file=2510_Graffity.pdf op=fileSearchStores/defaultstore-5d6pa3qmbgpk/upload/operations/2510graffitypdf-t0c4869rhexu query='返品ポリシーを要約して' result=OK
